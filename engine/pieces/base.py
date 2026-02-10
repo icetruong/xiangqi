@@ -1,0 +1,1 @@
+# Piece base class
