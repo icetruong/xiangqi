@@ -1,9 +1,12 @@
 from typing import Tuple, Optional, List
+import time
 from engine.board import Board
 from engine.rules.game_rules import generate_legal_moves
 from engine.rules.check_rules import is_in_check
 from engine.ai.evaluator import evaluate_board
 from engine.ai.move_ordering import order_moves
+from engine.ai.quiescence import quiescence
+from engine.ai.time_search import SearchTimeout  # <- thêm
 
 MATE_SCORE = 10**9
 
@@ -11,9 +14,13 @@ def opponent(color: str) -> str:
     return "r" if color == "b" else "b"
 
 # maximingzing: True là ai -> false là người
-def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, depth: int, alpha: int, beta: int) -> int:
+def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, depth: int, alpha: int, beta: int, deadline: float | None = None) -> int:
+    if deadline is not None and time.perf_counter() >= deadline:
+        raise SearchTimeout()
+
+    # Quiescence Search
     if depth == 0:
-        return evaluate_board(board, ai_color)
+        return quiescence(board, turn_color, ai_color, alpha, beta, maximizing, deadline)
     
     moves = generate_legal_moves(board, turn_color)
     if not moves:
@@ -28,8 +35,10 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
     if maximizing:
         max_eval = float('-inf')
         for src, dst in moves:
+            if deadline is not None and time.perf_counter() >= deadline:
+                raise SearchTimeout()
             undo = board.apply_move(src, dst)
-            eval = minimax(board, ai_color, opponent(turn_color), False, depth-1, alpha, beta)
+            eval = minimax(board, ai_color, opponent(turn_color), False, depth-1, alpha, beta, deadline)
             board.undo_move(undo)
 
             max_eval = max(max_eval, eval)
@@ -41,8 +50,10 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
     else:
         min_eval = float('inf')
         for src, dst in moves:
+            if deadline is not None and time.perf_counter() >= deadline:
+                raise SearchTimeout()
             undo = board.apply_move(src, dst)
-            eval = minimax(board, ai_color, opponent(turn_color), True, depth-1, alpha, beta)
+            eval = minimax(board, ai_color, opponent(turn_color), True, depth-1, alpha, beta, deadline)
             board.undo_move(undo)
 
             min_eval = min(min_eval, eval)
@@ -54,7 +65,7 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
 
 
 # depth là độ sâu tìm kiếm
-def find_best_move(board: Board, ai_color: str, depth: int) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
+def find_best_move(board: Board, ai_color: str, depth: int, deadline: float | None = None) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:
     """
     Trả về nước đi tốt nhất cho ai_color.
     depth: độ sâu tìm kiếm..
@@ -68,8 +79,10 @@ def find_best_move(board: Board, ai_color: str, depth: int) -> Optional[Tuple[Tu
     best_score = float('-inf')
 
     for src, dst in moves:
+        if deadline is not None and time.perf_counter() >= deadline:
+            raise SearchTimeout()
         undo = board.apply_move(src, dst)
-        score = minimax(board, ai_color, opponent(ai_color), False, depth-1, float('-inf'), float('inf'))
+        score = minimax(board, ai_color, opponent(ai_color), False, depth-1, float('-inf'), float('inf'), deadline)
         board.undo_move(undo)
 
         if score > best_score:

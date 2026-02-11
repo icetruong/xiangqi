@@ -78,6 +78,14 @@ class Game:
         src, dst = find_best_move(self.board, turn_color, depth)        
 
         return self.make_move(src, dst)
+    
+    def ai_move_time(self, time_limit_sec: float = 0.5, max_depth: int = 6) -> bool:
+        from engine.ai.time_search import best_move_with_time_limit
+
+        turn_color = self.turn.value
+        src, dst = best_move_with_time_limit(self.board, turn_color, max_depth, time_limit_sec)
+
+        return self.make_move(src, dst)
 
         
 

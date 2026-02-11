@@ -1,5 +1,6 @@
 from engine.utils.position import is_empty, color_of, type_of
 from engine.board import Board
+from engine.ai.pst import pst_value
 
 PIECE_VALUE = {
     "K": 100000,  # tướng cực lớn
@@ -19,10 +20,12 @@ def evaluate_board(board: Board, perspective_color: str) -> int:
             if is_empty(piece):
                 continue
 
+            c = color_of(piece)
             t = type_of(piece)
-            value = PIECE_VALUE.get(t, 0)
-
-            if color_of(piece) == perspective_color:
+            bonus = pst_value(t,c,i,j)
+            value = PIECE_VALUE.get(t, 0) + bonus
+            
+            if c == perspective_color:
                 score += value
             else:
                 score -= value

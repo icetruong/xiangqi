@@ -79,7 +79,8 @@ def main():
         # AI turn
         if turn == ai_color:
             print("\nAI thinking...")
-            game.ai_move_minimax(depth=3)
+            # game.ai_move_minimax(depth=3)
+            game.ai_move_time(0.5, 6)
             print_board(game)
 
             if getattr(game.status, "value", game.status) in ("CHECKMATE", "STALEMATE"):
