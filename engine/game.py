@@ -70,6 +70,14 @@ class Game:
     
     def get_status(self) -> str:
         return self.status.value
+    
+    def ai_moves_minimax(self, depth: int = 3) -> bool:
+        from engine.ai.search import find_best_move
+
+        turn_color = self.turn.value
+        src, dst = find_best_move(Board, turn_color, depth)        
+
+        return self.make_move(src, dst)
 
         
 
