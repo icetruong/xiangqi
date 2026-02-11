@@ -1,5 +1,3 @@
-# examples/play_with_ai_console.py
-
 from engine.game import Game
 from engine.serializer.fen import board_to_fen, load_fen
 
@@ -13,29 +11,52 @@ def piece_to_char(cell: str) -> str:
 
 def print_board(game: Game):
     b = game.board
-    turn = game.turn.value
-    status = game.status.value
+    turn = getattr(game.turn, "value", game.turn)
+    status = getattr(game.status, "value", game.status)
 
-    print("\n" + "=" * 50)
-    print(f"Turn: {turn}   Status: {status}")
-    print("    0 1 2 3 4 5 6 7 8")
-    print("   +" + "--" * 9 + "+")
+    # Các dòng command sẽ hiển thị bên phải (mỗi dòng ứng với 1 dòng board)
+    cmd_lines = [
+        "Commands:",
+        "  move sr sc dr dc",
+        "  undo",
+        "  fen",
+        "  load <fen>",
+        "  ai <depth>",
+        "  quit",
+    ]
 
+    # Header trái (board)
+    header1 = f"Turn: {turn}   Status: {status}"
+    header2 = "    0 1 2 3 4 5 6 7 8"
+    top_border = "   +" + "--" * 9 + "+"
+
+    # độ rộng cố định cho phần board để canh phải đẹp
+    # (board_line sẽ luôn ~ 4 + 2*9 + 4 ký tự)
+    def right(i: int) -> str:
+        return cmd_lines[i] if 0 <= i < len(cmd_lines) else ""
+
+    print("\n" + "=" * 80)
+    # in header + command (2 dòng đầu)
+    print(f"{header1:<30}   {right(0)}")
+    print(f"{header2:<30}   {right(1)}")
+    print(f"{top_border:<30}   {right(2)}")
+
+    # in 10 hàng board; chèn dòng River sau r==4
+    cmd_idx = 3  # tiếp tục từ cmd_lines[3]
     for r in range(b.ROWS):
-        row = [piece_to_char(b.get(r, c)) for c in range(b.COLS)]
-        print(f"{r:2} | " + " ".join(row) + " |")
-        if r == 4:
-            print("   | ~ ~ ~ ~ River ~ ~ ~ ~ |")
+        row_cells = [piece_to_char(b.get(r, c)) for c in range(b.COLS)]
+        left_line = f"{r:2} | " + " ".join(row_cells) + " |"
+        print(f"{left_line:<30}   {right(cmd_idx)}")
+        cmd_idx += 1
 
-    print("   +" + "--" * 9 + "+")
-    print("Commands:")
-    print("  move sr sc dr dc")
-    print("  undo")
-    print("  fen")
-    print("  load <fen>")
-    print("  ai <depth>")
-    print("  quit")
-    print("=" * 50)
+        if r == 4:
+            river_line = "   | ~ ~ ~ ~ River ~ ~ ~ ~ |"
+            print(f"{river_line:<30}   {right(cmd_idx)}")
+            cmd_idx += 1
+
+    bottom_border = "   +" + "--" * 9 + "+"
+    print(f"{bottom_border:<30}   {right(cmd_idx)}")
+    print("=" * 80)
 
 
 def main():
@@ -53,7 +74,7 @@ def main():
     print_board(game)
 
     while True:
-        turn = game.turn.value
+        turn = getattr(game.turn, "value", game.turn)
 
         # AI turn
         if turn == ai_color:
@@ -61,7 +82,7 @@ def main():
             game.ai_move_minimax(depth=3)
             print_board(game)
 
-            if game.status.value in ("CHECKMATE", "STALEMATE"):
+            if getattr(game.status, "value", game.status) in ("CHECKMATE", "STALEMATE"):
                 print("Game over.")
                 break
             continue
@@ -95,6 +116,8 @@ def main():
             fen_str = " ".join(parts[1:])
             t = load_fen(game.board, fen_str)
             if t:
+                # nếu Game.turn là enum Color thì cần ép: game.turn = Color(t)
+                # còn nếu đang dùng string thì set trực tiếp
                 game.turn = t
             print_board(game)
             continue
@@ -118,7 +141,7 @@ def main():
                     print("Illegal move.")
                 print_board(game)
 
-                if game.status.value in ("CHECKMATE", "STALEMATE"):
+                if getattr(game.status, "value", game.status) in ("CHECKMATE", "STALEMATE"):
                     print("Game over.")
                     break
 

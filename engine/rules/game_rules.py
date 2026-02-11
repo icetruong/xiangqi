@@ -64,7 +64,7 @@ def pseudo_moves_of_piece(board: Board, src: Tuple[int, int]) -> List[Tuple[int,
     return []
 
 #   bên color được phép đi những nước nào 
-def generate_legal_moves(board: Board, color) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
+def generate_legal_moves(board: Board, color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
     legal: List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
 
     for i in range(Board.ROWS):
