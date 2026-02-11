@@ -3,6 +3,7 @@ from engine.board import Board
 from engine.rules.game_rules import generate_legal_moves
 from engine.rules.check_rules import is_in_check
 from engine.ai.evaluator import evaluate_board
+from engine.ai.move_ordering import order_moves
 
 MATE_SCORE = 10**9
 
@@ -23,7 +24,7 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
                 return float('inf')
         else:
             return 0
-
+    moves = order_moves(board, moves, turn_color)
     if maximizing:
         max_eval = float('-inf')
         for src, dst in moves:
@@ -62,7 +63,7 @@ def find_best_move(board: Board, ai_color: str, depth: int) -> Optional[Tuple[Tu
     moves = generate_legal_moves(board, ai_color)
     if not moves:
         return None
-    
+    moves = order_moves(board, moves, ai_color)
     best_move: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None
     best_score = float('-inf')
 
