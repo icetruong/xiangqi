@@ -1,7 +1,7 @@
 # Tốt
 
 from typing import List, Tuple
-from engine.pieces.base import Piece, Pos
+from engine.pieces.base import Piece
 from engine.utils.position import is_empty, same_color, type_of, color_of
 from engine.board import Board
 
