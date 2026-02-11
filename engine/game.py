@@ -83,8 +83,10 @@ class Game:
         from engine.ai.time_search import best_move_with_time_limit
 
         turn_color = self.turn.value
-        src, dst = best_move_with_time_limit(self.board, turn_color, max_depth, time_limit_sec)
-
+        move = best_move_with_time_limit(self.board, turn_color,max_depth= max_depth,time_limit_sec=time_limit_sec)
+        if move is None:
+            return False
+        src, dst = move
         return self.make_move(src, dst)
 
         

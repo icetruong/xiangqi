@@ -4,15 +4,15 @@ from engine.ai.evaluator import evaluate_board
 from engine.rules.game_rules import generate_legal_moves
 from engine.utils.position import is_empty
 from engine.board import Board
-from engine.ai.time_search import SearchTimeout
+from engine.excaptions import SearchTimeout
 
-def generate_capture_moves(board: Board, color: str) -> List[Tuple[int, int], Tuple[int, int]]:
+def generate_capture_moves(board: Board, color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
     """
     Lấy tất cả nước hợp lệ mà có ăn quân (dst đang có quân).
     """
     
     moves = generate_legal_moves(board, color)
-    capture: List[Tuple[int, int], Tuple[int, int]] = []
+    capture:  List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
 
     for src, dst in moves:
         if not is_empty(board.get(*dst)):
@@ -26,8 +26,8 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
     - Stand pat = evaluate hiện tại
     - Nếu còn capture moves: thử capture và recurse
     """
-    if deadline is not None and time.perf_counter() > deadline:
-        raise SearchTimeout()
+    if deadline is not None and time.perf_counter() >= deadline:
+                raise SearchTimeout()
     stand_pat = evaluate_board(board, ai_color)
 
     if maximizing:
@@ -44,11 +44,13 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
     if maximizing:
         best = alpha
         for src, dst in capture_moves:
-            if deadline is not None and time.perf_counter() > deadline:
+            if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
             undo = board.apply_move(src, dst)
-            score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, False, deadline)
-            board.undo_move(undo)
+            try:
+                score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, False, deadline)
+            finally:
+                board.undo_move(undo)
 
             best = max(best, score)
             alpha = max(alpha, score)
@@ -58,11 +60,13 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
     else:
         best = beta
         for src, dst in capture_moves:
-            if deadline is not None and time.perf_counter() > deadline:
+            if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
             undo = board.apply_move(src, dst)
-            score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, True, deadline)
-            board.undo_move(undo)
+            try:
+                score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, True, deadline)
+            finally:
+                board.undo_move(undo)
 
             best = min(best, score)
             beta = min(beta, score)
