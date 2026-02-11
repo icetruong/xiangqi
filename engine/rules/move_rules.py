@@ -2,6 +2,7 @@
 from typing import List, Tuple
 from engine.board import Board
 from engine.utils.position import EMPTY, color_of, same_color, is_empty, type_of
+from engine.pieces import piece_from_cell
 
 def rook_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
@@ -187,6 +188,14 @@ def king_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
                 moves.append((king_r, king_c))
 
     return moves
+
+# moves tổng quát
+def pseudo_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
+    piece = board.get(*src)
+    obj = piece_from_cell(piece)
+    if obj is None:
+        return []
+    return obj.moves(board, src)
 
 def is_legal_basic_move(board: Board, src: Tuple[int, int], dst: Tuple[int, int]) -> bool:
     sr, sc = src

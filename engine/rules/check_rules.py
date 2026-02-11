@@ -39,6 +39,7 @@ def attacks_square(board: Board, src: Tuple[int, int], dst: Tuple[int, int]) -> 
 
     return False
 
+# check vua có bị chiếu không
 def is_in_check(board: Board, color: str) -> bool:
     king_pos = find_king(board=board, color=color)
     if king_pos is None:
