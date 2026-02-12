@@ -1,0 +1,47 @@
+.piece {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    position: relative;
+}
+
+.piece-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.piece.red .piece-inner {
+    background: linear-gradient(145deg, #ff6b6b, #ee5a6f);
+    color: white;
+    border-color: #c92a2a;
+}
+
+.piece.black .piece-inner {
+    background: linear-gradient(145deg, #2c3e50, #34495e);
+    color: white;
+    border-color: #1a252f;
+}
+
+.piece:hover .piece-inner {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.piece:active .piece-inner {
+    transform: scale(0.95);
+}
