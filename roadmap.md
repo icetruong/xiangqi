@@ -61,7 +61,10 @@
 ### 3.2 Move format (client → server)
 ```json
 { "from": [row, col], "to": [row, col] }
-3.3 Response chuẩn (server → client)
+```
+
+### 3.3 Response chuẩn (server → client)
+```json
 {
   "ok": true,
   "board_state": [[...10x9...]],
@@ -76,246 +79,278 @@
     "captured": "bN|null"
   }
 }
-3.4 Error contract (cần thống nhất)
+```
+
+### 3.4 Error contract (cần thống nhất)
 Response lỗi:
-
+```json
 { "ok": false, "error_code": "INVALID_MOVE", "message": "..." }
-Danh sách đề xuất:
+```
 
-BAD_REQUEST (format sai)
+Danh sách error codes:
+- `BAD_REQUEST` — Format sai
+- `INVALID_MOVE` — Luật không cho
+- `GAME_FINISHED` — Ván đã kết thúc
+- `NOT_YOUR_TURN` — Sai lượt
+- `SERVER_ERROR` — Lỗi nội bộ
 
-INVALID_MOVE (luật không cho)
+## 4) Tổ chức project (mapping với repo của bạn)
+### 4.1 Giữ engine/ là core library
+- Không để Django phụ thuộc logic console/UI trong engine
+- Django chỉ gọi adapter/service "bọc" engine
 
-GAME_FINISHED (ván đã kết thúc)
+### 4.2 Django apps tối thiểu
+- `games/` — Core cho PvE
+- `accounts/` — Optional nếu cần login
 
-NOT_YOUR_TURN (sai lượt)
+### 4.3 Folder gợi ý trong games/
+```
+games/
+├── models.py              # Game, Move models
+├── services/
+│   ├── engine_adapter.py  # Interface gọi engine
+│   └── game_service.py    # Flow: player move + AI move
+├── api_views.py           # API JSON endpoints
+├── views.py               # Render templates
+├── templates/games/
+│   └── game.html          # UI bàn cờ
+└── static/games/
+    ├── css/
+    ├── js/
+    └── pieces/            # SVG/PNG quân cờ
+```
 
-SERVER_ERROR (lỗi nội bộ)
+---
 
-4) Tổ chức project (mapping với repo của bạn)
-4.1 Giữ engine/ là core library
-Không để Django phụ thuộc logic console/UI trong engine
 
-Django chỉ gọi adapter/service “bọc” engine
+## 5) Adapter Engine (việc QUAN TRỌNG NHẤT)
+Nếu adapter ổn thì Django/UI chỉ là "vỏ".
 
-4.2 Django apps tối thiểu
-games/ (core cho PvE)
-
-accounts/ (optional nếu cần login)
-
-4.3 Folder gợi ý trong games/
-models.py (Game, Move)
-
-services/engine_adapter.py (interface gọi engine)
-
-services/game_service.py (flow: player move + ai move)
-
-api_views.py (API JSON)
-
-views.py (render template)
-
-templates/games/game.html (UI)
-
-5) Adapter Engine (việc QUAN TRỌNG NHẤT)
-Nếu adapter ổn thì Django/UI chỉ là “vỏ”.
-
-5.1 Interface tối thiểu (Python thuần)
+### 5.1 Interface tối thiểu (Python thuần)
+```python
 init_game_state() -> board_state
-
-list_legal_moves(board_state, side, from=None) -> moves (optional)
-
+list_legal_moves(board_state, side, from=None) -> moves  # optional
 apply_move(board_state, side, move) -> (new_state, meta)
-
 check_endgame(board_state, side_to_move) -> (status, winner, reason)
-
 pick_ai_move(board_state, ai_side, difficulty) -> move
-
-5.2 Trách nhiệm của adapter
-Validate board_state đúng 10x9
-
-Validate piece codes hợp lệ
-
-Validate move from/to trong range
-
-Chuyển đổi nếu engine dùng object Board/Move nội bộ
-
-6) Database Models (MVP)
-6.1 Model: Game (bắt buộc)
-id
-
-status: ongoing | finished
-
-board_state (JSON)
-
-current_turn: "r" | "b"
-
-player_side: mặc định "r"
-
-ai_side: mặc định "b"
-
-difficulty: easy|normal|hard
-
-winner: "r"|"b"|"draw"|null
-
-end_reason: nullable
-
-timestamps
-
-6.2 Model: Move (khuyến nghị)
-game FK
-
-ply (0..n)
-
-side ("r"/"b")
-
-from_row/from_col/to_row/to_col
-
-piece, captured (nullable)
-
-timestamps
-
-Nếu muốn ra MVP nhanh hơn: có thể làm Game-only trước, Move làm sau.
-
-7) API Endpoints (nhẹ, đủ chạy)
-7.1 Create game
-POST /api/games/
-
-input: { "difficulty": "easy|normal|hard" }
-
-output: { "game_id": "...", ...state }
-
-7.2 Get game state
-GET /api/games/<id>/
-
-output: ...state
-
-7.3 Apply player move (core)
-POST /api/games/<id>/move
-
-input: { "from":[r,c], "to":[r,c] }
-
-server flow:
-
-load Game + state
-
-check status != finished
-
-check đúng lượt người
-
-apply move người bằng adapter
-
-check endgame; nếu xong → save + return
-
-pick AI move (sync) → apply
-
-check endgame → save + return state
-
-7.4 (Optional) Legal moves for highlight
-GET /api/games/<id>/legal-moves?from=[r,c]
-
-output: list các to hợp lệ
-
-8) Trang web UI (Templates + JS/HTMX)
-8.1 Route
-GET /game/<id>/ render game.html
-
-8.2 UI responsibilities
-Render grid 10x9 từ board_state
-
-Map piece code -> SVG/PNG icon
-
-Click flow:
-
-click quân (chỉ cho chọn quân của player_side)
-
-click ô đích
-
-call API move
-
-render board theo response
-
-8.3 Nâng cấp UI (không bắt buộc)
-Highlight last move
-
-Highlight legal moves
-
-Move history sidebar
-
-Button restart/new game
-
-9) AI (sync trước, nâng cấp sau)
-9.1 Difficulty gợi ý
-easy: random legal move
-
-normal: greedy (ưu tiên ăn quân có giá trị cao)
-
-hard: minimax depth thấp (nếu engine hỗ trợ)
-
-9.2 Khi nào cần async
-AI chạy > 1–2s:
-
-dùng Celery/RQ
-
-API trả “AI thinking…”
-
-khi xong update state (giai đoạn sau)
-
-10) Testing tối thiểu (để không vỡ luật)
-10.1 Engine/adapter tests
-state 10x9 validate
-
-invalid move bị reject
-
-apply move ra state đúng
-
-endgame detection đúng
-
-10.2 API tests
-create game trả state đúng
-
-move valid: ok=true, state đổi
-
-move invalid: ok=false + error_code
-
-finished game: chặn move tiếp
-
-11) Thứ tự làm (roadmap chuẩn, không mắc kẹt)
-Đây là “hướng để làm trước” theo đúng ưu tiên.
-
-Phase 1 — Core trước (quan trọng nhất)
-Chốt contract (move/state/response/error_code) trong chính file này (mục 3)
-
-Làm engine_adapter chạy được bằng Python thuần:
-
-init/apply/check_endgame/pick_ai
-
-Tạo Django project + app games
-
-Phase 2 — API trước UI
-Model Game + endpoint POST /api/games/ + GET /api/games/<id>/
-
-Endpoint core POST /api/games/<id>/move (người → AI)
-
-Phase 3 — UI (lúc này làm rất nhanh)
-Template /game/<id>/ render board
-
-JS click-to-move gọi API + update board
-
-Phase 4 — Nâng cấp
-Move history / legal-moves highlight
-
-Tối ưu AI / async nếu cần
-
-Auth, deploy, polish UI
-
-12) Definition of Done (MVP)
-Tạo ván → hiển thị bàn cờ đúng
-
-Người đi hợp lệ → AI đi → board update đúng
-
-Invalid move bị chặn rõ ràng (error_code)
-
-Ván kết thúc có status/winner, không cho đi tiếp
-
-State lưu DB ổn định
-
+```
+
+### 5.2 Trách nhiệm của adapter
+- Validate board_state đúng 10x9
+- Validate piece codes hợp lệ
+- Validate move from/to trong range
+- Chuyển đổi nếu engine dùng object Board/Move nội bộ
+
+---
+
+
+## 6) Database Models (MVP)
+### 6.1 Model: Game (bắt buộc)
+```python
+class Game(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    status = models.CharField(max_length=20)  # ongoing | finished
+    board_state = models.JSONField()  # 10x9 array
+    current_turn = models.CharField(max_length=1)  # r | b
+    player_side = models.CharField(max_length=1, default='r')
+    ai_side = models.CharField(max_length=1, default='b')
+    difficulty = models.CharField(max_length=20)  # easy|normal|hard
+    winner = models.CharField(max_length=10, null=True, blank=True)
+    end_reason = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+```
+
+### 6.2 Model: Move (khuyến nghị)
+```python
+class Move(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    ply = models.IntegerField()  # 0..n
+    side = models.CharField(max_length=1)  # r | b
+    from_row = models.IntegerField()
+    from_col = models.IntegerField()
+    to_row = models.IntegerField()
+    to_col = models.IntegerField()
+    piece = models.CharField(max_length=5)
+    captured = models.CharField(max_length=5, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+```
+
+> Nếu muốn ra MVP nhanh hơn: có thể làm Game-only trước, Move làm sau.
+
+---
+
+
+## 7) API Endpoints (nhẹ, đủ chạy)
+### 7.1 Create game
+**POST** `/api/games/`
+- Input: `{ "difficulty": "easy|normal|hard" }`
+- Output: `{ "game_id": "...", ...state }`
+
+### 7.2 Get game state
+**GET** `/api/games/<id>/`
+- Output: `...state`
+
+### 7.3 Apply player move (core)
+**POST** `/api/games/<id>/move`
+- Input: `{ "from":[r,c], "to":[r,c] }`
+- Server flow:
+  1. Load Game + state
+  2. Check status != finished
+  3. Check đúng lượt người
+  4. Apply move người bằng adapter
+  5. Check endgame; nếu xong → save + return
+  6. Pick AI move (sync) → apply
+  7. Check endgame → save + return state
+
+### 7.4 (Optional) Legal moves for highlight
+**GET** `/api/games/<id>/legal-moves?from=[r,c]`
+- Output: List các to hợp lệ
+
+---
+
+
+## 8) Trang web UI (Templates + JS/HTMX)
+### 8.1 Route
+**GET** `/game/<id>/` — Render `game.html`
+
+### 8.2 UI responsibilities
+- Render grid 10x9 từ `board_state`
+- Map piece code → SVG/PNG icon (từ `static/games/pieces/`)
+- Click flow:
+  1. Click quân (chỉ cho chọn quân của player_side)
+  2. Click ô đích
+  3. Call API move
+  4. Render board theo response
+
+### 8.3 Static files
+```bash
+# Collect static files
+python manage.py collectstatic
+```
+- Đặt SVG/PNG quân cờ trong `games/static/games/pieces/`
+- Naming: `rK.svg`, `bR.png`, etc.
+
+### 8.4 Nâng cấp UI (không bắt buộc)
+- Highlight last move
+- Highlight legal moves
+- Move history sidebar
+- Button restart/new game
+
+---
+
+
+## 9) AI (sync trước, nâng cấp sau)
+### 9.1 Difficulty gợi ý
+- **easy**: Random legal move
+- **normal**: Greedy (ưu tiên ăn quân có giá trị cao)
+- **hard**: Minimax depth thấp (nếu engine hỗ trợ)
+
+### 9.2 Khi nào cần async
+Nếu AI chạy > 1–2s:
+- Dùng Celery/RQ
+- API trả "AI thinking…"
+- Khi xong update state (giai đoạn sau)
+
+---
+
+## 10) Testing tối thiểu (để không vỡ luật)
+### 10.1 Engine/adapter tests
+- State 10x9 validate
+- Invalid move bị reject
+- Apply move ra state đúng
+- Endgame detection đúng
+
+### 10.2 API tests
+```python
+# pytest/django test
+- create game trả state đúng
+- move valid: ok=true, state đổi
+- move invalid: ok=false + error_code
+- finished game: chặn move tiếp
+```
+
+---
+
+## 11) Thứ tự làm (roadmap chuẩn, không mắc kẹt)
+Đây là "hướng để làm trước" theo đúng ưu tiên.
+
+### Phase 1 — Core trước (quan trọng nhất)
+1. Chốt contract (move/state/response/error_code) trong chính file này (mục 3)
+2. Làm `engine_adapter` chạy được bằng Python thuần:
+   - `init/apply/check_endgame/pick_ai`
+3. Tạo Django project + app `games`
+
+### Phase 2 — API trước UI
+1. Model `Game` + endpoint `POST /api/games/` + `GET /api/games/<id>/`
+2. Endpoint core `POST /api/games/<id>/move` (người → AI)
+
+### Phase 3 — UI (lúc này làm rất nhanh)
+1. Template `/game/<id>/` render board
+2. JS click-to-move gọi API + update board
+
+### Phase 4 — Nâng cấp
+1. Move history / legal-moves highlight
+2. Tối ưu AI / async nếu cần
+3. Auth, deploy, polish UI
+
+---
+
+## 12) Django Settings & Deployment
+### 12.1 CORS (nếu frontend tách riêng)
+```python
+# settings.py
+INSTALLED_APPS += ['corsheaders']
+MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware', ...]
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000']  # hoặc Next.js port
+```
+
+### 12.2 Static files production
+```python
+# settings.py
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+```
+
+### 12.3 Docker (optional)
+```dockerfile
+# Dockerfile
+FROM python:3.11
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+RUN python manage.py collectstatic --noinput
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    environment:
+      - DEBUG=0
+```
+
+---
+
+## 13) Definition of Done (MVP)
+✅ **Checklist MVP:**
+- [ ] Tạo ván → hiển thị bàn cờ đúng
+- [ ] Người đi hợp lệ → AI đi → board update đúng
+- [ ] Invalid move bị chặn rõ ràng (error_code)
+- [ ] Ván kết thúc có status/winner, không cho đi tiếp
+- [ ] State lưu DB ổn định
+- [ ] Static files (quân cờ) hiển thị đúng
+- [ ] Tests pass (engine + API)
+
+---
+
+**Good luck! 🎯 Làm từng phase một, đừng nhảy cóc!**
