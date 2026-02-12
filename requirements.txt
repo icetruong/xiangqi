@@ -1,0 +1,21 @@
+# Django Xiangqi PvE Requirements
+
+# Core Framework
+Django==5.0.2
+djangorestframework==3.14.0
+
+# CORS (if needed for API)
+django-cors-headers==4.3.1
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Database (PostgreSQL optional, SQLite default)
+# psycopg2-binary==2.9.9  # Uncomment if using PostgreSQL
+
+# Production server
+gunicorn==21.2.0
+
+# Development tools
+pytest==8.0.0
+pytest-django==4.8.0
