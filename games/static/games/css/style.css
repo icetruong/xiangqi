@@ -1,0 +1,65 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+    background: #f0f0f0;
+}
+
+.board-container {
+    margin: 20px auto;
+    display: inline-block;
+    position: relative;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(9, 60px);
+    grid-template-rows: repeat(10, 60px);
+    gap: 0;
+    background: #eebb99;
+    border: 2px solid #8b4513;
+}
+
+.cell {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border: 1px dotted rgba(0, 0, 0, 0.1);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.cell.selected {
+    background-color: rgba(0, 255, 0, 0.3);
+}
+
+.cell.last-move {
+    background-color: rgba(255, 255, 0, 0.3);
+}
+
+/* Simple piece styling for MVP without images */
+.piece {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    user-select: none;
+}
+
+.piece.r {
+    background: #ffcccc;
+    color: #cc0000;
+    border: 2px solid #cc0000;
+}
+
+.piece.b {
+    background: #ccccff;
+    color: #000033;
+    border: 2px solid #000033;
+}

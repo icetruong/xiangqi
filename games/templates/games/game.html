@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xiangqi Game ({{ game.id }})</title>
+    <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
+</head>
+
+<body>
+    <h1>Xiangqi vs AI</h1>
+    <div>
+        Game ID: {{ game.id }} <br>
+        Status: <span id="status">{{ game.status }}</span> |
+        Turn: <span id="turn">{{ game.current_turn }}</span>
+    </div>
+
+    <div class="board-container">
+        <div id="board" class="grid">
+            <!-- Board rendered by JS -->
+        </div>
+    </div>
+
+    <div id="controls">
+        <button onclick="window.location.href='/'">New Game</button>
+    </div>
+
+    <script src="{% static 'games/js/game.js' %}"></script>
+    <script>
+        // Initialize game with data from server
+        document.addEventListener('DOMContentLoaded', () => {
+            initGame({
+                gameId: "{{ game.id }}",
+                boardState: {{ game.board_state | safe }},
+            currentTurn: "{{ game.current_turn }}",
+            status: "{{ game.status }}",
+            playerSide: "{{ game.player_side }}",
+            aiSide: "{{ game.ai_side }}"
+            });
+        });
+    </script>
+</body>
+
+</html>
