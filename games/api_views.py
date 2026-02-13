@@ -74,44 +74,27 @@ def make_move(request, game_id):
                 "message": "Missing 'from' or 'to' in request body"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        game, last_move_meta = game_service.handle_player_move(game_id, move_data)
+        import threading
+
+        # 1. Apply Player Move
+        game, player_move_meta = game_service.apply_player_move(game_id, move_data)
         
-        # Serialize last move
-        last_move_response = None
-        # Note: last_move_meta here is the dict returned by engine_adapter.apply_move
-        # But we really want the coordinates too.
-        # game_service returns meta... 
-        # Actually handle_player_move returns (game, last_move_info).
-        # But wait, create_game returns game object.
+        # 2. Trigger AI Move in Background
+        if game.status == 'ongoing' and game.current_turn == game.ai_side:
+            t = threading.Thread(target=game_service.process_ai_move, args=(game_id,))
+            t.daemon = True # Daemon thread so it doesn't block server shutdown
+            t.start()
         
-        # We need to construct the response properly.
-        # If AI moved, we want AI's move.
-        # 'from'/'to' are not in 'meta' from apply_move unless we put them there.
-        # Let's fix game_service logic in my head or adjust response here.
+        # 3. Construct Response (Immediate)
+        # We return the state AFTER player move.
+        # The frontend will see "Turn: b" (AI) and should start polling.
         
-        # In game_service:
-        # ai_move = engine_adapter.pick_ai_move -> returns {"from":..., "to":...}
-        # But apply_move returns meta {"piece":..., "captured":...}
-        
-        # We need to combine them.
-        # game_service.handle_player_move returns (game, last_move_info) 
-        # where last_move_info should be sufficient.
-        
-        # If I look at `game_service.py` again:
-        # It calls `pick_ai_move` -> gets generic move dict
-        # It calls `apply_move` -> gets meta
-        # It returns ... something.
-        
-        # I should probably just query the DB for the last move, it's safer and cleaner.
-        last_move = game.moves.last()
-        last_move_data = None
-        if last_move:
-            last_move_data = {
-                "from": [last_move.from_row, last_move.from_col],
-                "to": [last_move.to_row, last_move.to_col],
-                "piece": last_move.piece,
-                "captured": last_move.captured
-            }
+        last_move_data = {
+            "from": move_data['from'],
+            "to": move_data['to'],
+            "piece": player_move_meta.get('piece'),
+            "captured": player_move_meta.get('captured')
+        }
 
         return Response({
             "ok": True,

@@ -19,14 +19,10 @@ def create_new_game(difficulty='normal', player_side='r', ai_side='b') -> Game:
     )
     return game
 
-def handle_player_move(game_id, move_data):
+def apply_player_move(game_id, move_data):
     """
-    Handle player move:
-    1. Validate & Apply player move
-    2. Check endgame
-    3. If ongoing, trigger AI move
-    4. Check endgame
-    5. Return updated game state
+    Apply player move and update game state.
+    Returns: (game, move_meta)
     """
     try:
         game = Game.objects.get(id=game_id)
@@ -49,7 +45,7 @@ def handle_player_move(game_id, move_data):
     except ValueError as e:
         raise ValueError(str(e))
 
-    # Save move to history (optional but recommended)
+    # Save move to history
     _save_move(game, move_data, game.player_side, meta)
 
     # Update Game State
@@ -64,11 +60,23 @@ def handle_player_move(game_id, move_data):
         game.winner = winner
         game.end_reason = reason
         game.save()
-        return game, meta
 
-    # --- 3. AI Move ---
-    ai_move_meta = None
+    return game, meta
+
+def process_ai_move(game_id):
+    """
+    Calculate and apply AI move.
+    Designed to run in a background thread.
+    """
+    logger.info(f"Starting AI move for game {game_id}")
     try:
+        game = Game.objects.get(id=game_id)
+        
+        if game.status != 'ongoing' or game.current_turn != game.ai_side:
+            logger.warning(f"AI attempted move invalid state: {game.status}, Turn: {game.current_turn}")
+            return
+
+        # --- 3. AI Move ---
         ai_move = engine_adapter.pick_ai_move(
             game.board_state, 
             game.ai_side, 
@@ -82,38 +90,25 @@ def handle_player_move(game_id, move_data):
             ai_move
         )
         
-        ai_move_meta = meta_ai
         # Save AI move
         _save_move(game, ai_move, game.ai_side, meta_ai)
         
         # Update Game State
         game.board_state = new_board_ai
         game.current_turn = game.player_side # Switch back to player
-        game.save()
         
-    except Exception as e:
-        logger.error(f"AI Move Error: {e}")
-        # If AI fails, maybe we just leave turn as AI? 
-        # Or auto-resign AI? For now, just log and keep game ongoing.
-        pass
-
-    # --- 4. Check Endgame (AI wins?) ---
-    # new_board_ai might be undefined if AI failed
-    if ai_move_meta:
-        status, winner, reason = engine_adapter.check_endgame(game.board_state, game.player_side)
+        # --- 4. Check Endgame (AI wins?) ---
+        status, winner, reason = engine_adapter.check_endgame(new_board_ai, game.player_side)
         if status == 'finished':
             game.status = status
             game.winner = winner
             game.end_reason = reason
-            game.save()
-
-    # Return game state and LAST move (which is AI's move if it moved, or Player's if game ended)
-    last_move_info = ai_move_meta if ai_move_meta else meta
-    # We should probably return both? 
-    # Contract says "last_move". Usually the UI just wants to highlight the last action.
-    # If the user moved, and then AI moved, the UI wants to see AI's move result.
-    
-    return game, last_move_info
+            
+        game.save()
+        logger.info(f"AI move completed for game {game_id}")
+        
+    except Exception as e:
+        logger.error(f"AI Move Error for game {game_id}: {e}")
 
 def _save_move(game, move_data, side, meta):
     """Helper to save Move model."""

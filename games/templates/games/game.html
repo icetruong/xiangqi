@@ -5,31 +5,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi Game ({{ game.id }})</title>
+    <title>Xiangqi Game</title>
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <h1>Xiangqi vs AI</h1>
-    <div>
-        Game ID: {{ game.id }} <br>
-        Status: <span id="status">{{ game.status }}</span> |
-        Turn: <span id="turn">{{ game.current_turn }}</span>
-    </div>
-
-    <div class="board-container">
-        <div id="board" class="grid">
-            <!-- Board rendered by JS -->
+    <div class="main-container">
+        <!-- Left: Game Board -->
+        <div class="game-area">
+            <div class="board-wrapper">
+                <div id="board" class="xiangqi-board">
+                    <!-- Board rendered by JS -->
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div id="controls">
-        <button onclick="window.location.href='/'">New Game</button>
+        <!-- Right: Sidebar -->
+        <div class="sidebar">
+            <!-- Opponent Profile -->
+            <div class="profile-card opponent">
+                <div class="avatar">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="AI">
+                </div>
+                <div class="info">
+                    <div class="name">Computer (AI)</div>
+                    <div class="rank">Tập Sự <span class="icon">🐥</span></div>
+                    <div class="assets">💰 54K</div>
+                </div>
+            </div>
+
+            <!-- Scoreboard / Status -->
+            <div class="scoreboard">
+                <div class="title">Bảng tỷ số</div>
+                <div class="scores">
+                    <span class="side-r">帥 0</span>
+                    <span class="vs">VS</span>
+                    <span class="side-b">將 0</span>
+                </div>
+                <div id="status-display" class="status-msg">
+                    {{ game.status }}
+                </div>
+            </div>
+
+            <!-- Player Profile -->
+            <div class="profile-card player">
+                <div class="avatar">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="Player">
+                </div>
+                <div class="info">
+                    <div class="name">Player (You)</div>
+                    <div class="rank">Nhập Môn <span class="icon">🥚</span></div>
+                    <div class="assets">💰 7K</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn-game" onclick="alert('Requesting Draw...')">Cầu Hòa</button>
+                <button class="btn-game" onclick="alert('Resigning...')">Xin Thua</button>
+                <button class="btn-game" onclick="alert('Undoing...')">Xin Đi Lại</button>
+                <button class="btn-game" onclick="window.location.href='/'">Thoát</button>
+            </div>
+
+            <!-- Chat/Log Placeholder -->
+            <div class="chat-log">
+                <div class="log-entry system">System: Game Started</div>
+                <div id="game-status-log" class="log-entry">Turn: <span id="turn">{{ game.current_turn }}</span></div>
+            </div>
+        </div>
     </div>
 
     <script src="{% static 'games/js/game.js' %}"></script>
     <script>
-        // Initialize game with data from server
         document.addEventListener('DOMContentLoaded', () => {
             initGame({
                 gameId: "{{ game.id }}",

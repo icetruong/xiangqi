@@ -1,55 +1,291 @@
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+:root {
+    --bg-color: #1e3c00;
+    /* Dark Green Bamboo Forest */
+    --board-color: #DEB887;
+    /* Burlywood */
+    --board-border: #8B4513;
+    /* SaddleBrown */
+    --grid-line: #5c3a21;
+    --piece-wood: #f4dcb1;
+    --piece-wood-shadow: #cca37a;
+    --text-color: #f0f0f0;
+    --sidebar-bg: rgba(0, 0, 0, 0.6);
+    --accent-gold: #ffd700;
+}
+
 body {
-    font-family: sans-serif;
-    text-align: center;
-    background: #f0f0f0;
+    font-family: 'Noto Sans SC', sans-serif;
+    background: radial-gradient(circle, #2e5a1c 0%, #1a330a 100%);
+    color: var(--text-color);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* Prevent scrolling if possible */
 }
 
-.board-container {
-    margin: 20px auto;
-    display: inline-block;
+/* Layout */
+.main-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    width: 100%;
+    height: 95vh;
+}
+
+.game-area {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 350px;
+}
+
+/* Board Styling */
+.board-wrapper {
+    padding: 15px;
+    background: #5d3a1a;
+    /* Dark border wood */
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.xiangqi-board {
+    width: 540px;
+    /* 9 cols * 60px */
+    height: 600px;
+    /* 10 rows * 60px */
     position: relative;
-}
-
-.grid {
+    background-color: var(--board-color);
+    /* Wood texture */
+    background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0px, rgba(255, 255, 255, 0.05) 2px, transparent 2px, transparent 4px);
+    border: 2px solid var(--board-border);
     display: grid;
     grid-template-columns: repeat(9, 60px);
     grid-template-rows: repeat(10, 60px);
-    gap: 0;
-    background: #eebb99;
-    border: 2px solid #8b4513;
 }
+
+/* Grid Lines drawn via gradients or pseudo-elements would be complex.
+   Let's use a background image for grid lines for simplicity properly,
+   OR we can stick to the grid cells having borders if we are careful.
+   Previous simplified version used borders.
+   Let's try a cleaner approach: Pseudo-grid.
+   Actually, the previous CSS used cells with borders.
+   Let's keep the Cells as containers for pieces, but draw lines on the board background.
+*/
+
+.xiangqi-board::before {
+    /* Horizontal lines */
+    content: "";
+    position: absolute;
+    top: 29px;
+    left: 29px;
+    right: 29px;
+    bottom: 29px;
+    background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    background-position: 0 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* The River */
+.xiangqi-board::after {
+    content: "楚 河             漢 界";
+    position: absolute;
+    top: 270px;
+    /* Between row 4 and 5 (0-indexed 0,1,2,3,4) -> 4*60 + 30 = 270 center? No.
+                   Rows 0-4 are top half. 5-9 bottom.
+                   Gap is between row index 4 and 5.
+                   Top half height: 5 * 60 = 300px.
+                   Wait, Xiangqi board lines don't cross the river vertically except sides.
+                   The grid gradient above draws lines everywhere.
+                   We need to mask the vertical lines in the river.
+                */
+    left: 30px;
+    right: 30px;
+    height: 58px;
+    background-color: var(--board-color);
+    /* Cover grid lines */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-family: 'Ma Shan Zheng', cursive;
+    color: var(--grid-line);
+    font-size: 24px;
+    z-index: 0;
+}
+
+/* Fix vertical lines on sides crossing river */
+/* Actually, simply drawing a board image is easier.
+   But let's stick to CSS.
+   Real board: V-lines stop at river, except left/right edge.
+   We can add a blocker.
+*/
 
 .cell {
     width: 60px;
     height: 60px;
+    position: relative;
+    z-index: 1;
+    /* Above lines */
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    border: 1px dotted rgba(0, 0, 0, 0.1);
-    font-size: 24px;
-    cursor: pointer;
 }
 
+/* Highlight */
 .cell.selected {
     background-color: rgba(0, 255, 0, 0.3);
+    box-shadow: 0 0 10px #0f0;
 }
 
 .cell.last-move {
     background-color: rgba(255, 255, 0, 0.3);
 }
 
-/* Piece styling */
+/* Pieces */
 .piece {
-    width: 50px;
-    height: 50px;
-    /* border-radius: 50%; No longer needed for IMG */
-    /* display: flex; ... removed */
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    /* Keep round shadow */
-    user-select: none;
-    cursor: pointer;
+    background: radial-gradient(circle at 30% 30%, var(--piece-wood), var(--piece-wood-shadow));
+    box-shadow:
+        2px 2px 5px rgba(0, 0, 0, 0.5),
+        inset -2px -2px 5px rgba(0, 0, 0, 0.2);
+    border: 2px solid #5c3a21;
+    box-sizing: border-box;
+    /* We need to apply the image on top or use the SVG as background */
+    /* If using IMG tag, the src is SVG. */
+    /* Let's make the IMG transparent and put details there, 
+       OR just style the IMG container if it is one. 
+       In game.js we create an IMG tag.
+    */
+    background-color: #eebb99;
+    /* Fallback */
+    transform: rotateX(10deg);
+    /* Slight 3D tilt */
+    transition: transform 0.2s;
 }
 
-/* Colors handled by SVG now */
+.piece:hover {
+    transform: scale(1.1) translateY(-2px);
+    z-index: 10;
+}
+
+/* Sidebar Components */
+.profile-card {
+    background: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), #8B4513;
+    /* Wood texture substitute */
+    background-blend-mode: multiply;
+    border: 2px solid #5a3210;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    color: #ffd700;
+}
+
+.avatar img {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    border: 2px solid #ffd700;
+    background: #fff;
+}
+
+.info .name {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.info .rank {
+    font-size: 0.9em;
+    color: #ddd;
+}
+
+.scoreboard {
+    background: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), #5d3a1a;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    border: 2px solid #ffd700;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    color: #fff;
+}
+
+.scoreboard .title {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 1.5em;
+    color: #ffd700;
+    margin-bottom: 5px;
+}
+
+.scoreboard .scores {
+    font-size: 1.5em;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.status-msg {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #ffcc99;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-game {
+    background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
+    border: 1px solid #777;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.2s;
+    font-size: 0.9em;
+    min-width: 80px;
+}
+
+.btn-game:hover {
+    background: linear-gradient(to bottom, #666, #444);
+    transform: scale(1.05);
+}
+
+.chat-log {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    padding: 10px;
+    flex: 1;
+    overflow-y: auto;
+    font-size: 0.85em;
+    color: #bbb;
+}
+
+.log-entry.system {
+    color: #88cc88;
+}

@@ -10,8 +10,9 @@ let selectedCell = null;
 
 // DOM Elements
 const boardEl = document.getElementById('board');
-const statusEl = document.getElementById('status');
-const turnEl = document.getElementById('turn');
+const statusDisplay = document.getElementById('status-display');
+const gameStatusLog = document.getElementById('game-status-log');
+const chatLog = document.querySelector('.chat-log');
 
 // CSRF Helper
 function getCookie(name) {
@@ -39,6 +40,7 @@ function initGame(config) {
     // aiSide = config.aiSide;
 
     renderBoard();
+    updateStatusUI();
 }
 
 function renderBoard() {
@@ -57,7 +59,7 @@ function renderBoard() {
             if (lastMove) {
                 if ((lastMove.from[0] === r && lastMove.from[1] === c) ||
                     (lastMove.to[0] === r && lastMove.to[1] === c)) {
-                    cell.style.backgroundColor = "rgba(255, 255, 0, 0.2)";
+                    cell.classList.add('last-move');
                 }
             }
 
@@ -66,8 +68,7 @@ function renderBoard() {
                 const img = document.createElement('img');
                 img.src = `/static/games/pieces/${pieceCode}.svg`;
                 img.className = 'piece';
-                img.style.width = '50px';
-                img.style.height = '50px';
+                // Inline styles removed in favor of CSS
                 cell.appendChild(img);
             }
 
@@ -103,6 +104,8 @@ async function handleCellClick(r, c) {
         }
 
         // Attempt move
+        if (currentTurn !== playerSide) return; // Only allow move if it is my turn
+
         const moveData = {
             from: selectedCell,
             to: [r, c]
@@ -132,17 +135,12 @@ async function sendMove(move) {
 
         const data = await res.json();
         if (data.ok) {
-            boardState = data.board_state;
-            currentTurn = data.current_turn;
-            status = data.status;
-            statusEl.innerText = status;
-            turnEl.innerText = currentTurn;
-            lastMove = data.last_move;
+            updateGameState(data);
+            logMove(move, "Player");
 
-            renderBoard();
-
-            if (status === 'finished') {
-                setTimeout(() => alert(`Game Over! Winner: ${data.winner}`), 100);
+            if (data.status === 'ongoing' && data.current_turn !== playerSide) {
+                // AI is thinking...
+                startPolling();
             }
         } else {
             alert(`Error: ${data.message}`);
@@ -151,4 +149,81 @@ async function sendMove(move) {
         console.error(err);
         alert("Server error");
     }
+}
+
+function updateGameState(data) {
+    boardState = data.board_state;
+    currentTurn = data.current_turn;
+    status = data.status;
+    lastMove = data.last_move;
+
+    updateStatusUI();
+    renderBoard();
+
+    if (lastMove && currentTurn === playerSide) {
+        // If it's now my turn, logging the LAST move means logging what just happened (AI move)
+        logMove({ from: lastMove.from, to: lastMove.to }, "AI");
+    }
+
+    if (status === 'finished') {
+        setTimeout(() => alert(`Game Over! Winner: ${data.winner}`), 100);
+        logSystem(`Game Over. Winner: ${data.winner}`);
+    }
+}
+
+function updateStatusUI() {
+    if (statusDisplay) {
+        let text = status === 'ongoing' ? "Playing" : "Finished";
+        if (status === 'ongoing') {
+            text += currentTurn === playerSide ? " (Your Turn)" : " (Thinking...)";
+        }
+        statusDisplay.innerText = text;
+    }
+    if (gameStatusLog) {
+        // gameStatusLog.innerText = `Turn: ${currentTurn}`;
+    }
+}
+
+function logMove(move, who) {
+    if (!chatLog) return;
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    // Simple coordinate log
+    entry.innerText = `${who}: (${move.from}) → (${move.to})`;
+    chatLog.appendChild(entry);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function logSystem(msg) {
+    if (!chatLog) return;
+    const entry = document.createElement('div');
+    entry.className = 'log-entry system';
+    entry.innerText = `System: ${msg}`;
+    chatLog.appendChild(entry);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+let pollInterval = null;
+
+function startPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    updateStatusUI(); // Update to "Thinking..."
+
+    pollInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`/api/games/${gameId}/`);
+            const data = await res.json();
+
+            if (data.ok) {
+                // Check if turn changed back to player OR game ended
+                if (data.current_turn === playerSide || data.status === 'finished') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    updateGameState(data);
+                }
+            }
+        } catch (err) {
+            console.error("Polling error", err);
+        }
+    }, 1000);
 }
