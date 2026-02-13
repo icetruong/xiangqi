@@ -137,6 +137,70 @@ body {
    We can add a blocker.
 */
 
+/* Board Decorations (Palace Lines) */
+.board-decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.board-decorations::before,
+.board-decorations::after {
+    content: "";
+    position: absolute;
+    width: 120px;
+    /* 2 cols * 60 */
+    height: 120px;
+    /* 2 rows * 60 */
+    /* Wait, palace is 3x3 cells, but the X crosses 2x2 squares inside?
+       No, Xiangqi palace is 3x3 points. But the X connects the corners.
+       Top-left: (3,0) to Center (4,1) to Bottom-right (5,2).
+       Coordinates: Col 3 to 5 (indices). Width = 2 * 60 = 120px.
+       Height = 2 * 60 = 120px.
+       Top-Left of palace is at Col 3 line, Row 0 line.
+       In pixels: Left = 3 * 60 + 30 (offset)? 
+       Grid lines are at: 30, 90, 150...
+       Col 3 line is at 30 + 3*60 = 210px? 
+       Wait, let's check grid definition.
+       grid-template-columns: repeat(9, 60px);
+       Cell centers are at 30, 90, 150.
+       Lines are borders of cells? No, we used a gradient background for lines.
+       "left: 29px" for lines container.
+       Col 0 line is at 30px (center of cell 0).
+       Col 3 line is at 30 + 3*60 = 210px.
+       Col 5 line is at 30 + 5*60 = 330px.
+       Width = 120px.
+       Row 0 line is at 30px.
+       Row 2 line is at 30 + 2*60 = 150px.
+       So Top Palace Box: Left 210px, Top 30px, Width 120px, Height 120px.
+    */
+    left: 210px;
+    border: 2px solid transparent;
+    /* Use linear gradient for X */
+    background:
+        linear-gradient(to top right, transparent calc(50% - 2px), var(--grid-line) 50%, transparent calc(50% + 2px)),
+        linear-gradient(to top left, transparent calc(50% - 2px), var(--grid-line) 50%, transparent calc(50% + 2px));
+    z-index: 0;
+}
+
+.board-decorations::before {
+    /* Top Palace */
+    top: 30px;
+}
+
+.board-decorations::after {
+    /* Bottom Palace */
+    /* Row 7 line is at 30 + 7*60 = 450px.
+       Row 9 line is at 30 + 9*60 = 570px.
+       Top: 450px.
+    */
+    top: 450px;
+}
+
 .cell {
     width: 60px;
     height: 60px;
@@ -150,12 +214,31 @@ body {
 
 /* Highlight */
 .cell.selected {
-    background-color: rgba(0, 255, 0, 0.3);
-    box-shadow: 0 0 10px #0f0;
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    z-index: 100;
+}
+
+/* Target the piece inside selected cell */
+.cell.selected .piece {
+    transform: scale(1.15) translateY(-8px);
+    filter: brightness(1.2) contrast(1.1) drop-shadow(0 10px 10px rgba(0, 0, 0, 0.5));
+    z-index: 100;
+    /* Optional: subtle border on piece */
+    border: 2px solid rgba(255, 215, 0, 0.5);
 }
 
 .cell.last-move {
-    background-color: rgba(255, 255, 0, 0.3);
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.cell.palace {
+    /* Deprecated, remove style */
+    background: none;
+    border: none;
 }
 
 /* Pieces */
