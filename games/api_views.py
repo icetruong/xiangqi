@@ -51,6 +51,12 @@ def game_detail(request, game_id):
             "captured": last_move.captured
         }
 
+    # Get legal moves if it's player's turn
+    legal_moves = []
+    if game.status == 'ongoing' and game.current_turn == game.player_side:
+        from games.services import engine_adapter
+        legal_moves = engine_adapter.list_legal_moves(game.board_state, game.player_side)
+
     return Response({
         "ok": True,
         "game_id": game.id,
@@ -59,7 +65,8 @@ def game_detail(request, game_id):
         "status": game.status,
         "winner": game.winner,
         "end_reason": game.end_reason,
-        "last_move": last_move_data
+        "last_move": last_move_data,
+        "legal_moves": legal_moves
     })
 
 @api_view(['POST'])

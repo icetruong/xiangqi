@@ -21,4 +21,10 @@ def index(request):
 def game_board(request, game_id):
     # Verify game exists
     game = get_object_or_404(Game, id=game_id)
-    return render(request, 'games/game.html', {'game': game})
+    
+    legal_moves = []
+    if game.status == 'ongoing' and game.current_turn == game.player_side:
+        from games.services import engine_adapter
+        legal_moves = engine_adapter.list_legal_moves(game.board_state, game.player_side)
+        
+    return render(request, 'games/game.html', {'game': game, 'legal_moves': legal_moves})

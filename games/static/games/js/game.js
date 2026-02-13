@@ -7,6 +7,7 @@ let playerSide = "";
 let aiSide = "";
 let lastMove = null;
 let selectedCell = null;
+let legalMoves = [];
 
 // DOM Elements
 const boardEl = document.getElementById('board');
@@ -38,6 +39,7 @@ function initGame(config) {
     status = config.status;
     playerSide = config.playerSide;
     // aiSide = config.aiSide;
+    legalMoves = config.legalMoves || [];
 
     renderBoard();
     updateStatusUI();
@@ -76,6 +78,27 @@ function renderBoard() {
             boardEl.appendChild(cell);
         }
     }
+
+    // Render Hints
+    if (selectedCell) {
+        renderHints();
+    }
+}
+
+function renderHints() {
+    if (!selectedCell) return;
+
+    const [r, c] = selectedCell;
+    const moves = legalMoves.filter(m => m.from[0] === r && m.from[1] === c);
+
+    moves.forEach(m => {
+        const targetCell = boardEl.querySelector(`.cell[data-row="${m.to[0]}"][data-col="${m.to[1]}"]`);
+        if (targetCell) {
+            const dot = document.createElement('div');
+            dot.className = 'hint-dot';
+            targetCell.appendChild(dot);
+        }
+    });
 }
 
 async function handleCellClick(r, c) {
@@ -156,6 +179,7 @@ function updateGameState(data) {
     currentTurn = data.current_turn;
     status = data.status;
     lastMove = data.last_move;
+    legalMoves = data.legal_moves || [];
 
     updateStatusUI();
     renderBoard();

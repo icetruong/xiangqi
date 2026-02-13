@@ -87,7 +87,8 @@
             currentTurn: "{{ game.current_turn }}",
             status: "{{ game.status }}",
             playerSide: "{{ game.player_side }}",
-            aiSide: "{{ game.ai_side }}"
+            aiSide: "{{ game.ai_side }}",
+            legalMoves: {{ legal_moves|default:"[]"|safe }}
             });
         });
     </script>
