@@ -39,27 +39,17 @@ body {
     background-color: rgba(255, 255, 0, 0.3);
 }
 
-/* Simple piece styling for MVP without images */
+/* Piece styling */
 .piece {
     width: 50px;
     height: 50px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
+    /* border-radius: 50%; No longer needed for IMG */
+    /* display: flex; ... removed */
     box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    /* Keep round shadow */
     user-select: none;
+    cursor: pointer;
 }
 
-.piece.r {
-    background: #ffcccc;
-    color: #cc0000;
-    border: 2px solid #cc0000;
-}
-
-.piece.b {
-    background: #ccccff;
-    color: #000033;
-    border: 2px solid #000033;
-}
+/* Colors handled by SVG now */

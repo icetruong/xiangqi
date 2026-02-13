@@ -63,12 +63,12 @@ function renderBoard() {
 
             const pieceCode = boardState[r][c];
             if (pieceCode) {
-                const color = pieceCode[0];
-                const type = pieceCode.substring(1);
-                const pDiv = document.createElement('div');
-                pDiv.className = `piece ${color}`;
-                pDiv.innerText = type;
-                cell.appendChild(pDiv);
+                const img = document.createElement('img');
+                img.src = `/static/games/pieces/${pieceCode}.svg`;
+                img.className = 'piece';
+                img.style.width = '50px';
+                img.style.height = '50px';
+                cell.appendChild(img);
             }
 
             cell.onclick = () => handleCellClick(r, c);

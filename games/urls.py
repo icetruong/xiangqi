@@ -5,6 +5,7 @@ app_name = 'games'
 
 urlpatterns = [
     # Template Views
+    path('', views.index, name='index'),
     path('game/<uuid:game_id>/', views.game_board, name='game_board'),
 
     # API Endpoints
