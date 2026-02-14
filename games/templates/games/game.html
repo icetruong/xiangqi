@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,37 +7,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xiangqi Game</title>
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="main-container">
-        <!-- Left: Game Board -->
         <div class="game-area">
             <div class="board-wrapper">
-                <div id="board" class="xiangqi-board">
-                    <!-- Board Decorations (Palace Lines) -->
-                    <div class="board-decorations"></div>
-                    <!-- Board rendered by JS -->
-                </div>
+                <div class="board-inner" id="board"></div>
             </div>
         </div>
 
-        <!-- Right: Sidebar -->
         <div class="sidebar">
-            <!-- Opponent Profile -->
             <div class="profile-card opponent">
                 <div class="avatar">
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="AI">
                 </div>
                 <div class="info">
                     <div class="name">Computer (AI)</div>
-                    <div class="rank">Tập Sự <span class="icon">🐥</span></div>
-                    <div class="assets">💰 54K</div>
+                    <div class="rank">Tập Sự <span class="icon"></span></div>
+                    <div class="assets"> 54K</div>
                 </div>
             </div>
 
-            <!-- Scoreboard / Status -->
             <div class="scoreboard">
                 <div class="title">Bảng tỷ số</div>
                 <div class="scores">
@@ -50,19 +42,17 @@
                 </div>
             </div>
 
-            <!-- Player Profile -->
             <div class="profile-card player">
                 <div class="avatar">
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="Player">
                 </div>
                 <div class="info">
                     <div class="name">Player (You)</div>
-                    <div class="rank">Nhập Môn <span class="icon">🥚</span></div>
-                    <div class="assets">💰 7K</div>
+                    <div class="rank">Nhập Môn <span class="icon"></span></div>
+                    <div class="assets"> 7K</div>
                 </div>
             </div>
 
-            <!-- Controls -->
             <div class="controls">
                 <button class="btn-game" onclick="alert('Requesting Draw...')">Cầu Hòa</button>
                 <button class="btn-game" onclick="alert('Resigning...')">Xin Thua</button>
@@ -70,7 +60,6 @@
                 <button class="btn-game" onclick="window.location.href='/'">Thoát</button>
             </div>
 
-            <!-- Chat/Log Placeholder -->
             <div class="chat-log">
                 <div class="log-entry system">System: Game Started</div>
                 <div id="game-status-log" class="log-entry">Turn: <span id="turn">{{ game.current_turn }}</span></div>
@@ -80,15 +69,16 @@
 
     <script src="{% static 'games/js/game.js' %}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
+            var movesData = {{ legal_moves|default:"[]"|safe }};
             initGame({
                 gameId: "{{ game.id }}",
-                boardState: {{ game.board_state | safe }},
-            currentTurn: "{{ game.current_turn }}",
-            status: "{{ game.status }}",
-            playerSide: "{{ game.player_side }}",
-            aiSide: "{{ game.ai_side }}",
-            legalMoves: {{ legal_moves|default:"[]"|safe }}
+                boardState: {{ game.board_state|safe }},
+                currentTurn: "{{ game.current_turn }}",
+                status: "{{ game.status }}",
+                playerSide: "{{ game.player_side }}",
+                aiSide: "{{ game.ai_side }}",
+                legalMoves: movesData
             });
         });
     </script>

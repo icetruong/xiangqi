@@ -1,23 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
 
+/* ─────────────── Design Tokens ─────────────── */
 :root {
-    --bg-color: #1e3c00;
-    /* Dark Green Bamboo Forest */
-    --board-color: #DEB887;
-    /* Burlywood */
-    --board-border: #8B4513;
-    /* SaddleBrown */
-    --grid-line: #5c3a21;
-    --piece-wood: #f4dcb1;
-    --piece-wood-shadow: #cca37a;
+    /* Page */
+    --bg-color: #2a120b;
     --text-color: #f0f0f0;
-    --sidebar-bg: rgba(0, 0, 0, 0.6);
+
+    /* Board */
+    --board-bg: #e8c88a;
+    --board-bg-light: #f0dca8;
+    --board-frame: #c4a060;
+    --board-frame-dark: #8b6530;
+    --grid-stroke: #8b6c42;
+
+    /* Pieces */
+    --piece-red-outer: #b5372a;
+    --piece-red-inner: #d04a3a;
+    --piece-red-highlight: #e86050;
+    --piece-black-outer: #2c2c2c;
+    --piece-black-inner: #4a4a4a;
+    --piece-black-highlight: #666;
+    --piece-rim: #f5e6c8;
+    --piece-size-ratio: 0.82;
+
+    /* Interaction */
+    --highlight-gold: #f0b429;
+    --hint-orange: #e67e22;
     --accent-gold: #ffd700;
+    --accent-orange: #d4862b;
+
+    /* Sidebar */
+    --sidebar-bg: rgba(0, 0, 0, 0.6);
 }
 
+/* ─────────────── Base ─────────────── */
 body {
     font-family: 'Noto Sans SC', sans-serif;
-    background: radial-gradient(circle, #2e5a1c 0%, #1a330a 100%);
+    background:
+        radial-gradient(ellipse 80% 80% at 50% 50%,
+            transparent 40%,
+            rgba(0, 0, 0, 0.65) 100%),
+        radial-gradient(ellipse at 50% 40%,
+            #4b2416 0%,
+            #2a120b 70%);
     color: var(--text-color);
     margin: 0;
     min-height: 100vh;
@@ -25,10 +50,9 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    /* Prevent scrolling if possible */
 }
 
-/* Layout */
+/* ─────────────── Layout ─────────────── */
 .main-container {
     display: flex;
     gap: 20px;
@@ -53,239 +77,242 @@ body {
     max-width: 350px;
 }
 
-/* Board Styling */
+/* ─────────────── Board Wrapper (Wood Frame) ─────────────── */
 .board-wrapper {
-    padding: 15px;
-    background: #5d3a1a;
-    /* Dark border wood */
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.xiangqi-board {
-    width: 540px;
-    /* 9 cols * 60px */
-    height: 600px;
-    /* 10 rows * 60px */
+    padding: 28px;
+    background:
+        /* subtle wood grain */
+        repeating-linear-gradient(92deg,
+            rgba(0, 0, 0, 0.04) 0px,
+            rgba(0, 0, 0, 0.04) 1px,
+            transparent 1px,
+            transparent 7px),
+        repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.02) 0px,
+            rgba(0, 0, 0, 0.02) 1px,
+            transparent 1px,
+            transparent 14px),
+        linear-gradient(160deg, #d4b896 0%, #c4a87a 40%, #b8985a 100%);
+    border-radius: 16px;
+    box-shadow:
+        /* outer drop shadow */
+        0 12px 40px rgba(0, 0, 0, 0.55),
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        /* top highlight rim */
+        inset 0 2px 0 rgba(255, 255, 255, 0.25),
+        /* inner shadow for depth */
+        inset 0 -2px 6px rgba(0, 0, 0, 0.15);
     position: relative;
-    background-color: var(--board-color);
-    /* Wood texture */
-    background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0px, rgba(255, 255, 255, 0.05) 2px, transparent 2px, transparent 4px);
-    border: 2px solid var(--board-border);
-    display: grid;
-    grid-template-columns: repeat(9, 60px);
-    grid-template-rows: repeat(10, 60px);
 }
 
-/* Grid Lines drawn via gradients or pseudo-elements would be complex.
-   Let's use a background image for grid lines for simplicity properly,
-   OR we can stick to the grid cells having borders if we are careful.
-   Previous simplified version used borders.
-   Let's try a cleaner approach: Pseudo-grid.
-   Actually, the previous CSS used cells with borders.
-   Let's keep the Cells as containers for pieces, but draw lines on the board background.
-*/
-
-.xiangqi-board::before {
-    /* Horizontal lines */
+/* Inner reddish-brown border line */
+.board-wrapper::before {
     content: "";
     position: absolute;
-    top: 29px;
-    left: 29px;
-    right: 29px;
-    bottom: 29px;
-    background-image:
-        linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 60px 60px;
-    background-position: 0 0;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    border: 2.5px solid var(--board-frame-dark);
+    border-radius: 10px;
     pointer-events: none;
     z-index: 0;
 }
 
-/* The River */
-.xiangqi-board::after {
-    content: "楚 河             漢 界";
-    position: absolute;
-    top: 270px;
-    /* Between row 4 and 5 (0-indexed 0,1,2,3,4) -> 4*60 + 30 = 270 center? No.
-                   Rows 0-4 are top half. 5-9 bottom.
-                   Gap is between row index 4 and 5.
-                   Top half height: 5 * 60 = 300px.
-                   Wait, Xiangqi board lines don't cross the river vertically except sides.
-                   The grid gradient above draws lines everywhere.
-                   We need to mask the vertical lines in the river.
-                */
-    left: 30px;
-    right: 30px;
-    height: 58px;
-    background-color: var(--board-color);
-    /* Cover grid lines */
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    font-family: 'Ma Shan Zheng', cursive;
-    color: var(--grid-line);
-    font-size: 24px;
-    z-index: 0;
+/* ─────────────── Board Inner (Grid Area) ─────────────── */
+.board-inner {
+    position: relative;
+    background:
+        /* subtle wood texture */
+        repeating-linear-gradient(90deg,
+            rgba(0, 0, 0, 0.02) 0px,
+            rgba(0, 0, 0, 0.02) 1px,
+            transparent 1px,
+            transparent 5px),
+        repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.012) 0px,
+            rgba(0, 0, 0, 0.012) 1px,
+            transparent 1px,
+            transparent 9px),
+        linear-gradient(180deg, var(--board-bg-light) 0%, var(--board-bg) 50%, var(--board-bg-light) 100%);
+    border: 2px solid var(--board-frame-dark);
+    border-radius: 4px;
+    /* Dimensions set by JS via CSS custom properties */
+    overflow: visible;
 }
 
-/* Fix vertical lines on sides crossing river */
-/* Actually, simply drawing a board image is easier.
-   But let's stick to CSS.
-   Real board: V-lines stop at river, except left/right edge.
-   We can add a blocker.
-*/
-
-/* Board Decorations (Palace Lines) */
-.board-decorations {
+/* ─────────────── SVG Grid Overlay ─────────────── */
+.board-svg {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 0;
-}
-
-.board-decorations::before,
-.board-decorations::after {
-    content: "";
-    position: absolute;
-    width: 120px;
-    /* 2 cols * 60 */
-    height: 120px;
-    /* 2 rows * 60 */
-    /* Wait, palace is 3x3 cells, but the X crosses 2x2 squares inside?
-       No, Xiangqi palace is 3x3 points. But the X connects the corners.
-       Top-left: (3,0) to Center (4,1) to Bottom-right (5,2).
-       Coordinates: Col 3 to 5 (indices). Width = 2 * 60 = 120px.
-       Height = 2 * 60 = 120px.
-       Top-Left of palace is at Col 3 line, Row 0 line.
-       In pixels: Left = 3 * 60 + 30 (offset)? 
-       Grid lines are at: 30, 90, 150...
-       Col 3 line is at 30 + 3*60 = 210px? 
-       Wait, let's check grid definition.
-       grid-template-columns: repeat(9, 60px);
-       Cell centers are at 30, 90, 150.
-       Lines are borders of cells? No, we used a gradient background for lines.
-       "left: 29px" for lines container.
-       Col 0 line is at 30px (center of cell 0).
-       Col 3 line is at 30 + 3*60 = 210px.
-       Col 5 line is at 30 + 5*60 = 330px.
-       Width = 120px.
-       Row 0 line is at 30px.
-       Row 2 line is at 30 + 2*60 = 150px.
-       So Top Palace Box: Left 210px, Top 30px, Width 120px, Height 120px.
-    */
-    left: 210px;
-    border: 2px solid transparent;
-    /* Use linear gradient for X */
-    background:
-        linear-gradient(to top right, transparent calc(50% - 2px), var(--grid-line) 50%, transparent calc(50% + 2px)),
-        linear-gradient(to top left, transparent calc(50% - 2px), var(--grid-line) 50%, transparent calc(50% + 2px));
-    z-index: 0;
-}
-
-.board-decorations::before {
-    /* Top Palace */
-    top: 30px;
-}
-
-.board-decorations::after {
-    /* Bottom Palace */
-    /* Row 7 line is at 30 + 7*60 = 450px.
-       Row 9 line is at 30 + 9*60 = 570px.
-       Top: 450px.
-    */
-    top: 450px;
-}
-
-.cell {
-    width: 60px;
-    height: 60px;
-    position: relative;
     z-index: 1;
-    /* Above lines */
+}
+
+/* ─────────────── Pieces ─────────────── */
+.piece {
+    position: absolute;
+    z-index: 5;
+    border-radius: 50%;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+
+    /* Double-ring coin effect via box-shadow */
+    transition:
+        transform 0.18s cubic-bezier(.25, .8, .25, 1),
+        box-shadow 0.18s cubic-bezier(.25, .8, .25, 1),
+        filter 0.18s ease,
+        left 0.3s ease,
+        top 0.3s ease;
 }
 
-/* Highlight */
-.cell.selected {
-    background: none !important;
-    box-shadow: none !important;
-    border: none !important;
-    z-index: 100;
-}
-
-/* Target the piece inside selected cell */
-.cell.selected .piece {
-    transform: scale(1.15) translateY(-8px);
-    filter: brightness(1.2) contrast(1.1) drop-shadow(0 10px 10px rgba(0, 0, 0, 0.5));
-    z-index: 100;
-    /* Optional: subtle border on piece */
-    border: 2px solid rgba(255, 215, 0, 0.5);
-}
-
-.cell.last-move {
-    background: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-.cell.palace {
-    /* Deprecated, remove style */
-    background: none;
-    border: none;
-}
-
-/* Move Hints */
-.hint-dot {
-    width: 12px;
-    height: 12px;
-    background-color: rgba(0, 255, 0, 0.5);
-    border-radius: 50%;
-    position: absolute;
-    z-index: 50;
-    pointer-events: none;
-    box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-}
-
-/* Pieces */
-.piece {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, var(--piece-wood), var(--piece-wood-shadow));
+/* Red pieces */
+.piece-red {
+    background: radial-gradient(circle at 38% 32%,
+            var(--piece-red-highlight) 0%,
+            var(--piece-red-inner) 40%,
+            var(--piece-red-outer) 100%);
     box-shadow:
-        2px 2px 5px rgba(0, 0, 0, 0.5),
-        inset -2px -2px 5px rgba(0, 0, 0, 0.2);
-    border: 2px solid #5c3a21;
-    box-sizing: border-box;
-    /* We need to apply the image on top or use the SVG as background */
-    /* If using IMG tag, the src is SVG. */
-    /* Let's make the IMG transparent and put details there, 
-       OR just style the IMG container if it is one. 
-       In game.js we create an IMG tag.
-    */
-    background-color: #eebb99;
-    /* Fallback */
-    transform: rotateX(10deg);
-    /* Slight 3D tilt */
-    transition: transform 0.2s;
+        /* outer colored ring */
+        0 0 0 3px var(--piece-red-outer),
+        /* cream inner ring */
+        0 0 0 5px var(--piece-rim),
+        /* outer border */
+        0 0 0 6px #8b1a1a,
+        /* drop shadow */
+        0 4px 10px rgba(0, 0, 0, 0.4),
+        /* inner gloss */
+        inset 0 2px 4px rgba(255, 255, 255, 0.25),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+    color: #fff;
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.5),
+        0 0 8px rgba(255, 200, 200, 0.3);
 }
 
+/* Black pieces */
+.piece-black {
+    background: radial-gradient(circle at 38% 32%,
+            var(--piece-black-highlight) 0%,
+            var(--piece-black-inner) 40%,
+            var(--piece-black-outer) 100%);
+    box-shadow:
+        /* outer colored ring */
+        0 0 0 3px var(--piece-black-outer),
+        /* cream inner ring */
+        0 0 0 5px var(--piece-rim),
+        /* outer border */
+        0 0 0 6px #111,
+        /* drop shadow */
+        0 4px 10px rgba(0, 0, 0, 0.5),
+        /* inner gloss */
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    color: #e8e0d0;
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.6),
+        0 0 6px rgba(200, 200, 200, 0.2);
+}
+
+/* Piece text (Chinese character) */
+.piece-text {
+    font-family: 'Ma Shan Zheng', 'KaiTi', 'SimKai', 'STKaiti', serif;
+    font-weight: bold;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* ─── Piece Hover ─── */
 .piece:hover {
-    transform: scale(1.1) translateY(-2px);
+    transform: translateY(-2px);
+    filter: brightness(1.08);
     z-index: 10;
 }
 
-/* Sidebar Components */
+.piece-red:hover {
+    box-shadow:
+        0 0 0 3px var(--piece-red-outer),
+        0 0 0 5px var(--piece-rim),
+        0 0 0 6px #8b1a1a,
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.25),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.piece-black:hover {
+    box-shadow:
+        0 0 0 3px var(--piece-black-outer),
+        0 0 0 5px var(--piece-rim),
+        0 0 0 6px #111,
+        0 6px 16px rgba(0, 0, 0, 0.6),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Piece Selected ─── */
+.piece.selected {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    z-index: 20;
+}
+
+.piece-red.selected {
+    box-shadow:
+        0 0 0 3px var(--piece-red-outer),
+        0 0 0 5px var(--piece-rim),
+        0 0 0 6px #8b1a1a,
+        /* Golden glow ring */
+        0 0 0 9px var(--highlight-gold),
+        0 0 18px rgba(240, 180, 41, 0.5),
+        0 6px 16px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(255, 255, 255, 0.25),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.piece-black.selected {
+    box-shadow:
+        0 0 0 3px var(--piece-black-outer),
+        0 0 0 5px var(--piece-rim),
+        0 0 0 6px #111,
+        /* Golden glow ring */
+        0 0 0 9px var(--highlight-gold),
+        0 0 18px rgba(240, 180, 41, 0.5),
+        0 6px 16px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Legal Move Hint Dots ─── */
+.hint-dot {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
+    border-radius: 50%;
+    background: var(--hint-orange);
+    opacity: 0.8;
+    box-shadow: 0 0 6px rgba(230, 126, 34, 0.5);
+}
+
+/* ─── Last Move Indicator ─── */
+.last-move-marker {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: 50%;
+    border: 2.5px solid rgba(240, 180, 41, 0.5);
+    background: rgba(240, 180, 41, 0.08);
+}
+
+/* ─────────────── Sidebar Components ─────────────── */
 .profile-card {
     background: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), #8B4513;
-    /* Wood texture substitute */
     background-blend-mode: multiply;
     border: 2px solid #5a3210;
     border-radius: 10px;
