@@ -39,6 +39,20 @@ const statusDisplay = document.getElementById('status-display');
 const gameStatusLog = document.getElementById('game-status-log');
 const chatLog = document.querySelector('.chat-log');
 
+// ── Board Interaction ──
+boardEl.addEventListener('click', function (e) {
+    const rect = boardEl.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const c = Math.round((x - BOARD_PAD) / CELL_SIZE);
+    const r = Math.round((y - BOARD_PAD) / CELL_SIZE);
+
+    if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+        handleCellClick(r, c);
+    }
+});
+
 // ── CSRF ──
 function getCookie(name) {
     let cookieValue = null;
