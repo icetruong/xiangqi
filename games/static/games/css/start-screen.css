@@ -1,0 +1,547 @@
+/* Traditional Chinese Luxury Start Screen */
+
+:root {
+    --mahogany-dark: #3e2723;
+    --mahogany-medium: #5d4037;
+    --mahogany-light: #795548;
+    --cream-silk: #f5f0e8;
+    --cream-dark: #e8dfc8;
+    --brass-gold: #b8860b;
+    --gold-bright: #ffd700;
+    --red-lacquer: #c41e3a;
+    --red-lacquer-dark: #8b1529;
+    --text-dark: #2c1810;
+    --ornament-brown: #6d4c41;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Serif SC', serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Mahogany Wood Background with Rich Grain */
+.wood-background {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: 
+        linear-gradient(135deg, rgba(62, 39, 35, 0.8) 0%, rgba(93, 64, 55, 0.6) 50%, rgba(62, 39, 35, 0.8) 100%),
+        repeating-linear-gradient(90deg, 
+            rgba(121, 85, 72, 0.1) 0px, 
+            rgba(93, 64, 55, 0.2) 2px, 
+            rgba(62, 39, 35, 0.1) 4px,
+            rgba(93, 64, 55, 0.2) 6px,
+            rgba(121, 85, 72, 0.1) 8px,
+            transparent 8px,
+            transparent 200px
+        ),
+        radial-gradient(ellipse at 30% 40%, #5d4037 0%, #3e2723 60%);
+    background-size: 100% 100%, 100% 100%, 100% 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Subtle carved ornamental borders */
+.border-ornament {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background-image: radial-gradient(circle, rgba(121, 85, 72, 0.4) 0%, transparent 70%);
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.border-ornament.top-left {
+    top: -20px;
+    left: -20px;
+    background-image: 
+        linear-gradient(135deg, rgba(109, 76, 65, 0.5) 0%, transparent 50%),
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(121, 85, 72, 0.1) 10px, rgba(121, 85, 72, 0.1) 12px);
+    border-radius: 0 0 100% 0;
+}
+
+.border-ornament.top-right {
+    top: -20px;
+    right: -20px;
+    background-image: 
+        linear-gradient(225deg, rgba(109, 76, 65, 0.5) 0%, transparent 50%),
+        repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(121, 85, 72, 0.1) 10px, rgba(121, 85, 72, 0.1) 12px);
+    border-radius: 0 0 0 100%;
+}
+
+.border-ornament.bottom-left {
+    bottom: -20px;
+    left: -20px;
+    background-image: 
+        linear-gradient(45deg, rgba(109, 76, 65, 0.5) 0%, transparent 50%),
+        repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(121, 85, 72, 0.1) 10px, rgba(121, 85, 72, 0.1) 12px);
+    border-radius: 0 100% 0 0;
+}
+
+.border-ornament.bottom-right {
+    bottom: -20px;
+    right: -20px;
+    background-image: 
+        linear-gradient(315deg, rgba(109, 76, 65, 0.5) 0%, transparent 50%),
+        repeating-linear-gradient(225deg, transparent, transparent 10px, rgba(121, 85, 72, 0.1) 10px, rgba(121, 85, 72, 0.1) 12px);
+    border-radius: 100% 0 0 0;
+}
+
+/* Header */
+.game-header {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 50px;
+    z-index: 100;
+}
+
+.logo {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.nav-links {
+    display: flex;
+    gap: 30px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.nav-links a:hover {
+    color: var(--gold-bright);
+    transform: translateY(-2px);
+}
+
+/* Decorative Plaque Container */
+.plaque-container {
+    position: relative;
+    width: 550px;
+    padding: 40px;
+}
+
+/* Elaborate Wooden Frame with Carvings */
+.plaque-frame {
+    position: relative;
+    background: 
+        linear-gradient(135deg, #6d4c41 0%, #5d4037 25%, #4e342e 50%, #5d4037 75%, #6d4c41 100%);
+    border-radius: 30px;
+    padding: 25px;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+}
+
+/* Carved frame decorations */
+.frame-decoration {
+    position: absolute;
+    background-repeat: repeat-x;
+    opacity: 0.6;
+}
+
+.frame-decoration.top {
+    top: 8px;
+    left: 60px;
+    right: 60px;
+    height: 12px;
+    background-image: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 8px,
+        rgba(121, 85, 72, 0.4) 8px,
+        rgba(121, 85, 72, 0.4) 10px,
+        transparent 10px,
+        transparent 15px,
+        rgba(93, 64, 55, 0.5) 15px,
+        rgba(93, 64, 55, 0.5) 17px,
+        transparent 17px,
+        transparent 25px
+    );
+}
+
+.frame-decoration.bottom {
+    bottom: 8px;
+    left: 60px;
+    right: 60px;
+    height: 12px;
+    background-image: repeating-linear-gradient(
+        90deg,
+        transparent 0px,
+        transparent 8px,
+        rgba(121, 85, 72, 0.4) 8px,
+        rgba(121, 85, 72, 0.4) 10px,
+        transparent 10px,
+        transparent 15px,
+        rgba(93, 64, 55, 0.5) 15px,
+        rgba(93, 64, 55, 0.5) 17px,
+        transparent 17px,
+        transparent 25px
+    );
+}
+
+.frame-decoration.left {
+    left: 8px;
+    top: 60px;
+    bottom: 60px;
+    width: 12px;
+    background-image: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 8px,
+        rgba(121, 85, 72, 0.4) 8px,
+        rgba(121, 85, 72, 0.4) 10px,
+        transparent 10px,
+        transparent 15px,
+        rgba(93, 64, 55, 0.5) 15px,
+        rgba(93, 64, 55, 0.5) 17px,
+        transparent 17px,
+        transparent 25px
+    );
+}
+
+.frame-decoration.right {
+    right: 8px;
+    top: 60px;
+    bottom: 60px;
+    width: 12px;
+    background-image: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 8px,
+        rgba(121, 85, 72, 0.4) 8px,
+        rgba(121, 85, 72, 0.4) 10px,
+        transparent 10px,
+        transparent 15px,
+        rgba(93, 64, 55, 0.5) 15px,
+        rgba(93, 64, 55, 0.5) 17px,
+        transparent 17px,
+        transparent 25px
+    );
+}
+
+/* Inner Cream-Colored Parchment Content Area */
+.plaque-content {
+    position: relative;
+    background: 
+        radial-gradient(ellipse at 50% 40%, #f9f6f0 0%, #f5f0e8 40%, #e8dfc8 100%);
+    border-radius: 15px;
+    padding: 50px 40px;
+    box-shadow: 
+        inset 0 4px 8px rgba(109, 76, 65, 0.15),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Subtle silk texture */
+    background-image: 
+        repeating-linear-gradient(90deg, 
+            transparent 0px, 
+            rgba(232, 223, 200, 0.3) 1px, 
+            transparent 2px, 
+            transparent 4px
+        ),
+        repeating-linear-gradient(0deg, 
+            transparent 0px, 
+            rgba(232, 223, 200, 0.3) 1px, 
+            transparent 2px, 
+            transparent 4px
+        ),
+        radial-gradient(ellipse at 50% 40%, #f9f6f0 0%, #f5f0e8 40%, #e8dfc8 100%);
+}
+
+/* Traditional Corner Decorations */
+.corner-decoration {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-style: solid;
+    border-color: var(--ornament-brown);
+    opacity: 0.6;
+}
+
+.corner-decoration.tl {
+    top: 15px;
+    left: 15px;
+    border-width: 2px 0 0 2px;
+    border-radius: 3px 0 0 0;
+}
+
+.corner-decoration.tr {
+    top: 15px;
+    right: 15px;
+    border-width: 2px 2px 0 0;
+    border-radius: 0 3px 0 0;
+}
+
+.corner-decoration.bl {
+    bottom: 15px;
+    left: 15px;
+    border-width: 0 0 2px 2px;
+    border-radius: 0 0 0 3px;
+}
+
+.corner-decoration.br {
+    bottom: 15px;
+    right: 15px;
+    border-width: 0 2px 2px 0;
+    border-radius: 0 0 3px 0;
+}
+
+/* Title with Calligraphic Brush Font */
+.game-title {
+    font-family: 'Cinzel', serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    margin: 0 0 10px 0;
+    letter-spacing: 2px;
+    text-shadow: 
+        2px 2px 0px rgba(255, 255, 255, 0.3),
+        1px 1px 2px rgba(44, 24, 16, 0.2);
+}
+
+.subtitle {
+    font-size: 15px;
+    color: #6d5d52;
+    text-align: center;
+    margin: 0 0 35px 0;
+    font-style: italic;
+}
+
+/* Form Styling */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-group label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+    letter-spacing: 0.5px;
+}
+
+/* Wooden Dropdown with Brass Accents */
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrapper select {
+    width: 100%;
+    padding: 14px 45px 14px 20px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    color: var(--text-dark);
+    background: 
+        linear-gradient(135deg, #d4a574 0%, #c9995b 50%, #b8884a 100%);
+    border: 3px solid var(--brass-gold);
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 2px 4px rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(93, 64, 55, 0.3);
+    transition: all 0.3s ease;
+}
+
+.select-wrapper select:hover {
+    background: linear-gradient(135deg, #ddb07f 0%, #d2a366 50%, #c19155 100%);
+    border-color: var(--gold-bright);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 12px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(93, 64, 55, 0.3);
+}
+
+.select-wrapper select:focus {
+    border-color: var(--gold-bright);
+    box-shadow: 
+        0 6px 16px rgba(255, 215, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(93, 64, 55, 0.3);
+}
+
+/* Brass Arrow Decoration */
+.select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid var(--brass-gold);
+    pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* Glossy Red Lacquer Button with Gold Text */
+.start-button {
+    margin-top: 15px;
+    padding: 18px 40px;
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--gold-bright);
+    background: 
+        linear-gradient(180deg, #d63447 0%, #c41e3a 40%, #a01829 80%, #8b1529 100%);
+    border: 3px solid #8b1529;
+    border-radius: 12px;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 
+        0 8px 20px rgba(196, 30, 58, 0.5),
+        inset 0 2px 8px rgba(255, 255, 255, 0.3),
+        inset 0 -3px 8px rgba(139, 21, 41, 0.6);
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.6),
+        0 0 10px rgba(255, 215, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.start-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.start-button:hover {
+    background: 
+        linear-gradient(180deg, #e63f52 0%, #d42340 40%, #b01e2f 80%, #9b1a2e 100%);
+    border-color: var(--gold-bright);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+        0 12px 30px rgba(196, 30, 58, 0.6),
+        0 0 30px rgba(255, 215, 0, 0.3),
+        inset 0 2px 10px rgba(255, 255, 255, 0.4),
+        inset 0 -3px 8px rgba(139, 21, 41, 0.6);
+}
+
+.start-button:hover::before {
+    left: 100%;
+}
+
+.start-button:active {
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 
+        0 6px 15px rgba(196, 30, 58, 0.5),
+        inset 0 2px 8px rgba(255, 255, 255, 0.3),
+        inset 0 -3px 8px rgba(139, 21, 41, 0.7);
+}
+
+/* Warm Golden Lighting & Soft Shadows */
+.plaque-container::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Decorative Sparkle Effects */
+.sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.8);
+    animation: sparkle 3s infinite ease-in-out;
+    pointer-events: none;
+}
+
+.sparkle-1 {
+    top: 20%;
+    right: 25%;
+    animation-delay: 0s;
+}
+
+.sparkle-2 {
+    bottom: 30%;
+    left: 20%;
+    animation-delay: 1s;
+}
+
+.sparkle-3 {
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .plaque-container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .game-title {
+        font-size: 32px;
+    }
+
+    .plaque-content {
+        padding: 40px 25px;
+    }
+
+    .game-header {
+        padding: 0 30px;
+    }
+}

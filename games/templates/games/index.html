@@ -5,72 +5,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi AI - New Game</title>
-    <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
-    <style>
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        label {
-            font-weight: bold;
-            text-align: left;
-        }
-
-        select,
-        button {
-            padding: 10px;
-            font-size: 16px;
-        }
-
-        button {
-            background-color: #8b4513;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #a0522d;
-        }
-    </style>
+    <title>Xiangqi vs AI - Start Game</title>
+    <link rel="stylesheet" href="{% static 'games/css/start-screen.css' %}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-    <div class="container">
-        <h1>Xiangqi vs AI</h1>
-        <p>Choose your settings to start a new game.</p>
+    <!-- Mahogany wood background -->
+    <div class="wood-background">
+        <!-- Ornamental border corners -->
+        <div class="border-ornament top-left"></div>
+        <div class="border-ornament top-right"></div>
+        <div class="border-ornament bottom-left"></div>
+        <div class="border-ornament bottom-right"></div>
 
-        <form method="POST">
-            {% csrf_token %}
+        <!-- Header -->
+        <header class="game-header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="45" stroke="white" stroke-width="3" fill="none" />
+                    <text x="50" y="65" font-family="Ma Shan Zheng" font-size="48" fill="white"
+                        text-anchor="middle">將</text>
+                </svg>
+            </div>
+            <nav class="nav-links">
+                <a href="#rules">Rules</a>
+                <a href="#about">About</a>
+            </nav>
+        </header>
 
-            <label for="difficulty">Difficulty:</label>
-            <select name="difficulty" id="difficulty">
-                <option value="easy">Easy (Random)</option>
-                <option value="normal" selected>Normal (Greedy)</option>
-                <option value="hard">Hard (Minimax Depth 4)</option>
-            </select>
+        <!-- Central decorative plaque frame -->
+        <div class="plaque-container">
+            <div class="plaque-frame">
+                <!-- Carved decorations on frame -->
+                <div class="frame-decoration top"></div>
+                <div class="frame-decoration bottom"></div>
+                <div class="frame-decoration left"></div>
+                <div class="frame-decoration right"></div>
 
-            <label for="player_side">Play as:</label>
-            <select name="player_side" id="player_side">
-                <option value="r" selected>Red (Goes First)</option>
-                <option value="b">Black (Goes Second)</option>
-            </select>
+                <!-- Inner content area -->
+                <div class="plaque-content">
+                    <!-- Corner decorations -->
+                    <div class="corner-decoration tl"></div>
+                    <div class="corner-decoration tr"></div>
+                    <div class="corner-decoration bl"></div>
+                    <div class="corner-decoration br"></div>
 
-            <button type="submit">Start Game</button>
-        </form>
+                    <!-- Title -->
+                    <h1 class="game-title">Xiangqi vs AI</h1>
+                    <p class="subtitle">Choose your settings to start a new game.</p>
+
+                    <!-- Game Setup Form -->
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Difficulty Selection -->
+                        <div class="form-group">
+                            <label for="difficulty">Difficulty:</label>
+                            <div class="select-wrapper">
+                                <select name="difficulty" id="difficulty">
+                                    <option value="easy">Easy (Random)</option>
+                                    <option value="normal" selected>Normal (Greedy)</option>
+                                    <option value="hard">Hard (Minimax Depth 4)</option>
+                                </select>
+                                <div class="select-arrow"></div>
+                            </div>
+                        </div>
+
+                        <!-- Player Side Selection -->
+                        <div class="form-group">
+                            <label for="player_side">Play as:</label>
+                            <div class="select-wrapper">
+                                <select name="player_side" id="player_side">
+                                    <option value="r" selected>Red (Goes First)</option>
+                                    <option value="b">Black (Goes Second)</option>
+                                </select>
+                                <div class="select-arrow"></div>
+                            </div>
+                        </div>
+
+                        <!-- Start Game Button -->
+                        <button type="submit" class="start-button">Start Game</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorative sparkle effect -->
+        <div class="sparkle sparkle-1"></div>
+        <div class="sparkle sparkle-2"></div>
+        <div class="sparkle sparkle-3"></div>
     </div>
 </body>
 
