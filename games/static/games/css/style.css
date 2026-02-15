@@ -159,9 +159,32 @@ body {
     transition:
         transform 0.18s cubic-bezier(.25, .8, .25, 1),
         box-shadow 0.18s cubic-bezier(.25, .8, .25, 1),
-        filter 0.18s ease,
-        left 0.3s ease,
-        top 0.3s ease;
+        filter 0.18s ease;
+}
+
+/* ─── Slide Animation ─── */
+.piece--sliding {
+    transition: transform 0.45s cubic-bezier(0.33, 1, 0.68, 1) !important;
+    z-index: 50 !important;
+    pointer-events: none !important;
+}
+
+/* ─── Captured Piece Fade-Out ─── */
+.piece--captured {
+    animation: fadeOutPiece 0.15s ease-out forwards;
+    pointer-events: none !important;
+}
+
+@keyframes fadeOutPiece {
+    to {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+}
+
+/* ─── Board Animating Lock ─── */
+.board--animating {
+    pointer-events: none !important;
 }
 
 /* Red pieces */

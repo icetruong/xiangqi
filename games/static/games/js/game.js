@@ -32,6 +32,7 @@ let aiSide = '';
 let lastMove = null;
 let selectedCell = null;
 let legalMoves = [];
+let isAnimating = false;
 
 // ── DOM ──
 const boardEl = document.getElementById('board');
@@ -41,6 +42,7 @@ const chatLog = document.querySelector('.chat-log');
 
 // ── Board Interaction ──
 boardEl.addEventListener('click', function (e) {
+    if (isAnimating) return;
     const rect = boardEl.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -283,16 +285,56 @@ function initBoardStructure() {
     boardEl.appendChild(boardSvgEl);
 }
 
-function renderBoard() {
-    var children = Array.from(boardEl.children);
-    for (var i = 0; i < children.length; i++) {
-        if (children[i] !== boardSvgEl) boardEl.removeChild(children[i]);
-    }
-
+function renderBoard(shouldAnimate) {
     var px = function (c) { return BOARD_PAD + c * CELL_SIZE; };
     var py = function (r) { return BOARD_PAD + r * CELL_SIZE; };
 
-    // Last move markers
+    // ── Snapshot existing pieces by (row,col) ──
+    var existingByPos = {};   // "r,c" → element
+    var existingPieces = Array.from(boardEl.getElementsByClassName('piece'));
+    existingPieces.forEach(function (el) {
+        // Skip pieces that are currently fading out
+        if (el.classList.contains('piece--captured')) return;
+        var key = el.dataset.row + ',' + el.dataset.col;
+        existingByPos[key] = el;
+    });
+
+    // ── Identify the sliding piece & captured piece ──
+    var slidingEl = null;
+    var capturedEl = null;
+    var slideFromLeft = 0, slideFromTop = 0;
+
+    if (shouldAnimate && lastMove) {
+        var fromKey = lastMove.from[0] + ',' + lastMove.from[1];
+        var toKey = lastMove.to[0] + ',' + lastMove.to[1];
+
+        // The piece that was at lastMove.from is the one that moved
+        if (existingByPos[fromKey]) {
+            slidingEl = existingByPos[fromKey];
+            // Record its current pixel position BEFORE we move it
+            slideFromLeft = parseFloat(slidingEl.style.left) || 0;
+            slideFromTop = parseFloat(slidingEl.style.top) || 0;
+            // Remove from snapshot so it isn't double-matched
+            delete existingByPos[fromKey];
+        }
+
+        // The piece that was at lastMove.to is the captured piece
+        if (lastMove.captured && existingByPos[toKey]) {
+            capturedEl = existingByPos[toKey];
+            delete existingByPos[toKey];
+        }
+    }
+
+    // ── Remove non-SVG, non-piece children (markers, hints) ──
+    var children = Array.from(boardEl.children);
+    for (var i = 0; i < children.length; i++) {
+        var ch = children[i];
+        if (ch === boardSvgEl) continue;
+        if (ch.classList.contains('piece')) continue; // handle pieces separately
+        boardEl.removeChild(ch);
+    }
+
+    // ── Last move markers ──
     if (lastMove) {
         var positions = [lastMove.from, lastMove.to];
         for (var i = 0; i < positions.length; i++) {
@@ -309,30 +351,28 @@ function renderBoard() {
         }
     }
 
-    // Pieces
-    // We simply remove all existing pieces and re-create them for now,
-    // *unless* we want full diffing.
-    // To support animation with minimal change:
-    // 1. Mark all existing pieces as 'stale'
-    // 2. Iterate new board state
-    // 3. For each piece:
-    //    - Try to find a 'stale' piece of same type (e.g. 'rP').
-    //    - If found, reuse it: update pos, unmark stale.
-    //    - If not found, create new.
-    // 4. Remove remaining 'stale' pieces.
+    // ── Fade out captured piece ──
+    if (capturedEl) {
+        capturedEl.classList.add('piece--captured');
+        // Remove from DOM after animation
+        setTimeout(function () {
+            if (capturedEl.parentNode) capturedEl.parentNode.removeChild(capturedEl);
+        }, 180);
+    }
 
-    var existingPieces = Array.from(boardEl.getElementsByClassName('piece'));
-    var available = {}; // key: pieceCode, val: [element]
-
-    // Index existing pieces
-    existingPieces.forEach(function (p) {
-        var code = p.dataset.code;
-        if (!available[code]) available[code] = [];
-        available[code].push(p);
+    // ── Build pool of remaining existing pieces by code ──
+    var availableByCode = {};
+    Object.keys(existingByPos).forEach(function (key) {
+        var el = existingByPos[key];
+        var code = el.dataset.piece;
+        if (!availableByCode[code]) availableByCode[code] = [];
+        availableByCode[code].push(el);
     });
 
-    // We will build a list of pieces to keep/add
-    var nextPieces = [];
+    // ── Place pieces for new board state ──
+    var usedElements = new Set();
+    if (slidingEl) usedElements.add(slidingEl);
+    if (capturedEl) usedElements.add(capturedEl);
 
     for (var r = 0; r < ROWS; r++) {
         for (var c = 0; c < COLS; c++) {
@@ -340,18 +380,33 @@ function renderBoard() {
             if (!code) continue;
 
             var pieceEl = null;
+            var newLeft = (px(c) - PIECE_SIZE / 2);
+            var newTop = (py(r) - PIECE_SIZE / 2);
 
-            // Try to reuse an existing piece of same code
-            if (available[code] && available[code].length > 0) {
-                pieceEl = available[code].pop();
+            // Is this the destination of the sliding piece?
+            if (slidingEl && lastMove &&
+                r === lastMove.to[0] && c === lastMove.to[1]) {
+                pieceEl = slidingEl;
             } else {
-                // Create new
-                pieceEl = createPiece(code);
+                // Try to reuse an existing element of same code
+                if (availableByCode[code] && availableByCode[code].length > 0) {
+                    pieceEl = availableByCode[code].pop();
+                    usedElements.add(pieceEl);
+                } else {
+                    // Create new
+                    pieceEl = createPiece(code);
+                }
             }
 
+            // Update data attributes
+            pieceEl.dataset.row = r;
+            pieceEl.dataset.col = c;
+            pieceEl.dataset.piece = code;
+            pieceEl.dataset.side = code.charAt(0);
+
             // Update position
-            pieceEl.style.left = (px(c) - PIECE_SIZE / 2) + 'px';
-            pieceEl.style.top = (py(r) - PIECE_SIZE / 2) + 'px';
+            pieceEl.style.left = newLeft + 'px';
+            pieceEl.style.top = newTop + 'px';
 
             // Selection state
             if (selectedCell && selectedCell[0] === r && selectedCell[1] === c) {
@@ -360,33 +415,81 @@ function renderBoard() {
                 pieceEl.classList.remove('selected');
             }
 
-            // Click handler (update closure)
-            // Note: We need to update the onclick every time because r/c change
+            // Click handler
             (function (row, col) {
                 pieceEl.onclick = function (e) {
                     e.stopPropagation();
+                    if (isAnimating) return;
                     handleCellClick(row, col);
                 };
             })(r, c);
 
-            nextPieces.push(pieceEl);
-
-            // If it was detatched or new, append it
+            // If detached or new, append it
             if (!pieceEl.parentNode) {
                 boardEl.appendChild(pieceEl);
             }
         }
     }
 
-    // Remove any pieces that weren't reused (captured)
-    // The 'available' arrays now contain only unused elements
-    Object.keys(available).forEach(function (k) {
-        available[k].forEach(function (el) {
-            if (el.parentNode) el.parentNode.removeChild(el);
-        });
+    // ── Remove unused pieces ──
+    existingPieces.forEach(function (el) {
+        if (el.classList.contains('piece--captured')) return; // already handled
+        if (!usedElements.has(el) && !document.querySelector('[data-row="' + el.dataset.row + '"][data-col="' + el.dataset.col + '"]')) {
+            // Check if this element is still needed (matched by the loop above)
+            // Simple check: if its row/col data doesn't match any board cell with its code
+            var er = parseInt(el.dataset.row);
+            var ec = parseInt(el.dataset.col);
+            if (!boardState[er] || boardState[er][ec] !== el.dataset.piece) {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }
+        }
     });
 
-    // Hint Dots
+    // ── FLIP Animation for sliding piece ──
+    if (slidingEl && shouldAnimate && lastMove) {
+        var targetLeft = parseFloat(slidingEl.style.left) || 0;
+        var targetTop = parseFloat(slidingEl.style.top) || 0;
+        var deltaX = slideFromLeft - targetLeft;
+        var deltaY = slideFromTop - targetTop;
+
+        if (deltaX !== 0 || deltaY !== 0) {
+            // Lock interactions
+            isAnimating = true;
+            boardEl.classList.add('board--animating');
+
+            // FLIP: Immediately offset to old position (no transition)
+            slidingEl.style.transform = 'translate(' + deltaX + 'px, ' + deltaY + 'px)';
+
+            // Next frame: enable transition and slide to final position
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    slidingEl.classList.add('piece--sliding');
+                    slidingEl.style.transform = 'translate(0, 0)';
+
+                    var onEnd = function () {
+                        slidingEl.classList.remove('piece--sliding');
+                        slidingEl.style.transform = '';
+                        isAnimating = false;
+                        boardEl.classList.remove('board--animating');
+                        slidingEl.removeEventListener('transitionend', onEnd);
+                    };
+                    slidingEl.addEventListener('transitionend', onEnd);
+
+                    // Safety timeout in case transitionend doesn't fire
+                    setTimeout(function () {
+                        if (isAnimating) {
+                            slidingEl.classList.remove('piece--sliding');
+                            slidingEl.style.transform = '';
+                            isAnimating = false;
+                            boardEl.classList.remove('board--animating');
+                        }
+                    }, 520);
+                });
+            });
+        }
+    }
+
+    // ── Hint Dots ──
     if (selectedCell) {
         renderHints(px, py);
     }
@@ -398,7 +501,10 @@ function createPiece(code) {
 
     var piece = document.createElement('div');
     piece.className = 'piece ' + (isRed ? 'piece-red' : 'piece-black');
-    piece.dataset.code = code; // Store code for reuse/diffing
+    piece.dataset.piece = code;
+    piece.dataset.side = code.charAt(0);
+    piece.dataset.row = '0';
+    piece.dataset.col = '0';
 
     piece.style.width = PIECE_SIZE + 'px';
     piece.style.height = PIECE_SIZE + 'px';
@@ -443,13 +549,15 @@ function initGame(config) {
     status = config.status;
     playerSide = config.playerSide;
     legalMoves = config.legalMoves || [];
+    lastMove = config.lastMove || null;
 
     initBoardStructure();
-    renderBoard();
+    renderBoard(false);
     updateStatusUI();
 }
 
 function handleCellClick(r, c) {
+    if (isAnimating) return;
     if (status !== 'ongoing') return;
 
     var pieceCode = boardState[r][c];
@@ -458,13 +566,13 @@ function handleCellClick(r, c) {
     if (selectedCell) {
         if (selectedCell[0] === r && selectedCell[1] === c) {
             selectedCell = null;
-            renderBoard();
+            renderBoard(false);
             return;
         }
 
         if (isMyPiece) {
             selectedCell = [r, c];
-            renderBoard();
+            renderBoard(false);
             return;
         }
 
@@ -480,7 +588,7 @@ function handleCellClick(r, c) {
     } else {
         if (isMyPiece) {
             selectedCell = [r, c];
-            renderBoard();
+            renderBoard(false);
         }
     }
 }
@@ -514,14 +622,22 @@ function sendMove(move) {
 }
 
 function updateGameState(data) {
+    var prevLastMove = lastMove;
     boardState = data.board_state;
     currentTurn = data.current_turn;
     status = data.status;
     lastMove = data.last_move;
     legalMoves = data.legal_moves || [];
 
+    // Animate if there's a new move that differs from the previous one
+    var shouldAnimate = !!(lastMove && (!prevLastMove ||
+        lastMove.from[0] !== prevLastMove.from[0] ||
+        lastMove.from[1] !== prevLastMove.from[1] ||
+        lastMove.to[0] !== prevLastMove.to[0] ||
+        lastMove.to[1] !== prevLastMove.to[1]));
+
     updateStatusUI();
-    renderBoard();
+    renderBoard(shouldAnimate);
 
     if (lastMove && currentTurn === playerSide) {
         logMove({ from: lastMove.from, to: lastMove.to }, "AI");

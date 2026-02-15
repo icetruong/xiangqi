@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from games.models import Game
 from games.services import game_service
+import json
 
 def index(request):
     if request.method == "POST":
@@ -26,5 +27,20 @@ def game_board(request, game_id):
     if game.status == 'ongoing' and game.current_turn == game.player_side:
         from games.services import engine_adapter
         legal_moves = engine_adapter.list_legal_moves(game.board_state, game.player_side)
-        
-    return render(request, 'games/game.html', {'game': game, 'legal_moves': legal_moves})
+    
+    # Get last move
+    last_move = game.moves.last()
+    last_move_data = None
+    if last_move:
+        last_move_data = {
+            "from": [last_move.from_row, last_move.from_col],
+            "to": [last_move.to_row, last_move.to_col],
+            "piece": last_move.piece,
+            "captured": last_move.captured
+        }
+
+    return render(request, 'games/game.html', {
+        'game': game, 
+        'legal_moves': json.dumps(legal_moves),
+        'last_move': json.dumps(last_move_data)
+    })
