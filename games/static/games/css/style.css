@@ -124,10 +124,12 @@ body {
             transparent 1px,
             transparent 9px),
         linear-gradient(180deg, var(--board-bg-light) 0%, var(--board-bg) 50%, var(--board-bg-light) 100%);
-    border: 2px solid var(--board-frame-dark);
-    border-radius: 4px;
+
     /* Dimensions set by JS via CSS custom properties */
     overflow: visible;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
 }
 
 /* ─────────────── SVG Grid Overlay ─────────────── */
