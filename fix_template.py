@@ -1,4 +1,8 @@
-{% load static %}
+import os
+
+filepath = os.path.join(os.path.dirname(__file__), 'games', 'templates', 'games', 'game.html')
+
+content = r'''{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -37,3 +41,21 @@
 </body>
 
 </html>
+'''
+
+with open(filepath, 'w', encoding='utf-8', newline='\n') as f:
+    f.write(content)
+
+print(f"Written {len(content)} bytes to {filepath}")
+
+# Verify
+with open(filepath, 'r', encoding='utf-8') as f:
+    verify = f.read()
+
+if 'default:"[]"|safe' in verify:
+    print("SUCCESS: Template syntax is correct")
+else:
+    print("FAIL: Template syntax is still wrong")
+    for i, line in enumerate(verify.split('\n'), 1):
+        if 'default' in line or 'movesData' in line:
+            print(f"  Line {i}: {line!r}")

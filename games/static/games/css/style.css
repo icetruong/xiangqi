@@ -29,8 +29,6 @@
     --accent-gold: #ffd700;
     --accent-orange: #d4862b;
 
-    /* Sidebar */
-    --sidebar-bg: rgba(0, 0, 0, 0.6);
 }
 
 /* ─────────────── Base ─────────────── */
@@ -55,26 +53,17 @@ body {
 /* ─────────────── Layout ─────────────── */
 .main-container {
     display: flex;
-    gap: 20px;
+    justify-content: center;
+    align-items: center;
     padding: 20px;
-    max-width: 1200px;
     width: 100%;
     height: 95vh;
 }
 
 .game-area {
-    flex: 2;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.sidebar {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 350px;
 }
 
 /* ─────────────── Board Wrapper (Wood Frame) ─────────────── */
@@ -308,106 +297,4 @@ body {
     border-radius: 50%;
     border: 2.5px solid rgba(240, 180, 41, 0.5);
     background: rgba(240, 180, 41, 0.08);
-}
-
-/* ─────────────── Sidebar Components ─────────────── */
-.profile-card {
-    background: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), #8B4513;
-    background-blend-mode: multiply;
-    border: 2px solid #5a3210;
-    border-radius: 10px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    color: #ffd700;
-}
-
-.avatar img {
-    width: 50px;
-    height: 50px;
-    border-radius: 5px;
-    border: 2px solid #ffd700;
-    background: #fff;
-}
-
-.info .name {
-    font-weight: bold;
-    font-size: 1.1em;
-}
-
-.info .rank {
-    font-size: 0.9em;
-    color: #ddd;
-}
-
-.scoreboard {
-    background: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), #5d3a1a;
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-    border: 2px solid #ffd700;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    color: #fff;
-}
-
-.scoreboard .title {
-    font-family: 'Ma Shan Zheng', cursive;
-    font-size: 1.5em;
-    color: #ffd700;
-    margin-bottom: 5px;
-}
-
-.scoreboard .scores {
-    font-size: 1.5em;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.status-msg {
-    margin-top: 5px;
-    font-size: 0.9em;
-    color: #ffcc99;
-}
-
-.controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.btn-game {
-    background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
-    border: 1px solid #777;
-    color: #fff;
-    padding: 8px 15px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-family: 'Noto Sans SC', sans-serif;
-    transition: all 0.2s;
-    font-size: 0.9em;
-    min-width: 80px;
-}
-
-.btn-game:hover {
-    background: linear-gradient(to bottom, #666, #444);
-    transform: scale(1.05);
-}
-
-.chat-log {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 5px;
-    padding: 10px;
-    flex: 1;
-    overflow-y: auto;
-    font-size: 0.85em;
-    color: #bbb;
-}
-
-.log-entry.system {
-    color: #88cc88;
 }
