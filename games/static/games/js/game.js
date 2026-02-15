@@ -305,22 +305,27 @@ function renderBoard(shouldAnimate) {
     var slideFromLeft = 0, slideFromTop = 0;
 
     if (shouldAnimate && lastMove) {
+        console.log("Animation triggered for move:", lastMove);
         var fromKey = lastMove.from[0] + ',' + lastMove.from[1];
         var toKey = lastMove.to[0] + ',' + lastMove.to[1];
 
         // The piece that was at lastMove.from is the one that moved
         if (existingByPos[fromKey]) {
             slidingEl = existingByPos[fromKey];
+            console.log("Found sliding piece:", slidingEl.dataset.piece, "at", fromKey);
             // Record its current pixel position BEFORE we move it
             slideFromLeft = parseFloat(slidingEl.style.left) || 0;
             slideFromTop = parseFloat(slidingEl.style.top) || 0;
             // Remove from snapshot so it isn't double-matched
             delete existingByPos[fromKey];
+        } else {
+            console.warn("Sliding piece NOT found at", fromKey);
         }
 
         // The piece that was at lastMove.to is the captured piece
         if (lastMove.captured && existingByPos[toKey]) {
             capturedEl = existingByPos[toKey];
+            console.log("Found captured piece:", capturedEl.dataset.piece, "at", toKey);
             delete existingByPos[toKey];
         }
     }
@@ -458,11 +463,13 @@ function renderBoard(shouldAnimate) {
             boardEl.classList.add('board--animating');
 
             // FLIP: Immediately offset to old position (no transition)
+            slidingEl.style.transition = 'none';
             slidingEl.style.transform = 'translate(' + deltaX + 'px, ' + deltaY + 'px)';
 
             // Next frame: enable transition and slide to final position
             requestAnimationFrame(function () {
                 requestAnimationFrame(function () {
+                    slidingEl.style.transition = '';
                     slidingEl.classList.add('piece--sliding');
                     slidingEl.style.transform = 'translate(0, 0)';
 
