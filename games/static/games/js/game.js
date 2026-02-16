@@ -340,21 +340,8 @@ function renderBoard(shouldAnimate) {
     }
 
     // ── Last move markers ──
-    if (lastMove) {
-        var positions = [lastMove.from, lastMove.to];
-        for (var i = 0; i < positions.length; i++) {
-            var mr = positions[i][0];
-            var mc = positions[i][1];
-            var marker = document.createElement('div');
-            marker.className = 'last-move-marker';
-            var size = PIECE_SIZE + 8;
-            marker.style.width = size + 'px';
-            marker.style.height = size + 'px';
-            marker.style.left = (px(mc) - size / 2) + 'px';
-            marker.style.top = (py(mr) - size / 2) + 'px';
-            boardEl.appendChild(marker);
-        }
-    }
+    // (Legacy markers removed. We use transient .old-pos-marker and .last-move-target glow instead)
+
 
     // ── Fade out captured piece ──
     if (capturedEl) {
