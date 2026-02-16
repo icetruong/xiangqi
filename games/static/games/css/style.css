@@ -329,7 +329,8 @@ body {
     position: absolute;
     width: 12px;
     height: 12px;
-    background-color: rgba(80, 40, 20, 0.55);
+    background-color: #d35400;
+    /* Dark Orange */
     /* Brown semi-transparent */
     border-radius: 50%;
     transform: translate(-50%, -50%);

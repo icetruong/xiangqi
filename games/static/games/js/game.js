@@ -339,11 +339,16 @@ function renderBoard(shouldAnimate) {
         boardEl.removeChild(ch);
     }
 
-    // ── Last move markers ──
-    // (Legacy markers removed. We use transient .old-pos-marker and .last-move-target glow instead)
-
-
-    // ── Fade out captured piece ──
+    // ── Old Position Marker (Persistent) ──
+    if (lastMove) {
+        var r = lastMove.from[0];
+        var c = lastMove.from[1];
+        var marker = document.createElement('div');
+        marker.className = 'old-pos-marker';
+        marker.style.left = px(c) + 'px';
+        marker.style.top = py(r) + 'px';
+        boardEl.appendChild(marker);
+    }
     if (capturedEl) {
         capturedEl.classList.add('piece--captured');
         // Remove from DOM after animation
@@ -456,8 +461,13 @@ function renderBoard(shouldAnimate) {
             isAnimating = true;
             boardEl.classList.add('board--animating');
 
-            // Trigger "Old Position" marker effect
-            showOldPosMarker(lastMove.from[0], lastMove.from[1]);
+            isAnimating = true;
+            boardEl.classList.add('board--animating');
+
+            // (Marker is now handled declaratively in renderBoard, 
+            // no need to call showOldPosMarker here if it just fades)
+
+            // FLIP: Immediately offset to old position (no transition)
 
             // FLIP: Immediately offset to old position (no transition)
             slidingEl.style.transition = 'none';
@@ -542,29 +552,7 @@ function renderHints(px, py) {
     }
 }
 
-function showOldPosMarker(r, c) {
-    if (!boardEl) return;
-    var px = function (c) { return BOARD_PAD + c * CELL_SIZE; };
-    var py = function (r) { return BOARD_PAD + r * CELL_SIZE; };
-
-    var marker = document.createElement('div');
-    marker.className = 'old-pos-marker';
-    // Position at intersection
-    marker.style.left = px(c) + 'px';
-    marker.style.top = py(r) + 'px';
-
-    boardEl.appendChild(marker);
-
-    // Lifetime: 700-1200ms
-    // Let's fade out starting at 700ms, remove at 1200ms
-    setTimeout(function () {
-        marker.style.opacity = '0';
-    }, 700);
-
-    setTimeout(function () {
-        if (marker.parentNode) marker.parentNode.removeChild(marker);
-    }, 1200);
-}
+// (Function removed as we render declaratively now)
 
 // ═══════════════════════════════════════════════
 //  Game Logic
