@@ -413,7 +413,11 @@ function renderBoard(shouldAnimate) {
             }
 
             // Last Move Target State (Glow Ring)
-            if (lastMove && lastMove.to[0] === r && lastMove.to[1] === c) {
+            // If animating this piece, defer adding the ring until animation ends
+            var isTarget = (lastMove && lastMove.to[0] === r && lastMove.to[1] === c);
+            var isAnimatingThis = (slidingEl && shouldAnimate && pieceEl === slidingEl);
+
+            if (isTarget && !isAnimatingThis) {
                 pieceEl.classList.add('last-move-target');
             } else {
                 pieceEl.classList.remove('last-move-target');
@@ -483,6 +487,10 @@ function renderBoard(shouldAnimate) {
                     var onEnd = function () {
                         slidingEl.classList.remove('piece--sliding');
                         slidingEl.style.transform = '';
+
+                        // Add ring now that animation is done
+                        slidingEl.classList.add('last-move-target');
+
                         isAnimating = false;
                         boardEl.classList.remove('board--animating');
                         slidingEl.removeEventListener('transitionend', onEnd);
@@ -494,6 +502,7 @@ function renderBoard(shouldAnimate) {
                         if (isAnimating) {
                             slidingEl.classList.remove('piece--sliding');
                             slidingEl.style.transform = '';
+                            slidingEl.classList.add('last-move-target'); // Ensure ring is added on timeout too
                             isAnimating = false;
                             boardEl.classList.remove('board--animating');
                         }

@@ -315,13 +315,21 @@ body {
 }
 
 /* ─── Last Move Indicator ─── */
-.last-move-marker {
+.last-move-target::after {
+    content: '';
     position: absolute;
-    z-index: 2;
-    pointer-events: none;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
     border-radius: 50%;
-    border: 2.5px solid rgba(240, 180, 41, 0.5);
-    background: rgba(240, 180, 41, 0.08);
+    border: 2.5px solid #e67e22;
+    /* Earthy orange */
+    box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
+    /* Glow halo */
+    pointer-events: none;
+    z-index: 6;
+    /* Above piece, below dragged */
 }
 
 /* ─── Old Position Marker (Transient) ─── */
