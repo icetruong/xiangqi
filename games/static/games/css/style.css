@@ -323,3 +323,20 @@ body {
     border: 2.5px solid rgba(240, 180, 41, 0.5);
     background: rgba(240, 180, 41, 0.08);
 }
+
+/* ─── Old Position Marker (Transient) ─── */
+.old-pos-marker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: rgba(80, 40, 20, 0.55);
+    /* Brown semi-transparent */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    /* Centering */
+    z-index: 2;
+    /* Above board, below pieces */
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.5s ease-out;
+}

@@ -420,6 +420,13 @@ function renderBoard(shouldAnimate) {
                 pieceEl.classList.remove('selected');
             }
 
+            // Last Move Target State (Glow Ring)
+            if (lastMove && lastMove.to[0] === r && lastMove.to[1] === c) {
+                pieceEl.classList.add('last-move-target');
+            } else {
+                pieceEl.classList.remove('last-move-target');
+            }
+
             // Click handler
             (function (row, col) {
                 pieceEl.onclick = function (e) {
@@ -461,6 +468,9 @@ function renderBoard(shouldAnimate) {
             // Lock interactions
             isAnimating = true;
             boardEl.classList.add('board--animating');
+
+            // Trigger "Old Position" marker effect
+            showOldPosMarker(lastMove.from[0], lastMove.from[1]);
 
             // FLIP: Immediately offset to old position (no transition)
             slidingEl.style.transition = 'none';
@@ -543,6 +553,30 @@ function renderHints(px, py) {
         dot.style.top = (py(tr) - HINT_SIZE / 2) + 'px';
         boardEl.appendChild(dot);
     }
+}
+
+function showOldPosMarker(r, c) {
+    if (!boardEl) return;
+    var px = function (c) { return BOARD_PAD + c * CELL_SIZE; };
+    var py = function (r) { return BOARD_PAD + r * CELL_SIZE; };
+
+    var marker = document.createElement('div');
+    marker.className = 'old-pos-marker';
+    // Position at intersection
+    marker.style.left = px(c) + 'px';
+    marker.style.top = py(r) + 'px';
+
+    boardEl.appendChild(marker);
+
+    // Lifetime: 700-1200ms
+    // Let's fade out starting at 700ms, remove at 1200ms
+    setTimeout(function () {
+        marker.style.opacity = '0';
+    }, 700);
+
+    setTimeout(function () {
+        if (marker.parentNode) marker.parentNode.removeChild(marker);
+    }, 1200);
 }
 
 // ═══════════════════════════════════════════════
