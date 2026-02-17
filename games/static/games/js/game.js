@@ -366,6 +366,9 @@ function renderBoard(shouldAnimate) {
         availableByCode[code].push(el);
     });
 
+    // ── Compute capture targets ──
+    var captureTargets = getCaptureTargets();
+
     // ── Place pieces for new board state ──
     var usedElements = new Set();
     if (slidingEl) usedElements.add(slidingEl);
@@ -421,6 +424,13 @@ function renderBoard(shouldAnimate) {
                 pieceEl.classList.add('last-move-target');
             } else {
                 pieceEl.classList.remove('last-move-target');
+            }
+
+            // Capture target state (purple ring)
+            if (captureTargets.has(r + ',' + c)) {
+                pieceEl.classList.add('capture-target');
+            } else {
+                pieceEl.classList.remove('capture-target');
             }
 
             // Click handler
@@ -559,6 +569,26 @@ function renderHints(px, py) {
         dot.style.top = (py(tr) - HINT_SIZE / 2) + 'px';
         boardEl.appendChild(dot);
     }
+}
+
+function getCaptureTargets() {
+    var targets = new Set();
+    if (!selectedCell) return targets;
+    if (currentTurn !== playerSide || status !== 'ongoing') return targets;
+    var sr = selectedCell[0];
+    var sc = selectedCell[1];
+    var enemySide = (playerSide === 'r') ? 'b' : 'r';
+    for (var i = 0; i < legalMoves.length; i++) {
+        var m = legalMoves[i];
+        if (m.from[0] !== sr || m.from[1] !== sc) continue;
+        var tr = m.to[0];
+        var tc = m.to[1];
+        var dest = boardState[tr][tc];
+        if (dest && dest.charAt(0) === enemySide) {
+            targets.add(tr + ',' + tc);
+        }
+    }
+    return targets;
 }
 
 // (Function removed as we render declaratively now)
