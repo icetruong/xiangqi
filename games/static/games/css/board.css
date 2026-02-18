@@ -1,0 +1,201 @@
+/* ═══════════════════════════════════════════════
+   Board Shell — Outer Frame (Layer 1)
+   ═══════════════════════════════════════════════ */
+.board-shell {
+    /* ── Sizing ── */
+    width: min(92vw, 760px);
+    aspect-ratio: 9 / 10;
+    max-height: 95vh;
+    position: relative;
+
+    /* ── Frame padding ── */
+    padding: 20px;
+
+    /* ── Wood-grain background ── */
+    background:
+        /* horizontal grain — very fine */
+        repeating-linear-gradient(93deg,
+            rgba(0, 0, 0, 0.06) 0px,
+            transparent 1px,
+            transparent 4px,
+            rgba(0, 0, 0, 0.03) 4px,
+            transparent 5px,
+            transparent 9px),
+        /* vertical cross-grain — even subtler */
+        repeating-linear-gradient(2deg,
+            rgba(0, 0, 0, 0.02) 0px,
+            transparent 1px,
+            transparent 14px),
+        /* bevel: top-left lighter, bottom-right darker */
+        linear-gradient(135deg,
+            #dcc898 0%,
+            #c8a870 20%,
+            #b89858 50%,
+            #a48548 80%,
+            #8a6e38 100%);
+
+    border-radius: 16px;
+
+    /* ── Double-border impression ── */
+    border: 3px solid #c8b080;
+
+    /* ── Depth shadow stack ── */
+    box-shadow:
+        /* 1. main drop shadow */
+        0 20px 60px rgba(0, 0, 0, 0.7),
+        0 8px 20px rgba(0, 0, 0, 0.4),
+        /* 2. subtle outer glow (warm) */
+        0 0 80px rgba(60, 30, 10, 0.3),
+        /* 3. outer rim highlight */
+        0 -1px 0 rgba(255, 240, 200, 0.2),
+        /* 4. inner bevel — top-left light */
+        inset 2px 2px 4px rgba(255, 240, 200, 0.3),
+        /* 5. inner bevel — bottom-right dark */
+        inset -2px -2px 6px rgba(0, 0, 0, 0.25),
+        /* 6. inner dark rim */
+        inset 0 0 0 1px rgba(80, 50, 20, 0.5);
+}
+
+/* Bevel highlight overlay on the frame */
+.board-shell::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 13px;
+    border: 2px solid rgba(70, 40, 15, 0.6);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 240, 200, 0.15);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   Board Surface — Inner Mat (Layer 2)
+   ═══════════════════════════════════════════════ */
+.board-surface {
+    /* Fill the shell */
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    /* Center the board-inner */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* ── Parchment base ── */
+    background:
+        linear-gradient(180deg,
+            #f5e8c8 0%,
+            #f0ddb4 30%,
+            #ebcf98 70%,
+            #e4c488 100%);
+
+    border-radius: 8px;
+
+    /* ── Subtle inset border ── */
+    border: 1.5px solid rgba(100, 60, 25, 0.45);
+
+    /* ── Recessed inner shadow ── */
+    box-shadow:
+        inset 0 4px 14px rgba(80, 40, 10, 0.2),
+        inset 0 -3px 10px rgba(80, 40, 10, 0.12),
+        inset 4px 0 12px rgba(80, 40, 10, 0.08),
+        inset -4px 0 12px rgba(80, 40, 10, 0.08),
+        inset 0 0 40px rgba(255, 240, 200, 0.08);
+}
+
+/* Vignette overlay — edges darken */
+.board-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: radial-gradient(ellipse 80% 78% at 50% 48%,
+            transparent 45%,
+            rgba(100, 60, 20, 0.18) 85%,
+            rgba(60, 30, 8, 0.28) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Subtle noise texture overlay */
+.board-surface::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background:
+        repeating-radial-gradient(circle at 17% 23%, rgba(0, 0, 0, 0.012) 0px, transparent 1px, transparent 3px),
+        repeating-radial-gradient(circle at 83% 67%, rgba(0, 0, 0, 0.015) 0px, transparent 1px, transparent 4px),
+        repeating-radial-gradient(circle at 41% 79%, rgba(0, 0, 0, 0.01) 0px, transparent 1px, transparent 5px),
+        repeating-radial-gradient(circle at 69% 11%, rgba(0, 0, 0, 0.012) 0px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(47deg,
+            transparent,
+            transparent 3px,
+            rgba(120, 80, 30, 0.015) 3px,
+            rgba(120, 80, 30, 0.015) 4px),
+        repeating-linear-gradient(133deg,
+            transparent,
+            transparent 5px,
+            rgba(120, 80, 30, 0.01) 5px,
+            rgba(120, 80, 30, 0.01) 6px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ─────────────── Board Inner (Grid Area) ─────────────── */
+.board-inner {
+    position: relative;
+    margin: auto;
+    background: transparent;
+    overflow: visible;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+    z-index: 1;
+}
+
+/* ─────────────── SVG Grid Overlay ─────────────── */
+.board-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    shape-rendering: geometricPrecision;
+}
+
+/* ═══════════════════════════════════════════════
+   Responsive Rules
+   ═══════════════════════════════════════════════ */
+
+/* Mobile: tighter padding */
+@media (max-width: 520px) {
+    .board-shell {
+        padding: 14px;
+        border-width: 2.5px;
+        border-radius: 12px;
+    }
+
+    .board-shell::before {
+        inset: 3px;
+        border-radius: 10px;
+    }
+
+    .board-surface {
+        padding: 8px;
+        border-radius: 6px;
+    }
+
+    .board-surface::before,
+    .board-surface::after {
+        border-radius: 6px;
+    }
+
+    .main-container {
+        padding: 8px;
+    }
+}

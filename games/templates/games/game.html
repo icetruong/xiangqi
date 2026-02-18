@@ -6,9 +6,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xiangqi Game</title>
-    <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
+
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap"
         rel="stylesheet">
+
+    <!-- CSS Modules -->
+    <link rel="stylesheet" href="{% static 'games/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'games/css/board.css' %}">
+    <link rel="stylesheet" href="{% static 'games/css/pieces.css' %}">
+    <link rel="stylesheet" href="{% static 'games/css/effects.css' %}">
 </head>
 
 <body>
@@ -22,7 +29,13 @@
         </div>
     </div>
 
+    <!-- JS Modules (order matters: constants → svg-grid → piece-renderer → game-logic → game) -->
+    <script src="{% static 'games/js/constants.js' %}"></script>
+    <script src="{% static 'games/js/svg-grid.js' %}"></script>
+    <script src="{% static 'games/js/piece-renderer.js' %}"></script>
+    <script src="{% static 'games/js/game-logic.js' %}"></script>
     <script src="{% static 'games/js/game.js' %}"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var movesData = {{ legal_moves|default: "[]" | safe

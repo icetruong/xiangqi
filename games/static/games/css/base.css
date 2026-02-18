@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+/* ─────────────── Design Tokens ─────────────── */
+:root {
+    /* Page */
+    --bg-color: #1e0e08;
+    --bg-color-light: #3a1e10;
+    --text-color: #f0f0f0;
+
+    /* Board Frame */
+    --shell-bg: #c4a06a;
+    --shell-bg-dark: #a0834e;
+    --shell-border: #d4ba8a;
+    --shell-border-inner: #6b4226;
+    --shell-radius: 18px;
+
+    /* Board Surface */
+    --surface-bg: #f0dca0;
+    --surface-bg-light: #f7eac0;
+    --surface-bg-warm: #e6c87a;
+    --surface-border: #7a5230;
+    --surface-radius: 10px;
+
+    /* Board Grid Area */
+    --board-bg: #e8c88a;
+    --board-bg-light: #f0dca8;
+    --board-frame: #c4a060;
+    --board-frame-dark: #8b6530;
+    --grid-stroke: #8b6c42;
+
+    /* Pieces */
+    --piece-red-outer: #b5372a;
+    --piece-red-inner: #d04a3a;
+    --piece-red-highlight: #e86050;
+    --piece-black-outer: #2c2c2c;
+    --piece-black-inner: #4a4a4a;
+    --piece-black-highlight: #666;
+    --piece-rim: #f5e6c8;
+    --piece-size-ratio: 0.82;
+
+    /* Interaction */
+    --highlight-gold: #f0b429;
+    --hint-orange: #e67e22;
+    --accent-gold: #ffd700;
+    --accent-orange: #d4862b;
+}
+
+/* ─────────────── Base / Page ─────────────── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background:
+        /* deep vignette */
+        radial-gradient(ellipse 70% 65% at 50% 50%,
+            transparent 20%,
+            rgba(0, 0, 0, 0.75) 100%),
+        /* warm spotlight behind board */
+        radial-gradient(ellipse 55% 50% at 50% 45%,
+            rgba(80, 40, 18, 0.45) 0%,
+            transparent 70%),
+        /* rich dark-wood base */
+        linear-gradient(170deg, #2e1408 0%, #1a0a04 50%, #0f0602 100%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* ─────────────── Layout ─────────────── */
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    width: 100%;
+    height: 100vh;
+}
+
+.game-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
