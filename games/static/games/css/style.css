@@ -3,10 +3,25 @@
 /* ─────────────── Design Tokens ─────────────── */
 :root {
     /* Page */
-    --bg-color: #2a120b;
+    --bg-color: #1e0e08;
+    --bg-color-light: #3a1e10;
     --text-color: #f0f0f0;
 
-    /* Board */
+    /* Board Frame */
+    --shell-bg: #c4a06a;
+    --shell-bg-dark: #a0834e;
+    --shell-border: #d4ba8a;
+    --shell-border-inner: #6b4226;
+    --shell-radius: 18px;
+
+    /* Board Surface */
+    --surface-bg: #f0dca0;
+    --surface-bg-light: #f7eac0;
+    --surface-bg-warm: #e6c87a;
+    --surface-border: #7a5230;
+    --surface-radius: 10px;
+
+    /* Board Grid Area */
     --board-bg: #e8c88a;
     --board-bg-light: #f0dca8;
     --board-frame: #c4a060;
@@ -28,19 +43,26 @@
     --hint-orange: #e67e22;
     --accent-gold: #ffd700;
     --accent-orange: #d4862b;
-
 }
 
-/* ─────────────── Base ─────────────── */
+/* ─────────────── Base / Page ─────────────── */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Noto Sans SC', sans-serif;
     background:
-        radial-gradient(ellipse 80% 80% at 50% 50%,
-            transparent 40%,
-            rgba(0, 0, 0, 0.65) 100%),
+        /* vignette overlay on page */
+        radial-gradient(ellipse 75% 75% at 50% 50%,
+            transparent 30%,
+            rgba(0, 0, 0, 0.7) 100%),
+        /* warm wood gradient */
         radial-gradient(ellipse at 50% 40%,
-            #4b2416 0%,
-            #2a120b 70%);
+            var(--bg-color-light) 0%,
+            var(--bg-color) 70%);
     color: var(--text-color);
     margin: 0;
     min-height: 100vh;
@@ -55,55 +77,95 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 16px;
     width: 100%;
-    height: 95vh;
+    height: 100vh;
 }
 
 .game-area {
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
+    height: 100%;
 }
 
-/* ─────────────── Board Wrapper (Wood Frame) ─────────────── */
-.board-wrapper {
-    padding: 28px;
+/* ═══════════════════════════════════════════════
+   Board Shell — Outer Frame (Layer 1)
+   ═══════════════════════════════════════════════ */
+.board-shell {
+    /* Outer wooden frame with rounded corners */
+    padding: 18px;
     background:
-        /* subtle wood grain */
-        repeating-linear-gradient(92deg,
-            rgba(0, 0, 0, 0.04) 0px,
-            rgba(0, 0, 0, 0.04) 1px,
+        /* subtle wood grain texture */
+        repeating-linear-gradient(95deg,
+            rgba(0, 0, 0, 0.05) 0px,
+            rgba(0, 0, 0, 0.05) 1px,
             transparent 1px,
-            transparent 7px),
+            transparent 6px),
         repeating-linear-gradient(0deg,
             rgba(0, 0, 0, 0.02) 0px,
             rgba(0, 0, 0, 0.02) 1px,
             transparent 1px,
-            transparent 14px),
-        linear-gradient(160deg, #d4b896 0%, #c4a87a 40%, #b8985a 100%);
-    border-radius: 16px;
+            transparent 12px),
+        /* main gradient — warm golden-brown */
+        linear-gradient(160deg,
+            #d6be90 0%,
+            var(--shell-bg) 35%,
+            var(--shell-bg-dark) 100%);
+    border-radius: var(--shell-radius);
+    /* thick outer border — light cream-brown */
+    border: 3.5px solid var(--shell-border);
+    /* shadows for depth */
     box-shadow:
-        /* outer drop shadow */
-        0 12px 40px rgba(0, 0, 0, 0.55),
-        0 4px 12px rgba(0, 0, 0, 0.3),
-        /* top highlight rim */
-        inset 0 2px 0 rgba(255, 255, 255, 0.25),
-        /* inner shadow for depth */
-        inset 0 -2px 6px rgba(0, 0, 0, 0.15);
+        /* main outer drop shadow */
+        0 16px 50px rgba(0, 0, 0, 0.6),
+        0 6px 16px rgba(0, 0, 0, 0.35),
+        /* outer rim highlight */
+        0 -1px 0 rgba(255, 255, 255, 0.12),
+        /* top edge gloss */
+        inset 0 2px 0 rgba(255, 255, 255, 0.2),
+        /* bottom inner shadow */
+        inset 0 -3px 8px rgba(0, 0, 0, 0.15);
+
+    /* Responsive sizing — max width, aspect-ratio based */
+    max-width: min(520px, 93vw);
+    width: 93vw;
+}
+
+/* ═══════════════════════════════════════════════
+   Board Surface — Inner Mat (Layer 2)
+   ═══════════════════════════════════════════════ */
+.board-surface {
+    /* Inner surface sits inside the shell with padding */
+    padding: 14px;
+    background:
+        /* warm paper gradient — lighter on top, slightly darker at bottom */
+        linear-gradient(180deg,
+            var(--surface-bg-light) 0%,
+            var(--surface-bg) 40%,
+            var(--surface-bg-warm) 100%);
+    border-radius: var(--surface-radius);
+    /* thin dark brown border */
+    border: 2px solid var(--surface-border);
+    /* inner shadow for recessed feel */
+    box-shadow:
+        inset 0 3px 10px rgba(0, 0, 0, 0.18),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.08),
+        inset 3px 0 8px rgba(0, 0, 0, 0.06),
+        inset -3px 0 8px rgba(0, 0, 0, 0.06);
     position: relative;
 }
 
-/* Inner reddish-brown border line */
-.board-wrapper::before {
+/* Vignette overlay on the surface */
+.board-surface::after {
     content: "";
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    border: 2.5px solid var(--board-frame-dark);
-    border-radius: 10px;
+    inset: 0;
+    border-radius: var(--surface-radius);
+    background: radial-gradient(ellipse 85% 85% at 50% 48%,
+            transparent 50%,
+            rgba(90, 60, 20, 0.15) 100%);
     pointer-events: none;
     z-index: 0;
 }
@@ -112,24 +174,29 @@ body {
 .board-inner {
     position: relative;
     background:
-        /* subtle wood texture */
+        /* very subtle texture lines */
         repeating-linear-gradient(90deg,
-            rgba(0, 0, 0, 0.02) 0px,
-            rgba(0, 0, 0, 0.02) 1px,
+            rgba(0, 0, 0, 0.015) 0px,
+            rgba(0, 0, 0, 0.015) 1px,
             transparent 1px,
             transparent 5px),
         repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.012) 0px,
-            rgba(0, 0, 0, 0.012) 1px,
+            rgba(0, 0, 0, 0.008) 0px,
+            rgba(0, 0, 0, 0.008) 1px,
             transparent 1px,
             transparent 9px),
-        linear-gradient(180deg, var(--board-bg-light) 0%, var(--board-bg) 50%, var(--board-bg-light) 100%);
+        /* warm paper base */
+        linear-gradient(180deg,
+            var(--board-bg-light) 0%,
+            var(--board-bg) 50%,
+            var(--board-bg-light) 100%);
 
     /* Dimensions set by JS via CSS custom properties */
     overflow: visible;
     user-select: none;
     -webkit-user-select: none;
     cursor: default;
+    z-index: 1;
 }
 
 /* ─────────────── SVG Grid Overlay ─────────────── */
@@ -365,4 +432,33 @@ body {
     pointer-events: none;
     opacity: 1;
     transition: opacity 0.5s ease-out;
+}
+
+/* ═══════════════════════════════════════════════
+   Responsive Rules
+   ═══════════════════════════════════════════════ */
+
+/* Mobile: tighter padding */
+@media (max-width: 520px) {
+    .board-shell {
+        padding: 12px;
+        border-width: 3px;
+        border-radius: 14px;
+    }
+
+    .board-surface {
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .main-container {
+        padding: 8px;
+    }
+}
+
+/* Large screens: cap size */
+@media (min-width: 900px) {
+    .board-shell {
+        max-width: 560px;
+    }
 }
