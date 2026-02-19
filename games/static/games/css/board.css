@@ -147,7 +147,8 @@
 /* ─────────────── Board Inner (Grid Area) ─────────────── */
 .board-inner {
     position: relative;
-    margin: auto;
+    width: 100%;
+    height: 100%;
     background: transparent;
     overflow: visible;
     user-select: none;

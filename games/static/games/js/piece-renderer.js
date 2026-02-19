@@ -7,10 +7,8 @@
 var boardSvgEl = null;
 
 function initBoardStructure() {
-    var totalW = BOARD_W + BOARD_PAD * 2;
-    var totalH = BOARD_H + BOARD_PAD * 2;
-    boardEl.style.width = totalW + 'px';
-    boardEl.style.height = totalH + 'px';
+    boardEl.style.width = '100%';
+    boardEl.style.height = '100%';
 
     boardSvgEl = createBoardSVG();
     boardEl.appendChild(boardSvgEl);

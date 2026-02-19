@@ -22,20 +22,18 @@ var statusDisplay = document.getElementById('status-display');
 var gameStatusLog = document.getElementById('game-status-log');
 var chatLog = document.querySelector('.chat-log');
 
-// ── Board Click ──
-boardEl.addEventListener('click', function (e) {
-    if (isAnimating) return;
-    var rect = boardEl.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-
-    var c = Math.round((x - BOARD_PAD) / CELL_SIZE);
-    var r = Math.round((y - BOARD_PAD) / CELL_SIZE);
-
-    if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
-        handleCellClick(r, c);
-    }
-});
+// ── Board Click (Step 3+) ──
+// boardEl.addEventListener('click', function (e) {
+//     if (isAnimating) return;
+//     var rect = boardEl.getBoundingClientRect();
+//     var x = e.clientX - rect.left;
+//     var y = e.clientY - rect.top;
+//     var c = Math.round((x - BOARD_PAD) / CELL_SIZE);
+//     var r = Math.round((y - BOARD_PAD) / CELL_SIZE);
+//     if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+//         handleCellClick(r, c);
+//     }
+// });
 
 // ── Init ──
 function initGame(config) {
@@ -47,7 +45,10 @@ function initGame(config) {
     legalMoves = config.legalMoves || [];
     lastMove = config.lastMove || null;
 
+    // Step 2: Grid only
     initBoardStructure();
-    renderBoard(false);
-    updateStatusUI();
+
+    // Step 3+: Pieces & game logic (uncomment later)
+    // renderBoard(false);
+    // updateStatusUI();
 }

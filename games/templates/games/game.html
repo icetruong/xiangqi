@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <!-- JS Modules (order matters: constants → svg-grid → piece-renderer → game-logic → game) -->
+    <!-- JS Modules -->
     <script src="{% static 'games/js/constants.js' %}"></script>
     <script src="{% static 'games/js/svg-grid.js' %}"></script>
     <script src="{% static 'games/js/piece-renderer.js' %}"></script>
@@ -38,16 +38,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var movesData = {{ legal_moves|default: "[]" | safe
-        }};
-        initGame({
-            gameId: "{{ game.id }}",
-            boardState: {{ game.board_state | safe }},
-            currentTurn: "{{ game.current_turn }}",
-            status: "{{ game.status }}",
-            playerSide: "{{ game.player_side }}",
-            aiSide: "{{ game.ai_side }}",
-            legalMoves: movesData
+            var movesData = {{ legal_moves|default:"[]"|safe }};
+            initGame({
+                gameId: "{{ game.id }}",
+                boardState: {{ game.board_state|safe }},
+                currentTurn: "{{ game.current_turn }}",
+                status: "{{ game.status }}",
+                playerSide: "{{ game.player_side }}",
+                aiSide: "{{ game.ai_side }}",
+                legalMoves: movesData
             });
         });
     </script>
