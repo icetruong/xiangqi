@@ -1,56 +1,125 @@
-    /* ─── Legal Move Hint Dots ─── */
-    .hint-dot {
-        position: absolute;
-        z-index: 3;
-        pointer-events: none;
-        border-radius: 50%;
-        background: var(--hint-orange);
-        opacity: 0.8;
-        box-shadow: 0 0 6px rgba(230, 126, 34, 0.5);
-    }
+/* ─────────────── Markers Layer ─────────────── */
+.markers-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    /* above SVG(1), pieces(2) */
+    pointer-events: none;
+    /* children override with pointer-events: auto */
+}
 
-    /* ─── Last Move Indicator (Orange Ring) ─── */
-    .last-move-target::after {
-        content: '';
-        position: absolute;
-        top: -4px;
-        left: -4px;
-        right: -4px;
-        bottom: -4px;
-        border-radius: 50%;
-        border: 2.5px solid #e67e22;
-        box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
-        pointer-events: none;
-        z-index: 6;
-    }
+/* ─── Legal Move Dot ─── */
+.move-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(230, 120, 20, 0.88);
+    box-shadow: 0 0 6px rgba(230, 120, 20, 0.6);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
 
-    /* ─── Capture Target Ring (Purple) ─── */
-    .capture-target::before {
-        content: '';
-        position: absolute;
-        top: -6px;
-        left: -6px;
-        right: -6px;
-        bottom: -6px;
-        border-radius: 50%;
-        border: 2.5px solid #8b5cf6;
-        box-shadow:
-            0 0 10px rgba(139, 92, 246, 0.55),
-            0 0 20px rgba(139, 92, 246, 0.25);
-        pointer-events: none;
-        z-index: 7;
-    }
+.move-dot:hover {
+    transform: scale(1.25);
+}
 
-    /* ─── Old Position Marker (Transient) ─── */
-    .old-pos-marker {
-        position: absolute;
-        width: 12px;
-        height: 12px;
-        background-color: #d35400;
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 2;
-        pointer-events: none;
+/* ─── Capture Ring ─── */
+.capture-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid #8b5cf6;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.55),
+        inset 0 0 6px rgba(139, 92, 246, 0.2);
+    pointer-events: none;
+    animation: captureRingPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes captureRingPulse {
+
+    0%,
+    100% {
         opacity: 1;
-        transition: opacity 0.5s ease-out;
     }
+
+    50% {
+        opacity: 0.55;
+    }
+}
+
+/* ─── Selected Piece Ring ─── */
+.piece.selected {
+    box-shadow:
+        /* keep base rings */
+        0 0 0 2.5px inherit,
+        /* gold selection ring */
+        0 0 0 9px rgba(251, 191, 36, 0.9),
+        0 0 14px rgba(251, 191, 36, 0.55),
+        0 4px 12px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+    z-index: 10 !important;
+}
+
+.piece-red.selected {
+    box-shadow:
+        0 0 0 2.5px #922b21,
+        0 0 0 5px #f5e6c8,
+        0 0 0 7px #7b241c,
+        0 0 0 11px rgba(251, 191, 36, 0.9),
+        0 0 16px rgba(251, 191, 36, 0.5),
+        0 4px 12px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+}
+
+.piece-black.selected {
+    box-shadow:
+        0 0 0 2.5px #111,
+        0 0 0 5px #f0e8d4,
+        0 0 0 7px #0a0a0a,
+        0 0 0 11px rgba(251, 191, 36, 0.9),
+        0 0 16px rgba(251, 191, 36, 0.5),
+        0 4px 12px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
+}
+
+/* ─── Old Position Marker ─── */
+.old-pos-marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: rgba(200, 80, 20, 0.65);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* ─── Toast Notification ─── */
+.xiangqi-toast {
+    position: fixed;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(20, 10, 5, 0.92);
+    color: #f5e6c8;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 15px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: 1px solid rgba(180, 100, 40, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    pointer-events: none;
+    animation: toastFade 0.25s ease;
+}
+
+@keyframes toastFade {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
