@@ -6,8 +6,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xiangqi Game</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -21,16 +23,17 @@
 
     <script src="{% static 'games/js/game.js' %}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var movesData = {{ legal_moves|default:"[]"|safe }};
-            initGame({
-                gameId: "{{ game.id }}",
-                boardState: {{ game.board_state|safe }},
-                currentTurn: "{{ game.current_turn }}",
-                status: "{{ game.status }}",
-                playerSide: "{{ game.player_side }}",
-                aiSide: "{{ game.ai_side }}",
-                legalMoves: movesData
+        document.addEventListener('DOMContentLoaded', function () {
+            var movesData = {{ legal_moves|default: "[]" | safe
+        }};
+        initGame({
+            gameId: "{{ game.id }}",
+            boardState: {{ game.board_state | safe }},
+            currentTurn: "{{ game.current_turn }}",
+            status: "{{ game.status }}",
+            playerSide: "{{ game.player_side }}",
+            aiSide: "{{ game.ai_side }}",
+            legalMoves: movesData
             });
         });
     </script>
