@@ -13,15 +13,17 @@ function createBoardSVG() {
 
     var c = '#b06a2a';   // warm orange-brown
 
-    function line(x1, y1, x2, y2, sw) {
+    function line(x1, y1, x2, y2, sw, color) {
         var l = document.createElementNS(SVG_NS, 'line');
         l.setAttribute('x1', x1); l.setAttribute('y1', y1);
         l.setAttribute('x2', x2); l.setAttribute('y2', y2);
-        l.setAttribute('stroke', c);
+        l.setAttribute('stroke', color || c);
         l.setAttribute('stroke-width', sw);
         l.setAttribute('stroke-linecap', 'square');
         svg.appendChild(l); return l;
     }
+
+
     function rect(x, y, w, h, sw) {
         var r = document.createElementNS(SVG_NS, 'rect');
         r.setAttribute('x', x); r.setAttribute('y', y);

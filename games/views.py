@@ -40,7 +40,8 @@ def game_board(request, game_id):
         }
 
     return render(request, 'games/game.html', {
-        'game': game, 
-        'legal_moves': json.dumps(legal_moves),
-        'last_move': json.dumps(last_move_data)
+        'game': game,
+        'board_state_json': json.dumps(game.board_state),
+        'legal_moves_json': json.dumps(legal_moves),
+        'last_move_json': json.dumps(last_move_data),
     })

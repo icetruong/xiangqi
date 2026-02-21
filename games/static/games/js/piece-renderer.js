@@ -32,15 +32,18 @@ function pieceY(r) {
 
 // ── Init SVG + pieces-layer ──
 function initBoardStructure() {
+    console.log('[xiangqi] initBoardStructure — boardEl:', boardEl);
     boardEl.style.width = '';  // let CSS control
     boardEl.style.height = '';
 
     boardSvgEl = createBoardSVG();
     boardEl.appendChild(boardSvgEl);
+    console.log('[xiangqi] SVG appended, size:', boardSvgEl.getBoundingClientRect());
 
     piecesLayer = document.createElement('div');
     piecesLayer.className = 'pieces-layer';
     boardEl.appendChild(piecesLayer);
+    console.log('[xiangqi] piecesLayer appended');
 }
 
 // ── Piece element factory ──
@@ -63,6 +66,8 @@ function renderBoard(shouldAnimate) {
     piecesLayer.innerHTML = '';
 
     var sz = getPieceSize();
+    var rect = boardEl.getBoundingClientRect();
+    console.log('[xiangqi] renderBoard — boardEl rect:', rect.width.toFixed(0) + 'x' + rect.height.toFixed(0), 'pieceSize:', sz);
 
     for (var r = 0; r < ROWS; r++) {
         for (var c = 0; c < COLS; c++) {

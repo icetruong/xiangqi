@@ -77,11 +77,18 @@
     width: 100%;
     height: 100%;
     position: relative;
+    box-sizing: border-box;
 
-    /* Center the board-inner */
+    /* Inset: this IS the frame gap. Only define it here. */
+    padding: 5% 7%;
+
+    /* Flex so the child .grid-area fills the padded interior with a definite height.
+       display:grid without grid-template-rows caused .grid-area height:100% to collapse. */
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+
+    /* Isolate so ::before/::after z-index is scoped to THIS element only */
+    isolation: isolate;
 
     /* ── Parchment base ── */
     background:
@@ -116,6 +123,7 @@
             rgba(100, 60, 20, 0.18) 85%,
             rgba(60, 30, 8, 0.28) 100%);
     pointer-events: none;
+    /* Must be below .grid-area (z-index: 1) */
     z-index: 0;
 }
 
@@ -141,22 +149,32 @@
             rgba(120, 80, 30, 0.01) 5px,
             rgba(120, 80, 30, 0.01) 6px);
     pointer-events: none;
+    /* Must be below .grid-area (z-index: 1) */
     z-index: 0;
 }
 
-/* ─────────────── Grid Area (single source of truth) ─────────────── */
-/* THIS is the only place inset is defined. SVG + pieces use 0% = top-left ─── */
+/* ─────────────── Board Inner ─────────────── */
+/* Flex child of .board-surface: fills the padded interior with a definite size.
+   z-index:1 places it above ::before/::after (z-index:0).            */
+.board-inner {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    z-index: 1;
+}
+
+/* ─────────────── Grid Area ─────────────── */
+/* Fills .board-inner edge-to-edge via absolute positioning. */
 .grid-area {
     position: absolute;
-    /* inset from parchment edge — adjust these to taste */
-    top: 6%;
-    left: 8%;
-    right: 8%;
-    bottom: 6%;
+    inset: 0;
     overflow: visible;
     user-select: none;
     -webkit-user-select: none;
     cursor: default;
+    /* ── DEBUG outline (remove once confirmed) ── */
+    outline: 2px solid rgba(0, 255, 255, 0.35);
 }
 
 /* ─────────────── SVG Grid (fills .grid-area edge-to-edge) ─────────────── */
@@ -170,6 +188,8 @@
     shape-rendering: geometricPrecision;
     overflow: visible;
     /* allow coords text outside bounds */
+    /* ── DEBUG outline ── */
+    outline: 2px solid rgba(255, 165, 0, 0.25);
 }
 
 /* ═══════════════════════════════════════════════

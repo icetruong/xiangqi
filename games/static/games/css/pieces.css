@@ -2,9 +2,11 @@
 .pieces-layer {
     position: absolute;
     inset: 0;
+    /* z-index: 2 → above board-svg (1), below markers-layer (3) */
     z-index: 2;
     pointer-events: none;
-    /* Step 3: no clicks yet */
+    /* ── DEBUG outline ── */
+    outline: 2px solid rgba(255, 0, 0, 0.2);
 }
 
 /* ─────────────── Base Piece (Coin) ─────────────── */

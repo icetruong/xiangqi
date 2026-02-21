@@ -23,7 +23,9 @@
         <div class="game-area">
             <div class="board-shell">
                 <div class="board-surface">
-                    <div class="grid-area" id="board"></div>
+                    <div class="board-inner">
+                        <div class="grid-area" id="board"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -38,16 +40,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var movesData = {{ legal_moves|default: "[]" | safe
-        }};
-        initGame({
-            gameId: "{{ game.id }}",
-            boardState: {{ game.board_state | safe }},
+            initGame({
+                gameId: "{{ game.id }}",
+                boardState: {{ board_state_json| safe }},
             currentTurn: "{{ game.current_turn }}",
             status: "{{ game.status }}",
             playerSide: "{{ game.player_side }}",
             aiSide: "{{ game.ai_side }}",
-            legalMoves: movesData
+            legalMoves: {{ legal_moves_json| safe }},
+            lastMove: {{ last_move_json| safe }}
             });
         });
     </script>
