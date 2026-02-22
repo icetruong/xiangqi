@@ -59,6 +59,74 @@ function getCookie(name) {
 const csrftoken = getCookie('csrftoken');
 
 // ═══════════════════════════════════════════════
+//  Sound Effects (Web Audio API)
+// ═══════════════════════════════════════════════
+
+var _audioCtx = null;
+function getAudioCtx() {
+    if (!_audioCtx) {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return _audioCtx;
+}
+
+// "Cạch" — woody thump when a piece lands
+function playMoveSound() {
+    try {
+        var ctx = getAudioCtx();
+        var buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < data.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Low thump: decaying sine at ~180 Hz
+            data[i] = Math.sin(2 * Math.PI * 180 * t) * Math.exp(-t * 40);
+            // Add soft click transient
+            if (i < 80) data[i] += (Math.random() * 2 - 1) * (1 - i / 80) * 0.5;
+        }
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        // Slight low-pass to make it warmer
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 900;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.65;
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silence */ }
+}
+
+// "Tick" — sharp crack when a piece is captured
+function playCaptureSound() {
+    try {
+        var ctx = getAudioCtx();
+        var buf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < data.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Sharp crack: noise burst + mid-range tone
+            var noise = (Math.random() * 2 - 1) * Math.exp(-t * 80);
+            var tone = Math.sin(2 * Math.PI * 900 * t) * Math.exp(-t * 60) * 0.5;
+            data[i] = noise + tone;
+        }
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1800;
+        filter.Q.value = 0.8;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.8;
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silence */ }
+}
+
+// ═══════════════════════════════════════════════
 //  SVG Grid Builder
 // ═══════════════════════════════════════════════
 function createBoardSVG() {
@@ -621,6 +689,13 @@ function initGame(config) {
     lastMove = config.lastMove || null;
     inCheck = config.inCheck || null;
 
+    // Un-suspend AudioContext on first user interaction (browser autoplay policy)
+    document.addEventListener('click', function resumeAudio() {
+        var ctx = getAudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+        document.removeEventListener('click', resumeAudio);
+    }, { once: true });
+
     initBoardStructure();
     renderBoard(false);
     updateStatusUI();
@@ -706,6 +781,15 @@ function updateGameState(data) {
         lastMove.from[1] !== prevLastMove.from[1] ||
         lastMove.to[0] !== prevLastMove.to[0] ||
         lastMove.to[1] !== prevLastMove.to[1]));
+
+    // ── Sound Effects ──
+    if (shouldAnimate && lastMove) {
+        if (lastMove.captured) {
+            playCaptureSound();
+        } else {
+            playMoveSound();
+        }
+    }
 
     updateStatusUI();
     renderBoard(shouldAnimate);
