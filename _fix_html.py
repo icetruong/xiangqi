@@ -1,4 +1,5 @@
-﻿{% load static %}
+content = """\
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -37,3 +38,14 @@
 </body>
 
 </html>
+"""
+
+with open(
+    r"d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\games\templates\games\game.html",
+    "w",
+    encoding="utf-8",
+    newline="\r\n",
+) as f:
+    f.write(content)
+
+print("OK - file written successfully")

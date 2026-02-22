@@ -34,26 +34,11 @@ let selectedCell = null;
 let legalMoves = [];
 let isAnimating = false;
 
-// ── DOM ──
-const boardEl = document.getElementById('board');
-const statusDisplay = document.getElementById('status-display');
-const gameStatusLog = document.getElementById('game-status-log');
-const chatLog = document.querySelector('.chat-log');
-
-// ── Board Interaction ──
-boardEl.addEventListener('click', function (e) {
-    if (isAnimating) return;
-    const rect = boardEl.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const c = Math.round((x - BOARD_PAD) / CELL_SIZE);
-    const r = Math.round((y - BOARD_PAD) / CELL_SIZE);
-
-    if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
-        handleCellClick(r, c);
-    }
-});
+// ── DOM (assigned in initGame after DOMContentLoaded) ──
+var boardEl = null;
+var statusDisplay = null;
+var gameStatusLog = null;
+var chatLog = null;
 
 // ── CSRF ──
 function getCookie(name) {
@@ -598,6 +583,25 @@ function getCaptureTargets() {
 // ═══════════════════════════════════════════════
 
 function initGame(config) {
+    // Assign DOM refs here — DOM is guaranteed to exist by the time initGame() is called
+    boardEl = document.getElementById('board');
+    statusDisplay = document.getElementById('status-display');
+    gameStatusLog = document.getElementById('game-status-log');
+    chatLog = document.querySelector('.chat-log');
+
+    // Attach board click listener
+    boardEl.addEventListener('click', function (e) {
+        if (isAnimating) return;
+        var rect = boardEl.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        var c = Math.round((x - BOARD_PAD) / CELL_SIZE);
+        var r = Math.round((y - BOARD_PAD) / CELL_SIZE);
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+            handleCellClick(r, c);
+        }
+    });
+
     gameId = config.gameId;
     boardState = config.boardState;
     currentTurn = config.currentTurn;
