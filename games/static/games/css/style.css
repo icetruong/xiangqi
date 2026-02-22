@@ -349,6 +349,49 @@ body {
     z-index: 7;
 }
 
+/* ─── King In-Check Ring (Red, Pulsing) ─── */
+@keyframes checkPulse {
+    0% {
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.9), 0 0 14px rgba(220, 38, 38, 0.7);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.5), 0 0 26px rgba(220, 38, 38, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.9), 0 0 14px rgba(220, 38, 38, 0.7);
+    }
+}
+
+.piece-red.king-in-check {
+    box-shadow:
+        0 0 0 3px var(--piece-red-outer),
+        0 0 0 5px var(--piece-rim),
+        0 0 0 6px #8b1a1a,
+        0 0 0 9px rgba(220, 38, 38, 0.9),
+        0 0 20px rgba(220, 38, 38, 0.6),
+        0 4px 10px rgba(0, 0, 0, 0.4),
+        inset 0 2px 4px rgba(255, 255, 255, 0.25),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+    animation: checkPulse 1s ease-in-out infinite;
+    z-index: 20;
+}
+
+.piece-black.king-in-check {
+    box-shadow:
+        0 0 0 3px var(--piece-black-outer),
+        0 0 0 5px var(--piece-rim),
+        0 0 0 6px #111,
+        0 0 0 9px rgba(220, 38, 38, 0.9),
+        0 0 20px rgba(220, 38, 38, 0.6),
+        0 4px 10px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.15),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    animation: checkPulse 1s ease-in-out infinite;
+    z-index: 20;
+}
+
 /* ─── Old Position Marker (Transient) ─── */
 .old-pos-marker {
     position: absolute;

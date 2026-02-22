@@ -3,6 +3,19 @@ from rest_framework.response import Response
 from rest_framework import status
 from games.models import Game
 from games.services import game_service, engine_adapter
+from engine.board import Board
+from engine.utils.position import EMPTY as ENGINE_EMPTY
+from engine.rules.check_rules import is_in_check
+
+def _get_in_check(board_state):
+    """Return the side currently in check ('r', 'b'), or None."""
+    engine_board = [[ENGINE_EMPTY if cell == '' else cell for cell in row] for row in board_state]
+    b = Board(state=engine_board)
+    if is_in_check(b, 'r'):
+        return 'r'
+    if is_in_check(b, 'b'):
+        return 'b'
+    return None
 
 @api_view(['POST'])
 def create_game(request):
@@ -66,7 +79,8 @@ def game_detail(request, game_id):
         "winner": game.winner,
         "end_reason": game.end_reason,
         "last_move": last_move_data,
-        "legal_moves": legal_moves
+        "legal_moves": legal_moves,
+        "in_check": _get_in_check(game.board_state)
     })
 
 @api_view(['POST'])
@@ -110,7 +124,8 @@ def make_move(request, game_id):
             "status": game.status,
             "winner": game.winner,
             "end_reason": game.end_reason,
-            "last_move": last_move_data
+            "last_move": last_move_data,
+            "in_check": _get_in_check(game.board_state)
         })
 
     except ValueError as e:

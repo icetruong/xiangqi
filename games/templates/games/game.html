@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,12 +26,14 @@
     <script>
         initGame({
             gameId: "{{ game.id }}",
-            boardState: {{ game.board_state|safe }},
+            boardState: {{ game.board_state | safe }},
             currentTurn: "{{ game.current_turn }}",
             status: "{{ game.status }}",
             playerSide: "{{ game.player_side }}",
             aiSide: "{{ game.ai_side }}",
-            legalMoves: {{ legal_moves|default:"[]"|safe }}
+            legalMoves: {{ legal_moves| safe }},
+            lastMove: {{ last_move| safe }},
+            inCheck: {{ in_check| safe }}
         });
     </script>
 </body>

@@ -33,6 +33,7 @@ let lastMove = null;
 let selectedCell = null;
 let legalMoves = [];
 let isAnimating = false;
+let inCheck = null; // 'r', 'b', or null
 
 // ── DOM (assigned in initGame after DOMContentLoaded) ──
 var boardEl = null;
@@ -418,6 +419,15 @@ function renderBoard(shouldAnimate) {
                 pieceEl.classList.remove('capture-target');
             }
 
+            // Check indicator (red ring around king)
+            var isKing = (code === 'rK' || code === 'bK');
+            var side = code.charAt(0);
+            if (isKing && inCheck === side) {
+                pieceEl.classList.add('king-in-check');
+            } else {
+                pieceEl.classList.remove('king-in-check');
+            }
+
             // Click handler
             (function (row, col) {
                 pieceEl.onclick = function (e) {
@@ -609,6 +619,7 @@ function initGame(config) {
     playerSide = config.playerSide;
     legalMoves = config.legalMoves || [];
     lastMove = config.lastMove || null;
+    inCheck = config.inCheck || null;
 
     initBoardStructure();
     renderBoard(false);
@@ -687,6 +698,7 @@ function updateGameState(data) {
     status = data.status;
     lastMove = data.last_move;
     legalMoves = data.legal_moves || [];
+    inCheck = data.in_check || null;
 
     // Animate if there's a new move that differs from the previous one
     var shouldAnimate = !!(lastMove && (!prevLastMove ||
