@@ -38,6 +38,7 @@
             inCheck: {{ in_check| safe }}
         });
     </script>
+
     <!-- ── Game Action Buttons (fixed top-right — phong cách cổ trang) ── -->
     <div class="game-actions" aria-label="Game controls" style="position:relative">
         <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận thua</button>
@@ -45,40 +46,128 @@
         <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoái lui</a>
     </div>
 
+    <!-- ══════════════════════════════════════════════
+         Endgame Modal — Cuộn thư cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
+        <div class="egm-scroll" id="endgameScroll">
+            <!-- Trục cuộn trên -->
+            <div class="egm-rod egm-rod--top"></div>
+
+            <!-- Nội dung cuộn -->
+            <div class="egm-body">
+                <!-- Chữ Hán lớn -->
+                <div class="egm-hanzi" id="egmHanzi">敗北</div>
+
+                <!-- Đường kẻ trang trí -->
+                <div class="egm-divider"></div>
+
+                <!-- Subtitle & lý do -->
+                <div class="egm-subtitle" id="egmSubtitle">Bạn đã nhận thua</div>
+                <div class="egm-reason" id="egmReason">Xin bái phục — hẹn ngày tái đấu.</div>
+
+                <!-- Nút CTA -->
+                <div class="egm-actions">
+                    <button class="egm-btn egm-btn--retry" id="egmRetry">⚔ Tái đấu</button>
+                    <a class="egm-btn egm-btn--home" href="/">⛩ Hồi trang</a>
+                </div>
+
+                <!-- Triện đỏ (đóng dấu) -->
+                <div class="egm-seal" id="egmSeal">敗</div>
+            </div>
+
+            <!-- Trục cuộn dưới -->
+            <div class="egm-rod egm-rod--bottom"></div>
+        </div>
+    </div>
+
     <script>
         (function () {
+            /* ── CSRF helper ── */
             function getCsrf() {
                 const m = document.cookie.match("(^|;)\\s*csrftoken\\s*=\\s*([^;]+)");
                 return m ? m.pop() : "";
             }
 
+            /* ── Fetch helper ── */
             async function postAction(path) {
                 const res = await fetch(path, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": getCsrf(),
-                    },
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
                     body: JSON.stringify({})
                 });
                 return res.json().catch(() => ({}));
             }
 
+            /* ── Thud/stamp sound ── */
+            function playThud() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for (let i = 0; i < d.length; i++) {
+                        const t = i / ctx.sampleRate;
+                        d[i] = Math.sin(2 * Math.PI * 80 * t) * Math.exp(-t * 28)
+                            + (Math.random() * 2 - 1) * Math.exp(-t * 60) * 0.35;
+                    }
+                    const src = ctx.createBufferSource(), g = ctx.createGain();
+                    src.buffer = buf; g.gain.value = 0.55;
+                    src.connect(g); g.connect(ctx.destination); src.start();
+                } catch (e) { /* silent fail */ }
+            }
+
+            /* ── Show modal ── */
+            function showEndgameModal(type) {
+                const overlay = document.getElementById("endgameOverlay");
+                const hanzi = document.getElementById("egmHanzi");
+                const subtitle = document.getElementById("egmSubtitle");
+                const reason = document.getElementById("egmReason");
+                const seal = document.getElementById("egmSeal");
+                const scroll = document.getElementById("endgameScroll");
+
+                if (type === "resign") {
+                    hanzi.textContent = "敗北";
+                    subtitle.textContent = "Bạn đã nhận thua";
+                    reason.textContent = "Xin bái phục — hẹn ngày tái đấu.";
+                    seal.textContent = "敗";
+                    scroll.dataset.type = "lose";
+                } else {
+                    hanzi.textContent = "和局";
+                    subtitle.textContent = "Ván cờ hòa";
+                    reason.textContent = "Cầu hòa thành công — giang hồ rộng mở.";
+                    seal.textContent = "和";
+                    scroll.dataset.type = "draw";
+                }
+
+                overlay.hidden = false;
+                /* stamp animation: delay so scroll unfurls first */
+                seal.classList.remove("egm-seal--stamped");
+                void seal.offsetWidth; /* trigger reflow to restart animation */
+                setTimeout(() => { seal.classList.add("egm-seal--stamped"); playThud(); }, 350);
+            }
+
+            /* ── CTA: Tái đấu → về trang chủ để chọn ván mới ── */
+            document.getElementById("egmRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── Resign ── */
             document.getElementById("btnResign").addEventListener("click", async () => {
-                if (!confirm("Bạn chắc chắn muốn xin thua?")) return;
+                if (!confirm("Xác nhận nhận thua?")) return;
                 const data = await postAction(`/api/games/${window.GAME_ID}/resign`);
                 if (data.ok) {
-                    window.location.reload();
+                    showEndgameModal("resign");
                 } else {
                     alert(data.message || "Không thể xin thua lúc này.");
                 }
             });
 
+            /* ── Draw ── */
             document.getElementById("btnDraw").addEventListener("click", async () => {
                 if (!confirm("Gửi yêu cầu hòa?")) return;
                 const data = await postAction(`/api/games/${window.GAME_ID}/draw`);
                 if (data.ok) {
-                    window.location.reload();
+                    showEndgameModal("draw");
                 } else {
                     alert(data.message || "Không thể xin hòa lúc này.");
                 }

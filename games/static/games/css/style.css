@@ -621,3 +621,324 @@ body {
         font-size: 0.85rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Endgame Modal  ── Cuộn thư cổ trang  (古卷 phong cách kiếm hiệp)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Backdrop: đêm giang hồ ── */
+.egm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(60, 20, 0, .25) 0%, transparent 70%),
+        rgba(8, 5, 3, 0.82);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: egmFadeIn .35s ease forwards;
+}
+
+.egm-overlay[hidden] {
+    display: none;
+}
+
+@keyframes egmFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ── Cuộn thư (scroll container) ── */
+.egm-scroll {
+    position: relative;
+    width: clamp(300px, 88vw, 480px);
+    animation: egmUnfurl .45s cubic-bezier(.22, .68, 0, 1.2) forwards;
+    transform-origin: center top;
+}
+
+@keyframes egmUnfurl {
+    from {
+        transform: scaleY(0.1);
+        opacity: 0;
+    }
+
+    to {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+/* ── Trục cuộn (rod bars) — hiệu ứng trụ đồng 3D ── */
+.egm-rod {
+    height: 22px;
+    border-radius: 11px;
+    background:
+        linear-gradient(180deg,
+            #e8c97a 0%,
+            #a07830 25%,
+            #c9a048 50%,
+            #7a5018 75%,
+            #c0903a 100%);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, .6),
+        inset 0 2px 3px rgba(255, 240, 180, .4),
+        inset 0 -2px 3px rgba(0, 0, 0, .4);
+    position: relative;
+    z-index: 2;
+}
+
+.egm-rod--top {
+    border-radius: 11px 11px 0 0;
+    margin-bottom: -2px;
+}
+
+.egm-rod--bottom {
+    border-radius: 0 0 11px 11px;
+    margin-top: -2px;
+}
+
+/* Rod end caps (circles on left/right) */
+.egm-rod::before,
+.egm-rod::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 40% 35%,
+            #f0d890 0%,
+            #b08838 45%,
+            #7a5820 100%);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .5);
+}
+
+.egm-rod::before {
+    left: -8px;
+}
+
+.egm-rod::after {
+    right: -8px;
+}
+
+/* ── Thân cuộn (giấy gạo) ── */
+.egm-body {
+    position: relative;
+    padding: 32px 36px 40px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+        linear-gradient(170deg, #f2e4c0 0%, #ead5a0 40%, #e4cc8e 100%);
+    border-left: 2px solid #c9a050;
+    border-right: 2px solid #c9a050;
+    overflow: visible;
+}
+
+/* ── Chữ Hán lớn (mực tàu / mực đỏ) ── */
+.egm-hanzi {
+    font-family: 'Ma Shan Zheng', serif;
+    font-size: clamp(3.5rem, 12vw, 5.5rem);
+    line-height: 1;
+    text-align: center;
+    color: #8b1a1a;
+    text-shadow:
+        0 2px 0 rgba(0, 0, 0, .25),
+        0 4px 16px rgba(139, 26, 26, .35);
+    margin-bottom: 8px;
+    letter-spacing: .04em;
+}
+
+/* Draw variant: vàng đồng */
+.egm-scroll[data-type="draw"] .egm-hanzi {
+    color: #6b4a08;
+}
+
+/* ── Đường kẻ trang trí (divider) ── */
+.egm-divider {
+    height: 1px;
+    margin: 0 auto 18px;
+    width: 70%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            #a07830 20%,
+            #c9a048 50%,
+            #a07830 80%,
+            transparent 100%);
+}
+
+/* ── Subtitle + reason (tiếng Việt) ── */
+.egm-subtitle {
+    font-family: 'Noto Serif', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #3a2010;
+    text-align: center;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+}
+
+.egm-reason {
+    font-family: 'Noto Serif', serif;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #6a4820;
+    text-align: center;
+    margin-bottom: 24px;
+    letter-spacing: .02em;
+}
+
+/* ── Nút CTA (thẻ gỗ) ── */
+.egm-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+}
+
+.egm-btn {
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-family: 'Noto Serif', serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    box-sizing: border-box;
+    border: none;
+    transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+
+.egm-btn--retry {
+    background: linear-gradient(160deg, #7a1c10 0%, #5a1209 100%);
+    color: #f5e0c0;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 180, 120, .25),
+        inset 0 -2px 0 rgba(0, 0, 0, .4),
+        2px 3px 8px rgba(0, 0, 0, .4);
+    border: 1px solid #a03020;
+}
+
+.egm-btn--home {
+    background: linear-gradient(160deg, #3a2c18 0%, #241a0c 100%);
+    color: #d4b87a;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 200, 100, .2),
+        inset 0 -2px 0 rgba(0, 0, 0, .35),
+        2px 3px 8px rgba(0, 0, 0, .4);
+    border: 1px solid #6a4a18;
+}
+
+.egm-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+}
+
+.egm-btn:active {
+    transform: translateY(1px);
+    filter: brightness(0.88);
+}
+
+/* ── Triện đỏ (seal stamp) ── */
+.egm-seal {
+    position: absolute;
+    bottom: 28px;
+    right: 30px;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: 'Ma Shan Zheng', serif;
+    font-size: 1.8rem;
+    color: rgba(255, 255, 255, .92);
+
+    background: #a81c1c;
+    border: 2px solid #7a1010;
+    border-radius: 4px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 100, 100, .3),
+        2px 3px 8px rgba(100, 0, 0, .35);
+
+    /* Hidden until stamped */
+    opacity: 0;
+    transform: scale(1.6) rotate(-8deg);
+    transform-origin: center center;
+    transition: none;
+}
+
+/* Draw: triện vàng đồng */
+.egm-scroll[data-type="draw"] .egm-seal {
+    background: #8a6010;
+    border-color: #5a3a08;
+}
+
+/* Stamp animation */
+.egm-seal--stamped {
+    animation: egmStamp .28s cubic-bezier(.22, .68, 0, 1.3) forwards;
+}
+
+@keyframes egmStamp {
+    0% {
+        opacity: 0;
+        transform: scale(1.8) rotate(-10deg);
+    }
+
+    65% {
+        opacity: 1;
+        transform: scale(0.92) rotate(2deg);
+    }
+
+    85% {
+        transform: scale(1.06) rotate(-1deg);
+    }
+
+    100% {
+        opacity: .9;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* ── Mobile ── */
+@media (max-width: 520px) {
+    .egm-body {
+        padding: 22px 20px 32px;
+    }
+
+    .egm-hanzi {
+        font-size: 3rem;
+    }
+
+    .egm-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .egm-seal {
+        width: 44px;
+        height: 44px;
+        font-size: 1.4rem;
+        bottom: 18px;
+        right: 18px;
+    }
+
+    .egm-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .egm-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
