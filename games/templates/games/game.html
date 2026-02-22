@@ -8,7 +8,8 @@
     <title>Xiangqi Game</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
 </head>
 
@@ -24,6 +25,7 @@
     <!-- game.js MUST come before the inline script so initGame() is defined -->
     <script src="{% static 'games/js/game.js' %}"></script>
     <script>
+        window.GAME_ID = "{{ game.id }}";
         initGame({
             gameId: "{{ game.id }}",
             boardState: {{ game.board_state | safe }},
@@ -35,6 +37,53 @@
             lastMove: {{ last_move| safe }},
             inCheck: {{ in_check| safe }}
         });
+    </script>
+    <!-- ── Game Action Buttons (fixed top-right — phong cách cổ trang) ── -->
+    <div class="game-actions" aria-label="Game controls" style="position:relative">
+        <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận thua</button>
+        <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
+        <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoái lui</a>
+    </div>
+
+    <script>
+        (function () {
+            function getCsrf() {
+                const m = document.cookie.match("(^|;)\\s*csrftoken\\s*=\\s*([^;]+)");
+                return m ? m.pop() : "";
+            }
+
+            async function postAction(path) {
+                const res = await fetch(path, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCsrf(),
+                    },
+                    body: JSON.stringify({})
+                });
+                return res.json().catch(() => ({}));
+            }
+
+            document.getElementById("btnResign").addEventListener("click", async () => {
+                if (!confirm("Bạn chắc chắn muốn xin thua?")) return;
+                const data = await postAction(`/api/games/${window.GAME_ID}/resign`);
+                if (data.ok) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Không thể xin thua lúc này.");
+                }
+            });
+
+            document.getElementById("btnDraw").addEventListener("click", async () => {
+                if (!confirm("Gửi yêu cầu hòa?")) return;
+                const data = await postAction(`/api/games/${window.GAME_ID}/draw`);
+                if (data.ok) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Không thể xin hòa lúc này.");
+                }
+            });
+        })();
     </script>
 </body>
 

@@ -409,3 +409,215 @@ body {
     opacity: 1;
     transition: opacity 0.5s ease-out;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Game Action Panel  ── Phong cách gỗ / sơn mài / đồng cổ
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Panel (bảng gỗ) ── */
+.game-actions {
+    position: fixed;
+    top: calc(20px + env(safe-area-inset-top));
+    right: calc(18px + env(safe-area-inset-right));
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 12px;
+
+    /* Bảng treo: chiều rộng cố định, ôm đủ 3 nút */
+    width: clamp(170px, 14vw, 220px);
+    padding: 20px 16px;
+
+    /* Gỗ mahogany sẫm + vân nhẹ */
+    background:
+        repeating-linear-gradient(178deg,
+            rgba(255, 220, 160, .025) 0px,
+            rgba(255, 220, 160, .025) 1px,
+            transparent 1px,
+            transparent 6px),
+        linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+
+    /* Viền đồng hai lớp */
+    border: 2px solid #7a5a28;
+    outline: 1px solid #c9944a;
+    outline-offset: -5px;
+    border-radius: 6px;
+
+    /* Hiệu ứng chiều sâu như bảng đồng */
+    box-shadow:
+        0 0 0 1px #3a1c0e,
+        0 8px 32px rgba(0, 0, 0, .7),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
+}
+
+/* ── Hoa văn góc giả (corner ornaments via CSS) ── */
+.game-actions::before,
+.game-actions::after {
+    content: '◈';
+    position: absolute;
+    font-size: 0.65rem;
+    color: #c9944a;
+    opacity: 0.75;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.game-actions::before {
+    top: 5px;
+    left: 6px;
+}
+
+.game-actions::after {
+    bottom: 5px;
+    right: 6px;
+}
+
+/* ── Nút (thẻ lệnh sơn mài) ── */
+.ga-btn {
+    appearance: none;
+    display: block;
+    position: relative;
+    /* cần cho ::before (triện) */
+    width: 100%;
+    box-sizing: border-box;
+    /* border + padding tính vào 100% */
+    border: none;
+    border-radius: 4px;
+    padding: 13px 28px 13px 14px;
+
+    /* Font cổ điển, hỗ trợ tiếng Việt đầy đủ */
+    font-family: 'Noto Serif', 'Times New Roman', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: left;
+    user-select: none;
+
+    /* Màu chữ ngà */
+    color: #f5e6c8;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+
+    /* Bevel: sáng trên, tối dưới – cảm giác nổi */
+    box-shadow:
+        inset 0 1px 0 rgba(255, 220, 140, .25),
+        inset 0 -2px 0 rgba(0, 0, 0, .4),
+        2px 3px 8px rgba(0, 0, 0, .5);
+
+    transition:
+        transform .12s ease,
+        box-shadow .12s ease,
+        filter .12s ease;
+}
+
+/* ── Ấn triện đỏ (góc phải mỗi nút) ── */
+.ga-btn::before {
+    content: attr(data-seal);
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Ma Shan Zheng', serif;
+    font-size: 0.58rem;
+    line-height: 1;
+    color: #fff;
+    background: #c0392b;
+    border: 1px solid #8b1a1a;
+    border-radius: 2px;
+    padding: 1px 2px;
+    opacity: 0.9;
+    box-shadow: inset 0 1px 0 rgba(255, 100, 100, .3);
+    pointer-events: none;
+}
+
+/* ── Hover: ánh sơn mài lướt qua ── */
+.ga-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 240, 180, .35),
+        inset 0 -2px 0 rgba(0, 0, 0, .5),
+        2px 5px 14px rgba(0, 0, 0, .55);
+}
+
+/* ── Active: lún xuống như ấn vào gỗ ── */
+.ga-btn:active {
+    transform: translateY(1px);
+    filter: brightness(0.88);
+    box-shadow:
+        inset 0 2px 4px rgba(0, 0, 0, .5),
+        inset 0 -1px 0 rgba(255, 200, 80, .1),
+        1px 1px 4px rgba(0, 0, 0, .5);
+}
+
+/* ── XIN THUA (đỏ son) ── */
+.ga-btn--resign {
+    background: linear-gradient(160deg, #7a1c10 0%, #5a1209 100%);
+    border: 1px solid #a03020;
+}
+
+.ga-btn--resign::before {
+    content: attr(data-seal);
+    background: #8b1a1a;
+}
+
+/* ── CẦU HÒA (vàng nghệ / đồng) ── */
+.ga-btn--draw {
+    background: linear-gradient(160deg, #6b4e0a 0%, #4a3407 100%);
+    border: 1px solid #9a7220;
+    color: #ffe9a0;
+}
+
+.ga-btn--draw::before {
+    content: attr(data-seal);
+    background: #7a5a10;
+}
+
+/* ── THOÁI LUI (xanh than / chàm) ── */
+.ga-btn--exit {
+    background: linear-gradient(160deg, #1a2e3e 0%, #0e1e2a 100%);
+    border: 1px solid #2e5070;
+}
+
+.ga-btn--exit::before {
+    content: attr(data-seal);
+    background: #1e3e54;
+}
+
+/* ══════════ Mobile ══════════ */
+@media (max-width: 520px) {
+    .game-actions {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        width: auto;
+        min-height: unset;
+        gap: 8px;
+        padding: 10px 12px;
+        top: auto;
+        bottom: calc(14px + env(safe-area-inset-bottom));
+        right: 50%;
+        transform: translateX(50%);
+        border-radius: 6px;
+    }
+
+    .game-actions::before {
+        top: 3px;
+        left: 4px;
+    }
+
+    .game-actions::after {
+        bottom: 3px;
+        right: 4px;
+    }
+
+    .ga-btn {
+        padding: 9px 20px 9px 10px;
+        font-size: 0.85rem;
+    }
+}

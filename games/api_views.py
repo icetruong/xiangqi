@@ -140,3 +140,49 @@ def make_move(request, game_id):
             "error_code": "SERVER_ERROR",
             "message": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def resign_game(request, game_id):
+    """Player resigns – AI wins."""
+    try:
+        game = Game.objects.get(id=game_id)
+    except Game.DoesNotExist:
+        return Response({"ok": False, "error_code": "GAME_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+
+    if game.status != 'ongoing':
+        return Response({"ok": False, "error_code": "GAME_ALREADY_OVER", "message": "Game is not ongoing."}, status=status.HTTP_400_BAD_REQUEST)
+
+    game.status = 'finished'
+    game.winner = game.ai_side
+    game.end_reason = 'resign'
+    game.save()
+
+    return Response({
+        "ok": True,
+        "status": game.status,
+        "winner": game.winner,
+        "end_reason": game.end_reason,
+    })
+
+@api_view(['POST'])
+def draw_game(request, game_id):
+    """Player requests a draw – immediately accepted (PvE mode)."""
+    try:
+        game = Game.objects.get(id=game_id)
+    except Game.DoesNotExist:
+        return Response({"ok": False, "error_code": "GAME_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+
+    if game.status != 'ongoing':
+        return Response({"ok": False, "error_code": "GAME_ALREADY_OVER", "message": "Game is not ongoing."}, status=status.HTTP_400_BAD_REQUEST)
+
+    game.status = 'finished'
+    game.winner = 'draw'
+    game.end_reason = 'draw_agreement'
+    game.save()
+
+    return Response({
+        "ok": True,
+        "status": game.status,
+        "winner": game.winner,
+        "end_reason": game.end_reason,
+    })
