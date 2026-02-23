@@ -1103,6 +1103,52 @@ body {
     text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
 }
 
+/* ── Lose Screen Specific ── */
+.lose-hanzi {
+    font-family: 'Ma Shan Zheng', serif;
+    font-size: clamp(3.5rem, 12vw, 4.5rem);
+    line-height: 1.1;
+    text-align: center;
+    color: #8b1a1a;
+    text-shadow:
+        0 2px 0 rgba(0, 0, 0, .25),
+        0 4px 16px rgba(139, 26, 26, .35);
+    margin-bottom: 4px;
+    letter-spacing: .04em;
+}
+
+.lose-seal {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: 'Ma Shan Zheng', serif;
+    font-size: 1.6rem;
+    color: rgba(255, 255, 255, .92);
+
+    background: #a81c1c;
+    border: 2px solid #7a1010;
+    border-radius: 4px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 100, 100, .3),
+        2px 3px 8px rgba(100, 0, 0, .35);
+
+    /* Hidden until stamped */
+    opacity: 0;
+    transform: scale(1.6) rotate(-8deg);
+    transform-origin: center center;
+    transition: none;
+}
+
+.lose-seal--stamped {
+    animation: egmStamp .28s cubic-bezier(.22, .68, 0, 1.3) forwards;
+}
+
 /* ── Divider ── */
 .cfm-divider {
     height: 1px;

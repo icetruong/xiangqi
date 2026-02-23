@@ -34,6 +34,7 @@ let selectedCell = null;
 let legalMoves = [];
 let isAnimating = false;
 let inCheck = null; // 'r', 'b', or null
+window.gameLocked = false;
 
 // ── DOM (assigned in initGame after DOMContentLoaded) ──
 var boardEl = null;
@@ -703,6 +704,7 @@ function initGame(config) {
 
 function handleCellClick(r, c) {
     if (isAnimating) return;
+    if (window.gameLocked) return;
     if (status !== 'ongoing') return;
 
     var pieceCode = boardState[r][c];
@@ -799,7 +801,30 @@ function updateGameState(data) {
     }
 
     if (status === 'finished') {
-        setTimeout(function () { alert('Game Over! Winner: ' + data.winner); }, 100);
+        // Determine whether user won, lost, or drew
+        var gameStatus = "draw";
+        if (data.winner) {
+            gameStatus = (data.winner === playerSide) ? "win" : "lose";
+        } else if (data.result === "lose") {
+            gameStatus = "lose";
+        }
+
+        var reason = data.reason || "";
+        if (!reason && inCheck && data.winner) {
+            reason = "checkmate";
+        }
+
+        if (window.showEndgame) {
+            window.showEndgame({
+                status: gameStatus,
+                winner: data.winner,
+                my_side: playerSide,
+                reason: reason,
+                message: data.message
+            });
+        } else {
+            setTimeout(function () { alert('Game Over! Winner: ' + data.winner); }, 100);
+        }
         logSystem('Game Over. Winner: ' + data.winner);
     }
 }
@@ -831,6 +856,67 @@ function logSystem(msg) {
     chatLog.appendChild(entry);
     chatLog.scrollTop = chatLog.scrollHeight;
 }
+
+// ═══════════════════════════════════════════════
+//  Global Endgame Modals
+// ═══════════════════════════════════════════════
+window.showEndgame = function (result) {
+    window.gameLocked = true; // Block UI interactions
+
+    // Currently we only explicitly handle the "lose" screen as requested.
+    // Winning and drawing might use different ones or the cuộn thư.
+    if (result.status === "lose") {
+        document.body.style.overflow = "hidden"; // Lock scroll
+
+        var overlay = document.getElementById("loseOverlay");
+        if (!overlay) return;
+
+        var reasonText = document.getElementById("loseReason");
+        if (reasonText) {
+            var r = result.reason || "";
+            if (r === "checkmate") {
+                reasonText.textContent = "Bại do chiếu bí.";
+            } else if (r === "resign") {
+                reasonText.textContent = "Bại do nhận thua.";
+            } else if (r === "timeout") {
+                reasonText.textContent = "Bại do hết thời gian.";
+            } else if (r === "disconnect") {
+                reasonText.textContent = "Bại do rời trận.";
+            } else {
+                reasonText.textContent = "Thất bại.";
+            }
+        }
+
+        overlay.hidden = false;
+
+        // Trigger stamp animation
+        var seal = document.getElementById("loseSeal");
+        if (seal) {
+            seal.classList.remove("lose-seal--stamped");
+            void seal.offsetWidth; // trigger reflow
+            setTimeout(function () {
+                seal.classList.add("lose-seal--stamped");
+                if (typeof playThud === "function") playThud();
+                else if (typeof window.playThud === "function") window.playThud();
+                // We'll optionally define playThud globally if needed, 
+                // but let's assume it's in the inline script or we could use playMoveSound().
+                else playMoveSound();
+            }, 120);
+        }
+    } else {
+        // Fallback for win/draw
+        if (result.status === "draw") {
+            if (typeof window.showEndgameModal === "function") {
+                window.showEndgameModal("draw");
+            } else {
+                setTimeout(function () { alert("Game Drawn"); }, 100);
+            }
+        } else {
+            // win
+            setTimeout(function () { alert("Chờ xíu, bạn Đã Chiến Thắng! (Win Modal hasn't been implemented)"); }, 100);
+        }
+    }
+};
 
 var pollInterval = null;
 

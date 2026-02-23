@@ -140,6 +140,40 @@
     </div>
 
     <!-- ══════════════════════════════════════════════
+         Lose Screen Overlay — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="loseOverlay" class="cfm-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="loseTitle"
+        aria-describedby="loseBody">
+        <div class="cfm-box" id="loseBox" style="text-align: center; padding: 36px 28px 28px;">
+            <!-- Header: Chữ Hán lớn -->
+            <div class="lose-hanzi" id="loseHanzi">敗北</div>
+            <div class="cfm-title" id="loseTitle" style="font-size: 1.4rem; margin-bottom: 20px;">Bạn thua!</div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-result" id="loseReason" style="font-size: 1.05rem; color: #d4b87a; margin-bottom: 8px;">
+                Bại do nhận thua.
+            </p>
+            <p class="cfm-body" id="loseBody" style="margin-bottom: 32px; font-size: 0.95rem;">
+                Giang hồ hiểm ác — hẹn ngày tái đấu.
+            </p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--confirm" id="loseRetry">Tái đấu</button>
+                <a href="/" class="cfm-btn cfm-btn--exit-confirm" id="loseHome"
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Về
+                    sảnh</a>
+            </div>
+
+            <!-- Triện đỏ (đóng dấu) -->
+            <div class="lose-seal" id="loseSeal">敗</div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
          Endgame Modal — Cuộn thư cổ trang
          ══════════════════════════════════════════ -->
     <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
@@ -193,7 +227,7 @@
             }
 
             /* ── Thud/stamp sound ── */
-            function playThud() {
+            window.playThud = function playThud() {
                 try {
                     const ctx = new (window.AudioContext || window.webkitAudioContext)();
                     const buf = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
@@ -207,10 +241,13 @@
                     src.buffer = buf; g.gain.value = 0.55;
                     src.connect(g); g.connect(ctx.destination); src.start();
                 } catch (e) { /* silent fail */ }
-            }
+            };
+
+            function playThud() { window.playThud(); }
 
             /* ── Show modal ── */
             function showEndgameModal(type) {
+                // For "draw" we still use the old cuộn thư.
                 const overlay = document.getElementById("endgameOverlay");
                 const hanzi = document.getElementById("egmHanzi");
                 const subtitle = document.getElementById("egmSubtitle");
@@ -218,19 +255,11 @@
                 const seal = document.getElementById("egmSeal");
                 const scroll = document.getElementById("endgameScroll");
 
-                if (type === "resign") {
-                    hanzi.textContent = "敗北";
-                    subtitle.textContent = "Bạn đã nhận thua";
-                    reason.textContent = "Xin bái phục — hẹn ngày tái đấu.";
-                    seal.textContent = "敗";
-                    scroll.dataset.type = "lose";
-                } else {
-                    hanzi.textContent = "和局";
-                    subtitle.textContent = "Ván cờ hòa";
-                    reason.textContent = "Cầu hòa thành công — giang hồ rộng mở.";
-                    seal.textContent = "和";
-                    scroll.dataset.type = "draw";
-                }
+                hanzi.textContent = "和局";
+                subtitle.textContent = "Ván cờ hòa";
+                reason.textContent = "Cầu hòa thành công — giang hồ rộng mở.";
+                seal.textContent = "和";
+                scroll.dataset.type = "draw";
 
                 overlay.hidden = false;
                 /* stamp animation: delay so scroll unfurls first */
@@ -238,6 +267,11 @@
                 void seal.offsetWidth; /* trigger reflow to restart animation */
                 setTimeout(() => { seal.classList.add("egm-seal--stamped"); playThud(); }, 350);
             }
+
+            /* ── CTA cho Lose Screen ── */
+            document.getElementById("loseRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
 
             /* ── CTA: Tái đấu → về trang chủ để chọn ván mới ── */
             document.getElementById("egmRetry").addEventListener("click", () => {
@@ -299,7 +333,9 @@
                     const data = await postAction(`/api/games/${window.GAME_ID}/resign`);
                     if (data.ok) {
                         closeConfirmModal();
-                        showEndgameModal("resign");
+                        if (window.showEndgame) {
+                            window.showEndgame({ status: "lose", reason: "resign" });
+                        }
                     } else {
                         cfmConfirm.disabled = false;
                         cfmConfirm.textContent = "Xác nhận";
