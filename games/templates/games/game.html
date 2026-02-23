@@ -109,6 +109,37 @@
     </div>
 
     <!-- ══════════════════════════════════════════════
+         Confirm Exit Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmExitOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmExitTitle" aria-describedby="cfmExitBody">
+        <div class="cfm-box" id="confirmExitBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon cfm-header-icon--exit" aria-hidden="true">退</div>
+                <span class="cfm-hanzi">「請三思」</span>
+                <span class="cfm-title" id="cfmExitTitle">Xác nhận thoát ván?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmExitBody">
+                Rút lui khỏi ván và trở về sảnh.
+            </p>
+            <p class="cfm-result">Tiến trình ván cờ sẽ không được lưu.</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmExitCancel">Ở lại</button>
+                <button type="button" class="cfm-btn cfm-btn--exit-confirm" id="cfmExitConfirm">Thoát</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
          Endgame Modal — Cuộn thư cổ trang
          ══════════════════════════════════════════ -->
     <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
@@ -355,6 +386,49 @@
 
             /* ── Draw button → open confirm modal ── */
             document.getElementById("btnDraw").addEventListener("click", openDrawModal);
+
+            /* ── Exit Confirm Modal ── */
+            const cfmExitOverlay = document.getElementById("confirmExitOverlay");
+            const cfmExitConfirm = document.getElementById("cfmExitConfirm");
+            const cfmExitCancel = document.getElementById("cfmExitCancel");
+
+            function openExitModal() {
+                cfmExitOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmExitConfirm.disabled = false;
+                cfmExitConfirm.textContent = "Thoát";
+                cfmExitConfirm.focus();
+            }
+
+            function closeExitModal() {
+                cfmExitOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            /* Close on backdrop click */
+            cfmExitOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmExitOverlay) closeExitModal();
+            });
+
+            /* Close on ESC */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmExitOverlay.hidden) closeExitModal();
+            });
+
+            cfmExitCancel.addEventListener("click", closeExitModal);
+
+            /* Confirm → disable button then redirect */
+            cfmExitConfirm.addEventListener("click", () => {
+                cfmExitConfirm.disabled = true;
+                cfmExitConfirm.textContent = "Đang thoát\u2026";
+                setTimeout(() => { window.location.href = "/"; }, 300);
+            });
+
+            /* Intercept <a> default navigation — open modal instead */
+            document.getElementById("btnExit").addEventListener("click", (e) => {
+                e.preventDefault();
+                openExitModal();
+            });
         })();
     </script>
 </body>

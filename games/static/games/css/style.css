@@ -1184,6 +1184,24 @@ body {
     box-shadow: inset 0 1px 0 rgba(255, 220, 80, .2), 0 2px 6px rgba(80, 50, 0, .4);
 }
 
+/* Exit modal header icon — xanh than (navy) */
+.cfm-header-icon--exit {
+    background: #1a3a52;
+    border-color: #2e5a7a;
+    box-shadow: inset 0 1px 0 rgba(100, 180, 240, .2), 0 2px 6px rgba(0, 20, 40, .5);
+}
+
+/* Exit confirm button — navy steel */
+.cfm-btn--exit-confirm {
+    background: linear-gradient(160deg, #1a3a52 0%, #0d2235 100%);
+    color: #a8d4f0;
+    border: 1px solid #2e5a7a;
+    box-shadow:
+        inset 0 1px 0 rgba(100, 200, 255, .15),
+        inset 0 -2px 0 rgba(0, 0, 0, .45),
+        2px 3px 8px rgba(0, 0, 0, .5);
+}
+
 .cfm-btn:hover {
     transform: translateY(-1px);
     filter: brightness(1.18);
@@ -1199,7 +1217,8 @@ body {
 
 /* Loading / disabled state */
 .cfm-btn--confirm:disabled,
-.cfm-btn--draw-confirm:disabled {
+.cfm-btn--draw-confirm:disabled,
+.cfm-btn--exit-confirm:disabled {
     opacity: .65;
     cursor: not-allowed;
     filter: none;
