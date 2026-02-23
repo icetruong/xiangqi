@@ -1,16 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
 
-/* ─── Xiangqi Piece Font — SimSun subset (14 glyphs only, WOFF2) ───────────
+/* ─── Xiangqi Piece Font — Noto Serif TC subset (14 glyphs only, WOFF2) ──────
    Glyph list: 帥仕相傌俥炮兵 將士象馬車砲卒
-   Generated:  pyftsubset simsun.ttc --unicodes=U+5E25,U+4ED5,U+76F8,U+50CC,
-               U+4FC5,U+70AE,U+5175,U+5C07,U+58EB,U+8C61,U+99AC,U+8ECA,
-               U+7832,U+5352 --flavor=woff2 --font-number=0
-   To regenerate: run the command above from the project root.
+   Downloaded via Google Fonts API
    ──────────────────────────────────────────────────────────────────────── */
 @font-face {
     font-family: 'XiangqiSerif';
     src: url('../fonts/xiangqi-serif-subset.woff2') format('woff2');
-    font-weight: normal;
+    font-weight: bold;
     font-style: normal;
     /* block: keep layout stable while font loads (no FOUT for piece chars) */
     font-display: block;
