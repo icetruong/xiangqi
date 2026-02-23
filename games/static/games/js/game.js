@@ -33,27 +33,14 @@ let lastMove = null;
 let selectedCell = null;
 let legalMoves = [];
 let isAnimating = false;
+let inCheck = null; // 'r', 'b', or null
+window.gameLocked = false;
 
-// ── DOM ──
-const boardEl = document.getElementById('board');
-const statusDisplay = document.getElementById('status-display');
-const gameStatusLog = document.getElementById('game-status-log');
-const chatLog = document.querySelector('.chat-log');
-
-// ── Board Interaction ──
-boardEl.addEventListener('click', function (e) {
-    if (isAnimating) return;
-    const rect = boardEl.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const c = Math.round((x - BOARD_PAD) / CELL_SIZE);
-    const r = Math.round((y - BOARD_PAD) / CELL_SIZE);
-
-    if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
-        handleCellClick(r, c);
-    }
-});
+// ── DOM (assigned in initGame after DOMContentLoaded) ──
+var boardEl = null;
+var statusDisplay = null;
+var gameStatusLog = null;
+var chatLog = null;
 
 // ── CSRF ──
 function getCookie(name) {
@@ -71,6 +58,74 @@ function getCookie(name) {
     return cookieValue;
 }
 const csrftoken = getCookie('csrftoken');
+
+// ═══════════════════════════════════════════════
+//  Sound Effects (Web Audio API)
+// ═══════════════════════════════════════════════
+
+var _audioCtx = null;
+function getAudioCtx() {
+    if (!_audioCtx) {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return _audioCtx;
+}
+
+// "Cạch" — woody thump when a piece lands
+function playMoveSound() {
+    try {
+        var ctx = getAudioCtx();
+        var buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < data.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Low thump: decaying sine at ~180 Hz
+            data[i] = Math.sin(2 * Math.PI * 180 * t) * Math.exp(-t * 40);
+            // Add soft click transient
+            if (i < 80) data[i] += (Math.random() * 2 - 1) * (1 - i / 80) * 0.5;
+        }
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        // Slight low-pass to make it warmer
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 900;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.65;
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silence */ }
+}
+
+// "Tick" — sharp crack when a piece is captured
+function playCaptureSound() {
+    try {
+        var ctx = getAudioCtx();
+        var buf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < data.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Sharp crack: noise burst + mid-range tone
+            var noise = (Math.random() * 2 - 1) * Math.exp(-t * 80);
+            var tone = Math.sin(2 * Math.PI * 900 * t) * Math.exp(-t * 60) * 0.5;
+            data[i] = noise + tone;
+        }
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        var filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1800;
+        filter.Q.value = 0.8;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.8;
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silence */ }
+}
 
 // ═══════════════════════════════════════════════
 //  SVG Grid Builder
@@ -433,6 +488,15 @@ function renderBoard(shouldAnimate) {
                 pieceEl.classList.remove('capture-target');
             }
 
+            // Check indicator (red ring around king)
+            var isKing = (code === 'rK' || code === 'bK');
+            var side = code.charAt(0);
+            if (isKing && inCheck === side) {
+                pieceEl.classList.add('king-in-check');
+            } else {
+                pieceEl.classList.remove('king-in-check');
+            }
+
             // Click handler
             (function (row, col) {
                 pieceEl.onclick = function (e) {
@@ -598,6 +662,25 @@ function getCaptureTargets() {
 // ═══════════════════════════════════════════════
 
 function initGame(config) {
+    // Assign DOM refs here — DOM is guaranteed to exist by the time initGame() is called
+    boardEl = document.getElementById('board');
+    statusDisplay = document.getElementById('status-display');
+    gameStatusLog = document.getElementById('game-status-log');
+    chatLog = document.querySelector('.chat-log');
+
+    // Attach board click listener
+    boardEl.addEventListener('click', function (e) {
+        if (isAnimating) return;
+        var rect = boardEl.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        var c = Math.round((x - BOARD_PAD) / CELL_SIZE);
+        var r = Math.round((y - BOARD_PAD) / CELL_SIZE);
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+            handleCellClick(r, c);
+        }
+    });
+
     gameId = config.gameId;
     boardState = config.boardState;
     currentTurn = config.currentTurn;
@@ -605,6 +688,14 @@ function initGame(config) {
     playerSide = config.playerSide;
     legalMoves = config.legalMoves || [];
     lastMove = config.lastMove || null;
+    inCheck = config.inCheck || null;
+
+    // Un-suspend AudioContext on first user interaction (browser autoplay policy)
+    document.addEventListener('click', function resumeAudio() {
+        var ctx = getAudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+        document.removeEventListener('click', resumeAudio);
+    }, { once: true });
 
     initBoardStructure();
     renderBoard(false);
@@ -613,6 +704,7 @@ function initGame(config) {
 
 function handleCellClick(r, c) {
     if (isAnimating) return;
+    if (window.gameLocked) return;
     if (status !== 'ongoing') return;
 
     var pieceCode = boardState[r][c];
@@ -683,6 +775,7 @@ function updateGameState(data) {
     status = data.status;
     lastMove = data.last_move;
     legalMoves = data.legal_moves || [];
+    inCheck = data.in_check || null;
 
     // Animate if there's a new move that differs from the previous one
     var shouldAnimate = !!(lastMove && (!prevLastMove ||
@@ -690,6 +783,15 @@ function updateGameState(data) {
         lastMove.from[1] !== prevLastMove.from[1] ||
         lastMove.to[0] !== prevLastMove.to[0] ||
         lastMove.to[1] !== prevLastMove.to[1]));
+
+    // ── Sound Effects ──
+    if (shouldAnimate && lastMove) {
+        if (lastMove.captured) {
+            playCaptureSound();
+        } else {
+            playMoveSound();
+        }
+    }
 
     updateStatusUI();
     renderBoard(shouldAnimate);
@@ -699,7 +801,30 @@ function updateGameState(data) {
     }
 
     if (status === 'finished') {
-        setTimeout(function () { alert('Game Over! Winner: ' + data.winner); }, 100);
+        // Determine whether user won, lost, or drew
+        var gameStatus = "draw";
+        if (data.winner) {
+            gameStatus = (data.winner === playerSide) ? "win" : "lose";
+        } else if (data.result === "lose") {
+            gameStatus = "lose";
+        }
+
+        var reason = data.reason || "";
+        if (!reason && inCheck && data.winner) {
+            reason = "checkmate";
+        }
+
+        if (window.showEndgame) {
+            window.showEndgame({
+                status: gameStatus,
+                winner: data.winner,
+                my_side: playerSide,
+                reason: reason,
+                message: data.message
+            });
+        } else {
+            setTimeout(function () { alert('Game Over! Winner: ' + data.winner); }, 100);
+        }
         logSystem('Game Over. Winner: ' + data.winner);
     }
 }
@@ -731,6 +856,67 @@ function logSystem(msg) {
     chatLog.appendChild(entry);
     chatLog.scrollTop = chatLog.scrollHeight;
 }
+
+// ═══════════════════════════════════════════════
+//  Global Endgame Modals
+// ═══════════════════════════════════════════════
+window.showEndgame = function (result) {
+    window.gameLocked = true; // Block UI interactions
+
+    // Currently we only explicitly handle the "lose" screen as requested.
+    // Winning and drawing might use different ones or the cuộn thư.
+    if (result.status === "lose") {
+        document.body.style.overflow = "hidden"; // Lock scroll
+
+        var overlay = document.getElementById("loseOverlay");
+        if (!overlay) return;
+
+        var reasonText = document.getElementById("loseReason");
+        if (reasonText) {
+            var r = result.reason || "";
+            if (r === "checkmate") {
+                reasonText.textContent = "Bại do chiếu bí.";
+            } else if (r === "resign") {
+                reasonText.textContent = "Bại do nhận thua.";
+            } else if (r === "timeout") {
+                reasonText.textContent = "Bại do hết thời gian.";
+            } else if (r === "disconnect") {
+                reasonText.textContent = "Bại do rời trận.";
+            } else {
+                reasonText.textContent = "Thất bại.";
+            }
+        }
+
+        overlay.hidden = false;
+
+        // Trigger stamp animation
+        var seal = document.getElementById("loseSeal");
+        if (seal) {
+            seal.classList.remove("lose-seal--stamped");
+            void seal.offsetWidth; // trigger reflow
+            setTimeout(function () {
+                seal.classList.add("lose-seal--stamped");
+                if (typeof playThud === "function") playThud();
+                else if (typeof window.playThud === "function") window.playThud();
+                // We'll optionally define playThud globally if needed, 
+                // but let's assume it's in the inline script or we could use playMoveSound().
+                else playMoveSound();
+            }, 120);
+        }
+    } else {
+        // Fallback for win/draw
+        if (result.status === "draw") {
+            if (typeof window.showEndgameModal === "function") {
+                window.showEndgameModal("draw");
+            } else {
+                setTimeout(function () { alert("Game Drawn"); }, 100);
+            }
+        } else {
+            // win
+            setTimeout(function () { alert("Chờ xíu, bạn Đã Chiến Thắng! (Win Modal hasn't been implemented)"); }, 100);
+        }
+    }
+};
 
 var pollInterval = null;
 

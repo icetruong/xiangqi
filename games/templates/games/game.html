@@ -8,7 +8,8 @@
     <title>Xiangqi Game</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
 </head>
 
@@ -21,11 +22,10 @@
         </div>
     </div>
 
+    <!-- game.js MUST come before the inline script so initGame() is defined -->
     <script src="{% static 'games/js/game.js' %}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var movesData = {{ legal_moves|default: "[]" | safe
-        }};
+        window.GAME_ID = "{{ game.id }}";
         initGame({
             gameId: "{{ game.id }}",
             boardState: {{ game.board_state | safe }},
@@ -33,9 +33,439 @@
             status: "{{ game.status }}",
             playerSide: "{{ game.player_side }}",
             aiSide: "{{ game.ai_side }}",
-            legalMoves: movesData
-            });
+            legalMoves: {{ legal_moves| safe }},
+            lastMove: {{ last_move| safe }},
+            inCheck: {{ in_check| safe }}
         });
+    </script>
+
+    <!-- ── Game Action Buttons (fixed top-right — phong cách cổ trang) ── -->
+    <div class="game-actions" aria-label="Game controls" style="position:relative">
+        <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận thua</button>
+        <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
+        <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoái lui</a>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Confirm Resign Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmResignOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmTitle" aria-describedby="cfmBody">
+        <div class="cfm-box" id="confirmResignBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon" aria-hidden="true">令</div>
+                <span class="cfm-hanzi">「請三思」</span>
+                <span class="cfm-title" id="cfmTitle">Xác nhận nhận thua?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmBody">
+                Giang hồ hiểm ác — một khi nhận thua, ván cờ sẽ kết thúc.
+            </p>
+            <p class="cfm-result">Kết quả: Bạn thua (敗北).</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmCancel">Hủy</button>
+                <button type="button" class="cfm-btn cfm-btn--confirm" id="cfmConfirm">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Confirm Draw Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmDrawOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmDrawTitle" aria-describedby="cfmDrawBody">
+        <div class="cfm-box" id="confirmDrawBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon cfm-header-icon--draw" aria-hidden="true">和</div>
+                <span class="cfm-hanzi">「請和」</span>
+                <span class="cfm-title" id="cfmDrawTitle">Gửi yêu cầu hòa?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmDrawBody">
+                Giang hồ trọng hòa khí — gửi cầu hòa cho đối thủ.
+            </p>
+            <p class="cfm-result">Nếu đối thủ đồng ý, ván cờ kết thúc hòa (和棋).</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmDrawCancel">Hủy</button>
+                <button type="button" class="cfm-btn cfm-btn--draw-confirm" id="cfmDrawConfirm">Gửi yêu cầu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Confirm Exit Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmExitOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmExitTitle" aria-describedby="cfmExitBody">
+        <div class="cfm-box" id="confirmExitBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon cfm-header-icon--exit" aria-hidden="true">退</div>
+                <span class="cfm-hanzi">「請三思」</span>
+                <span class="cfm-title" id="cfmExitTitle">Xác nhận thoát ván?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmExitBody">
+                Rút lui khỏi ván và trở về sảnh.
+            </p>
+            <p class="cfm-result">Tiến trình ván cờ sẽ không được lưu.</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmExitCancel">Ở lại</button>
+                <button type="button" class="cfm-btn cfm-btn--exit-confirm" id="cfmExitConfirm">Thoát</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Lose Screen Overlay — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="loseOverlay" class="cfm-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="loseTitle"
+        aria-describedby="loseBody">
+        <div class="cfm-box" id="loseBox" style="text-align: center; padding: 36px 28px 28px;">
+            <!-- Header: Chữ Hán lớn -->
+            <div class="lose-hanzi" id="loseHanzi">敗北</div>
+            <div class="cfm-title" id="loseTitle" style="font-size: 1.4rem; margin-bottom: 20px;">Bạn thua!</div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-result" id="loseReason" style="font-size: 1.05rem; color: #d4b87a; margin-bottom: 8px;">
+                Bại do nhận thua.
+            </p>
+            <p class="cfm-body" id="loseBody" style="margin-bottom: 32px; font-size: 0.95rem;">
+                Giang hồ hiểm ác — hẹn ngày tái đấu.
+            </p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--confirm" id="loseRetry">Tái đấu</button>
+                <a href="/" class="cfm-btn cfm-btn--exit-confirm" id="loseHome"
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Về
+                    sảnh</a>
+            </div>
+
+            <!-- Triện đỏ (đóng dấu) -->
+            <div class="lose-seal" id="loseSeal">敗</div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Endgame Modal — Cuộn thư cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
+        <div class="egm-scroll" id="endgameScroll">
+            <!-- Trục cuộn trên -->
+            <div class="egm-rod egm-rod--top"></div>
+
+            <!-- Nội dung cuộn -->
+            <div class="egm-body">
+                <!-- Chữ Hán lớn -->
+                <div class="egm-hanzi" id="egmHanzi">敗北</div>
+
+                <!-- Đường kẻ trang trí -->
+                <div class="egm-divider"></div>
+
+                <!-- Subtitle & lý do -->
+                <div class="egm-subtitle" id="egmSubtitle">Bạn đã nhận thua</div>
+                <div class="egm-reason" id="egmReason">Xin bái phục — hẹn ngày tái đấu.</div>
+
+                <!-- Nút CTA -->
+                <div class="egm-actions">
+                    <button class="egm-btn egm-btn--retry" id="egmRetry">⚔ Tái đấu</button>
+                    <a class="egm-btn egm-btn--home" href="/">⛩ Hồi trang</a>
+                </div>
+
+                <!-- Triện đỏ (đóng dấu) -->
+                <div class="egm-seal" id="egmSeal">敗</div>
+            </div>
+
+            <!-- Trục cuộn dưới -->
+            <div class="egm-rod egm-rod--bottom"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            /* ── CSRF helper ── */
+            function getCsrf() {
+                const m = document.cookie.match("(^|;)\\s*csrftoken\\s*=\\s*([^;]+)");
+                return m ? m.pop() : "";
+            }
+
+            /* ── Fetch helper ── */
+            async function postAction(path) {
+                const res = await fetch(path, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+                    body: JSON.stringify({})
+                });
+                return res.json().catch(() => ({}));
+            }
+
+            /* ── Thud/stamp sound ── */
+            window.playThud = function playThud() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for (let i = 0; i < d.length; i++) {
+                        const t = i / ctx.sampleRate;
+                        d[i] = Math.sin(2 * Math.PI * 80 * t) * Math.exp(-t * 28)
+                            + (Math.random() * 2 - 1) * Math.exp(-t * 60) * 0.35;
+                    }
+                    const src = ctx.createBufferSource(), g = ctx.createGain();
+                    src.buffer = buf; g.gain.value = 0.55;
+                    src.connect(g); g.connect(ctx.destination); src.start();
+                } catch (e) { /* silent fail */ }
+            };
+
+            function playThud() { window.playThud(); }
+
+            /* ── Show modal ── */
+            function showEndgameModal(type) {
+                // For "draw" we still use the old cuộn thư.
+                const overlay = document.getElementById("endgameOverlay");
+                const hanzi = document.getElementById("egmHanzi");
+                const subtitle = document.getElementById("egmSubtitle");
+                const reason = document.getElementById("egmReason");
+                const seal = document.getElementById("egmSeal");
+                const scroll = document.getElementById("endgameScroll");
+
+                hanzi.textContent = "和局";
+                subtitle.textContent = "Ván cờ hòa";
+                reason.textContent = "Cầu hòa thành công — giang hồ rộng mở.";
+                seal.textContent = "和";
+                scroll.dataset.type = "draw";
+
+                overlay.hidden = false;
+                /* stamp animation: delay so scroll unfurls first */
+                seal.classList.remove("egm-seal--stamped");
+                void seal.offsetWidth; /* trigger reflow to restart animation */
+                setTimeout(() => { seal.classList.add("egm-seal--stamped"); playThud(); }, 350);
+            }
+
+            /* ── CTA cho Lose Screen ── */
+            document.getElementById("loseRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── CTA: Tái đấu → về trang chủ để chọn ván mới ── */
+            document.getElementById("egmRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── Confirm Resign Modal helpers ── */
+            const cfmOverlay = document.getElementById("confirmResignOverlay");
+            const cfmConfirm = document.getElementById("cfmConfirm");
+            const cfmCancel = document.getElementById("cfmCancel");
+            let cfmToastTimer = null;
+
+            function openConfirmModal() {
+                cfmOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmConfirm.disabled = false;
+                cfmConfirm.textContent = "Xác nhận";
+                /* remove stale toast */
+                const old = cfmOverlay.querySelector(".cfm-toast");
+                if (old) old.remove();
+                /* focus confirm for keyboard nav */
+                cfmConfirm.focus();
+            }
+
+            function closeConfirmModal() {
+                cfmOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            function showCfmToast(msg) {
+                const box = document.getElementById("confirmResignBox");
+                const old = box.querySelector(".cfm-toast");
+                if (old) old.remove();
+                const t = document.createElement("div");
+                t.className = "cfm-toast";
+                t.textContent = msg;
+                box.appendChild(t);
+                clearTimeout(cfmToastTimer);
+                cfmToastTimer = setTimeout(() => t.remove(), 3500);
+            }
+
+            /* Close on backdrop click */
+            cfmOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmOverlay) closeConfirmModal();
+            });
+
+            /* Close on ESC */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmOverlay.hidden) closeConfirmModal();
+            });
+
+            cfmCancel.addEventListener("click", closeConfirmModal);
+
+            /* Confirm → send resign */
+            cfmConfirm.addEventListener("click", async () => {
+                cfmConfirm.disabled = true;
+                cfmConfirm.textContent = "Đang xử lý…";
+                try {
+                    const data = await postAction(`/api/games/${window.GAME_ID}/resign`);
+                    if (data.ok) {
+                        closeConfirmModal();
+                        if (window.showEndgame) {
+                            window.showEndgame({ status: "lose", reason: "resign" });
+                        }
+                    } else {
+                        cfmConfirm.disabled = false;
+                        cfmConfirm.textContent = "Xác nhận";
+                        showCfmToast(data.message || "Gửi thất bại, thử lại.");
+                    }
+                } catch (_) {
+                    cfmConfirm.disabled = false;
+                    cfmConfirm.textContent = "Xác nhận";
+                    showCfmToast("Gửi thất bại, thử lại.");
+                }
+            });
+
+            /* ── Resign button → open confirm modal ── */
+            document.getElementById("btnResign").addEventListener("click", openConfirmModal);
+
+            /* ── Confirm Draw Modal helpers ── */
+            const cfmDrawOverlay = document.getElementById("confirmDrawOverlay");
+            const cfmDrawConfirm = document.getElementById("cfmDrawConfirm");
+            const cfmDrawCancel = document.getElementById("cfmDrawCancel");
+            let cfmDrawToastTimer = null;
+
+            function openDrawModal() {
+                cfmDrawOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmDrawConfirm.disabled = false;
+                cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                const old = cfmDrawOverlay.querySelector(".cfm-toast");
+                if (old) old.remove();
+                cfmDrawConfirm.focus();
+            }
+
+            function closeDrawModal() {
+                cfmDrawOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            function showDrawToast(msg) {
+                const box = document.getElementById("confirmDrawBox");
+                const old = box.querySelector(".cfm-toast");
+                if (old) old.remove();
+                const t = document.createElement("div");
+                t.className = "cfm-toast";
+                t.textContent = msg;
+                box.appendChild(t);
+                clearTimeout(cfmDrawToastTimer);
+                cfmDrawToastTimer = setTimeout(() => t.remove(), 3500);
+            }
+
+            /* Close on backdrop click */
+            cfmDrawOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmDrawOverlay) closeDrawModal();
+            });
+
+            /* Close on ESC (also handles resign ESC via existing listener) */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmDrawOverlay.hidden) closeDrawModal();
+            });
+
+            cfmDrawCancel.addEventListener("click", closeDrawModal);
+
+            /* Confirm → send draw offer */
+            cfmDrawConfirm.addEventListener("click", async () => {
+                cfmDrawConfirm.disabled = true;
+                cfmDrawConfirm.textContent = "Đang gửi\u2026";
+                try {
+                    const data = await postAction(`/api/games/${window.GAME_ID}/draw`);
+                    if (data.ok) {
+                        closeDrawModal();
+                        showEndgameModal("draw");
+                        const btnDraw = document.getElementById("btnDraw");
+                        btnDraw.disabled = true;
+                        btnDraw.textContent = "Đã cầu hòa";
+                    } else {
+                        cfmDrawConfirm.disabled = false;
+                        cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                        showDrawToast(data.message || "Không thể cầu hòa lúc này.");
+                    }
+                } catch (_) {
+                    cfmDrawConfirm.disabled = false;
+                    cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                    showDrawToast("Gửi cầu hòa thất bại, thử lại.");
+                }
+            });
+
+            /* ── Draw button → open confirm modal ── */
+            document.getElementById("btnDraw").addEventListener("click", openDrawModal);
+
+            /* ── Exit Confirm Modal ── */
+            const cfmExitOverlay = document.getElementById("confirmExitOverlay");
+            const cfmExitConfirm = document.getElementById("cfmExitConfirm");
+            const cfmExitCancel = document.getElementById("cfmExitCancel");
+
+            function openExitModal() {
+                cfmExitOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmExitConfirm.disabled = false;
+                cfmExitConfirm.textContent = "Thoát";
+                cfmExitConfirm.focus();
+            }
+
+            function closeExitModal() {
+                cfmExitOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            /* Close on backdrop click */
+            cfmExitOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmExitOverlay) closeExitModal();
+            });
+
+            /* Close on ESC */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmExitOverlay.hidden) closeExitModal();
+            });
+
+            cfmExitCancel.addEventListener("click", closeExitModal);
+
+            /* Confirm → disable button then redirect */
+            cfmExitConfirm.addEventListener("click", () => {
+                cfmExitConfirm.disabled = true;
+                cfmExitConfirm.textContent = "Đang thoát\u2026";
+                setTimeout(() => { window.location.href = "/"; }, 300);
+            });
+
+            /* Intercept <a> default navigation — open modal instead */
+            document.getElementById("btnExit").addEventListener("click", (e) => {
+                e.preventDefault();
+                openExitModal();
+            });
+        })();
     </script>
 </body>
 

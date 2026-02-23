@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from games.models import Game
 from games.services import game_service
+from games.api_views import _get_in_check
 import json
 
 def index(request):
@@ -39,8 +40,11 @@ def game_board(request, game_id):
             "captured": last_move.captured
         }
 
+    in_check = _get_in_check(game.board_state)
+
     return render(request, 'games/game.html', {
         'game': game, 
         'legal_moves': json.dumps(legal_moves),
-        'last_move': json.dumps(last_move_data)
+        'last_move': json.dumps(last_move_data),
+        'in_check': json.dumps(in_check)
     })
