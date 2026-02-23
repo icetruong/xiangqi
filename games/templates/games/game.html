@@ -78,6 +78,37 @@
     </div>
 
     <!-- ══════════════════════════════════════════════
+         Confirm Draw Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmDrawOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmDrawTitle" aria-describedby="cfmDrawBody">
+        <div class="cfm-box" id="confirmDrawBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon cfm-header-icon--draw" aria-hidden="true">和</div>
+                <span class="cfm-hanzi">「請和」</span>
+                <span class="cfm-title" id="cfmDrawTitle">Gửi yêu cầu hòa?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmDrawBody">
+                Giang hồ trọng hòa khí — gửi cầu hòa cho đối thủ.
+            </p>
+            <p class="cfm-result">Nếu đối thủ đồng ý, ván cờ kết thúc hòa (和棋).</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmDrawCancel">Hủy</button>
+                <button type="button" class="cfm-btn cfm-btn--draw-confirm" id="cfmDrawConfirm">Gửi yêu cầu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
          Endgame Modal — Cuộn thư cổ trang
          ══════════════════════════════════════════ -->
     <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
@@ -253,16 +284,77 @@
             /* ── Resign button → open confirm modal ── */
             document.getElementById("btnResign").addEventListener("click", openConfirmModal);
 
-            /* ── Draw ── */
-            document.getElementById("btnDraw").addEventListener("click", async () => {
-                if (!confirm("Gửi yêu cầu hòa?")) return;
-                const data = await postAction(`/api/games/${window.GAME_ID}/draw`);
-                if (data.ok) {
-                    showEndgameModal("draw");
-                } else {
-                    alert(data.message || "Không thể xin hòa lúc này.");
+            /* ── Confirm Draw Modal helpers ── */
+            const cfmDrawOverlay = document.getElementById("confirmDrawOverlay");
+            const cfmDrawConfirm = document.getElementById("cfmDrawConfirm");
+            const cfmDrawCancel = document.getElementById("cfmDrawCancel");
+            let cfmDrawToastTimer = null;
+
+            function openDrawModal() {
+                cfmDrawOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmDrawConfirm.disabled = false;
+                cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                const old = cfmDrawOverlay.querySelector(".cfm-toast");
+                if (old) old.remove();
+                cfmDrawConfirm.focus();
+            }
+
+            function closeDrawModal() {
+                cfmDrawOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            function showDrawToast(msg) {
+                const box = document.getElementById("confirmDrawBox");
+                const old = box.querySelector(".cfm-toast");
+                if (old) old.remove();
+                const t = document.createElement("div");
+                t.className = "cfm-toast";
+                t.textContent = msg;
+                box.appendChild(t);
+                clearTimeout(cfmDrawToastTimer);
+                cfmDrawToastTimer = setTimeout(() => t.remove(), 3500);
+            }
+
+            /* Close on backdrop click */
+            cfmDrawOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmDrawOverlay) closeDrawModal();
+            });
+
+            /* Close on ESC (also handles resign ESC via existing listener) */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmDrawOverlay.hidden) closeDrawModal();
+            });
+
+            cfmDrawCancel.addEventListener("click", closeDrawModal);
+
+            /* Confirm → send draw offer */
+            cfmDrawConfirm.addEventListener("click", async () => {
+                cfmDrawConfirm.disabled = true;
+                cfmDrawConfirm.textContent = "Đang gửi\u2026";
+                try {
+                    const data = await postAction(`/api/games/${window.GAME_ID}/draw`);
+                    if (data.ok) {
+                        closeDrawModal();
+                        showEndgameModal("draw");
+                        const btnDraw = document.getElementById("btnDraw");
+                        btnDraw.disabled = true;
+                        btnDraw.textContent = "Đã cầu hòa";
+                    } else {
+                        cfmDrawConfirm.disabled = false;
+                        cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                        showDrawToast(data.message || "Không thể cầu hòa lúc này.");
+                    }
+                } catch (_) {
+                    cfmDrawConfirm.disabled = false;
+                    cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                    showDrawToast("Gửi cầu hòa thất bại, thử lại.");
                 }
             });
+
+            /* ── Draw button → open confirm modal ── */
+            document.getElementById("btnDraw").addEventListener("click", openDrawModal);
         })();
     </script>
 </body>
