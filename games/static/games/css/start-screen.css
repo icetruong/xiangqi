@@ -1141,3 +1141,644 @@ form {
 .nav-links a.active::after {
     width: 100%;
 }
+
+/* =========================================
+   "SỔ LUẬT" (RULES BOOK) 2-PAGE SPREAD
+   ========================================= */
+.rules-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(30, 15, 10, 0.85) 0%, rgba(10, 5, 2, 0.98) 100%);
+    backdrop-filter: blur(5px);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+}
+
+.rules-overlay[hidden] {
+    display: none;
+    opacity: 0;
+}
+
+.book-close {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    background: transparent;
+    border: none;
+    color: var(--gold);
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    opacity: 0.8;
+    z-index: 1010;
+}
+
+.book-close:hover {
+    color: var(--gold-bright);
+    transform: scale(1.1) rotate(90deg);
+    opacity: 1;
+}
+
+.book-spread {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: 80vh;
+    max-height: 800px;
+    min-height: 500px;
+    background-color: #f1ebd9;
+    /* cleaner parchment */
+    /* Paper grain (very faint SVG or radial noise approximation) */
+    background-image:
+        radial-gradient(ellipse at center, rgba(160, 107, 61, 0.02) 0%, rgba(106, 63, 31, 0.05) 100%);
+    border-radius: 6px;
+    box-shadow:
+        15px 15px 40px rgba(0, 0, 0, 0.7),
+        inset 0 0 40px rgba(106, 63, 31, 0.1);
+    border: 1px solid rgba(106, 63, 31, 0.4);
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* Spine visual in the middle */
+.book-spine-center {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 35%;
+    width: 40px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(0, 0, 0, 0.1) 45%,
+            rgba(0, 0, 0, 0.2) 50%,
+            rgba(255, 255, 255, 0.1) 55%,
+            transparent 100%);
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ================= TRANG TRÁI (TOC) ================= */
+.book-page-left {
+    flex: 0 0 35%;
+    border-right: 1px solid rgba(106, 63, 31, 0.1);
+    padding: 30px 20px 30px 30px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 90%, rgba(0, 0, 0, 0.05) 100%);
+}
+
+.book-header-left {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.book-hanzi-left {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 38px;
+    color: var(--text-title);
+    margin: 0;
+    line-height: 1.1;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.book-sub-header {
+    font-family: 'Noto Serif', serif;
+    font-size: 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    display: block;
+    margin-top: 5px;
+}
+
+.ink-divider {
+    height: 3px;
+    background: radial-gradient(circle, rgba(106, 63, 31, 0.6) 0%, transparent 80%);
+    margin: 15px auto;
+    width: 80%;
+}
+
+.book-toc {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* Scrollbar for TOC */
+.book-toc::-webkit-scrollbar {
+    width: 4px;
+}
+
+.book-toc::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.book-toc::-webkit-scrollbar-thumb {
+    background: rgba(160, 107, 61, 0.3);
+    border-radius: 4px;
+}
+
+.book-toc li {
+    font-family: 'Noto Serif', serif;
+    font-size: 15px;
+    color: var(--text-body);
+    padding: 12px 10px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.book-toc li:hover {
+    background: rgba(160, 107, 61, 0.08);
+}
+
+.book-toc li.active {
+    background: rgba(202, 167, 106, 0.15);
+    /* light gold */
+    border-left: 3px solid var(--gold);
+    color: var(--text-title);
+    font-weight: 600;
+}
+
+.toc-num {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--gold-dark);
+    width: 25px;
+    display: inline-block;
+}
+
+.toc-seal {
+    position: absolute;
+    right: 10px;
+    font-family: 'Ma Shan Zheng', cursive;
+    color: #b11a1f;
+    border: 1px solid #b11a1f;
+    border-radius: 2px;
+    font-size: 14px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.5);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.book-toc li.active .toc-seal {
+    opacity: 0.8;
+    transform: rotate(-5deg) scale(1);
+}
+
+.book-tips {
+    margin-top: 20px;
+    border-top: 1px dashed rgba(106, 63, 31, 0.2);
+    padding-top: 15px;
+}
+
+.book-tips p {
+    font-family: 'Noto Serif', serif;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+.book-tips kbd {
+    background: rgba(106, 63, 31, 0.1);
+    border: 1px solid rgba(106, 63, 31, 0.3);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+/* ================= TRANG PHẢI (CONTENT) ================= */
+.book-page-right-wrapper {
+    flex: 1;
+    position: relative;
+    padding: 40px 40px 40px 40px;
+    perspective: 1500px;
+    z-index: 10;
+}
+
+.book-content {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 30px);
+    /* Leave room for indicator */
+}
+
+.book-page {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    padding-right: 15px;
+    opacity: 0;
+    transform-origin: left center;
+    transform: rotateY(15deg);
+    transition: opacity 0.26s ease, transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    /* subtle inner shadow to simulate page bend */
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.03) 0%, transparent 20%, transparent 95%, rgba(0, 0, 0, 0.02) 100%);
+}
+
+.book-page.active {
+    opacity: 1;
+    transform: rotateY(0deg);
+    pointer-events: auto;
+}
+
+.flipping .book-page.active {
+    opacity: 0;
+    transform: rotateY(-30deg);
+    /* Flip away */
+    filter: drop-shadow(5px 0 10px rgba(0, 0, 0, 0.1));
+}
+
+.book-page::-webkit-scrollbar {
+    width: 5px;
+}
+
+.book-page::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.book-page::-webkit-scrollbar-thumb {
+    background: rgba(160, 107, 61, 0.4);
+    border-radius: 4px;
+}
+
+.book-chapter-title {
+    font-family: 'Noto Serif', serif;
+    font-size: 26px;
+    color: var(--text-title);
+    margin: 0 0 10px 0;
+    font-weight: 700;
+}
+
+.book-summary {
+    font-family: 'Noto Serif', serif;
+    font-size: 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Rule Cards */
+.rule-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.rule-cards-pieces {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.rule-card {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(160, 107, 61, 0.3);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: 'Noto Serif', serif;
+    font-size: 15px;
+    color: var(--text-body);
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.rule-card strong {
+    color: var(--text-title);
+}
+
+.rc-piece {
+    flex: 1 1 calc(50% - 12px);
+    text-align: center;
+    padding: 10px;
+}
+
+/* Mini Table */
+.mini-table {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(160, 107, 61, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mt-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    border-bottom: 1px solid rgba(160, 107, 61, 0.1);
+}
+
+.mt-row:last-child {
+    border-bottom: none;
+}
+
+.mt-header {
+    background: rgba(160, 107, 61, 0.1);
+}
+
+.mt-key {
+    padding: 10px 15px;
+    font-family: 'Noto Serif', serif;
+    font-size: 14px;
+    color: var(--text-title);
+    border-right: 1px solid rgba(160, 107, 61, 0.1);
+    font-weight: 600;
+}
+
+.mt-val {
+    padding: 10px 15px;
+    font-family: 'Noto Serif', serif;
+    font-size: 14px;
+    color: var(--text-body);
+}
+
+/* Callouts */
+.book-callout {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, rgba(202, 167, 106, 0.15) 0%, rgba(202, 167, 106, 0.05) 100%);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 4px 4px 0;
+    font-family: 'Noto Serif', serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-body);
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.book-callout.style-info strong {
+    color: var(--gold-dark);
+}
+
+.book-callout.style-warning {
+    background: linear-gradient(90deg, rgba(177, 26, 31, 0.1) 0%, rgba(177, 26, 31, 0.02) 100%);
+    border-left-color: #b11a1f;
+}
+
+.book-right-seal {
+    position: absolute;
+    bottom: 30px;
+    right: 40px;
+    width: 32px;
+    height: 32px;
+    border: 2px solid #b11a1f;
+    color: #b11a1f;
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transform: rotate(5deg);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.book-page-number {
+    position: absolute;
+    bottom: 30px;
+    left: 40px;
+    font-family: 'Noto Serif', serif;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
+/* Corner Flips (Edges) */
+.corner-flip {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 80%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.corner-prev {
+    left: 0;
+    justify-content: flex-start;
+}
+
+.corner-next {
+    right: 0;
+    justify-content: flex-end;
+}
+
+.corner-flip:hover:not(:disabled) {
+    opacity: 1;
+}
+
+.corner-flip:disabled {
+    cursor: default;
+    display: none;
+}
+
+.corner-prev::before {
+    content: '‹';
+    font-family: sans-serif;
+    font-size: 60px;
+    color: var(--gold);
+    margin-left: -15px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+}
+
+.corner-next::before {
+    content: '›';
+    font-family: sans-serif;
+    font-size: 60px;
+    color: var(--gold);
+    margin-right: -15px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+}
+
+/* =========================================
+   RESPONSIVE MODAL
+   ========================================= */
+@media (max-width: 768px) {
+    .rules-overlay {
+        padding: 5px;
+    }
+
+    .book-spread {
+        flex-direction: column;
+        height: 95vh;
+        max-height: 95vh;
+        border-radius: 4px;
+    }
+
+    .book-spine-center {
+        display: none;
+    }
+
+    .book-page-left {
+        flex: 0 0 auto;
+        border-right: none;
+        border-bottom: 1px solid rgba(106, 63, 31, 0.2);
+        padding: 15px 15px 10px 15px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .book-header-left {
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .book-hanzi-left {
+        font-size: 28px;
+    }
+
+    .book-sub-header {
+        margin-top: 0;
+    }
+
+    .ink-divider {
+        display: none;
+    }
+
+    .book-toc {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        padding-bottom: 5px;
+    }
+
+    .book-toc li {
+        display: inline-flex;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        margin-right: 10px;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .book-toc li.active {
+        border-left: none;
+        border-bottom: 3px solid var(--gold);
+    }
+
+    .toc-seal {
+        display: none;
+    }
+
+    .book-tips {
+        display: none;
+    }
+
+    .book-page-right-wrapper {
+        padding: 20px 15px 15px 15px;
+    }
+
+    .book-content {
+        height: calc(100% - 25px);
+    }
+
+    .book-chapter-title {
+        font-size: 20px;
+    }
+
+    .book-summary {
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .rule-card {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .rc-piece {
+        flex: 1 1 100%;
+    }
+
+    .mt-row {
+        grid-template-columns: 80px 1fr;
+    }
+
+    .mt-key,
+    .mt-val {
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+
+    .book-callout {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .corner-flip {
+        width: 30px;
+        opacity: 0.6;
+        /* visible on mobile */
+    }
+
+    .corner-prev::before {
+        margin-left: 0;
+        font-size: 40px;
+    }
+
+    .corner-next::before {
+        margin-right: 0;
+        font-size: 40px;
+    }
+
+    .book-close {
+        top: 10px;
+        right: 10px;
+        font-size: 26px;
+        z-index: 2000;
+    }
+
+    .book-page-number {
+        bottom: 10px;
+        left: 15px;
+        font-size: 12px;
+    }
+
+    .book-right-seal {
+        bottom: 10px;
+        right: 15px;
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+}
