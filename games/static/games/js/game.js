@@ -759,12 +759,12 @@ function sendMove(move) {
                     startPolling();
                 }
             } else {
-                alert('Error: ' + data.message);
+                showGameToast(data.message, 'warning');
             }
         })
         .catch(function (err) {
             console.error(err);
-            alert("Server error");
+            showGameToast("Mất kết nối với giang hồ", 'warning');
         });
 }
 
@@ -941,3 +941,72 @@ function startPolling() {
             });
     }, 1000);
 }
+
+// ═══════════════════════════════════════════════
+//  Game Toasts (Thông báo hiển thị cổ trang)
+// ═══════════════════════════════════════════════
+window.showGameToast = function (message, type) {
+    type = type || 'warning';
+    var container = document.getElementById('game-toast-container');
+    if (!container) return;
+
+    var existingToasts = container.querySelectorAll('.game-toast:not(.hiding)');
+    if (existingToasts.length > 0) {
+        var lastToast = existingToasts[existingToasts.length - 1];
+        var textNode = lastToast.querySelector('.game-toast-message');
+        if (textNode && textNode.dataset.rawMessage === message) {
+            var count = parseInt(lastToast.dataset.count || '0') + 1;
+            lastToast.dataset.count = count;
+            textNode.textContent = window.getToastDisplayMsg(message) + ' (x' + count + ')';
+
+            clearTimeout(parseInt(lastToast.dataset.timeoutId));
+            var newTimeoutId = setTimeout(function () {
+                lastToast.classList.add('hiding');
+                setTimeout(function () { if (lastToast.parentNode) lastToast.remove(); }, 300);
+            }, 3000);
+            lastToast.dataset.timeoutId = newTimeoutId;
+
+            lastToast.style.transform = 'scale(1.02)';
+            setTimeout(function () {
+                if (!lastToast.classList.contains('hiding')) {
+                    lastToast.style.transform = '';
+                }
+            }, 120);
+            return;
+        }
+    }
+
+    if (existingToasts.length >= 2) {
+        var oldest = existingToasts[0];
+        oldest.classList.add('hiding');
+        setTimeout(function () { if (oldest.parentNode) oldest.remove(); }, 300);
+    }
+
+    var toast = document.createElement('div');
+    toast.className = 'game-toast toast-' + type;
+    toast.dataset.count = 1;
+
+    var msgEl = document.createElement('div');
+    msgEl.className = 'game-toast-message';
+    msgEl.dataset.rawMessage = message;
+    msgEl.textContent = window.getToastDisplayMsg(message);
+    toast.appendChild(msgEl);
+
+    container.appendChild(toast);
+
+    var timeoutId = setTimeout(function () {
+        toast.classList.add('hiding');
+        setTimeout(function () { if (toast.parentNode) toast.remove(); }, 300);
+    }, 3000);
+    toast.dataset.timeoutId = timeoutId;
+};
+
+window.getToastDisplayMsg = function (message) {
+    if (!message) return "Nước đi không hợp lệ.";
+    var msg = message.toLowerCase();
+    if (msg.includes("invalid move")) return "Nước đi không hợp lệ.";
+    if (msg.includes("not your turn")) return "Chưa tới lượt xuất chiêu.";
+    if (msg.includes("piece from")) return "Không thể điều binh tướng này.";
+    if (msg.includes("check")) return "Tướng đang nguy cấp (bị chiếu)!";
+    return message;
+};
