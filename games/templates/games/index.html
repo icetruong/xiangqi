@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/start-screen.css' %}">
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Ma+Shan+Zheng&family=Noto+Serif:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 </head>
 
@@ -110,6 +110,456 @@
         <div class="dust dust-7"></div>
         <div class="dust dust-8"></div>
     </div>
+
+    <!-- ══════════════════════════════════════════════
+         "Sổ Luật" (Rules Book) Modal Overlay
+         ══════════════════════════════════════════ -->
+    <div id="rulesOverlay" class="rules-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="rulesTitle">
+        <!-- Close button top right -->
+        <button class="book-close" id="btnCloseRules" aria-label="Đóng" title="Đóng (ESC)">✕</button>
+
+        <div class="book-spread" id="bookSpread">
+
+            <!-- Trục gữa (Spine visual) -->
+            <div class="book-spine-center"></div>
+
+            <!-- ================= TRANG TRÁI (TOC) ================= -->
+            <div class="book-page-left" id="bookLeft">
+                <div class="book-header-left">
+                    <h2 class="book-hanzi-left">棋律</h2>
+                    <span class="book-sub-header">Quyển Luật</span>
+                    <div class="ink-divider"></div>
+                </div>
+
+                <ul class="book-toc" id="bookToc">
+                    <li data-target="0" class="active">
+                        <span class="toc-num">I</span> Bàn cờ & mục tiêu
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="1">
+                        <span class="toc-num">II</span> Quân cờ
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="2">
+                        <span class="toc-num">III</span> Xếp quân ban đầu
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="3">
+                        <span class="toc-num">IV</span> Xếp quân (chi tiết)
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="4">
+                        <span class="toc-num">V</span> Luật đi quân (Phần 1)
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="5">
+                        <span class="toc-num">VI</span> Luật đi quân (Phần 2)
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="6">
+                        <span class="toc-num">VII</span> Ăn quân, Chiếu/Bí
+                        <span class="toc-seal">閱</span>
+                    </li>
+                    <li data-target="7">
+                        <span class="toc-num">VIII</span> Hòa & Ghi nhớ nhanh
+                        <span class="toc-seal">閱</span>
+                    </li>
+                </ul>
+
+                <div class="book-tips">
+                    <p>✦ Gợi ý: Click mép phải/trái để lật trang.</p>
+                    <p>✦ Dùng phím <kbd>←</kbd> <kbd>→</kbd> để xem nhanh.</p>
+                </div>
+            </div>
+
+            <!-- ================= TRANG PHẢI (CONTENT) ================= -->
+            <div class="book-page-right-wrapper" id="bookRightWrapper">
+
+                <div class="book-content" id="bookContent">
+
+                    <!-- Page 1 -->
+                    <div class="book-page" data-page="1">
+                        <h2 class="book-chapter-title">1) Bàn cờ & mục tiêu</h2>
+                        <p class="book-summary">Bàn cờ 9×10, chơi trên giao điểm; giữa có sông; mỗi bên có cung 3×3.</p>
+
+                        <div class="rule-cards">
+                            <div class="rule-card"><strong>9 cột × 10 hàng</strong> (điểm giao)</div>
+                            <div class="rule-card"><strong>Sông</strong> ngăn cách hai bên</div>
+                            <div class="rule-card"><strong>Cửu cung 3×3</strong> (nơi Tướng, Sĩ)</div>
+                            <div class="rule-card"><strong>Mục tiêu:</strong> Chiếu hết hoặc ép bí</div>
+                        </div>
+
+                        <div class="mini-table">
+                            <div class="mt-row">
+                                <div class="mt-key">Cung Đen</div>
+                                <div class="mt-val">cột 3–5, hàng 0–2</div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Cung Đỏ</div>
+                                <div class="mt-val">cột 3–5, hàng 7–9</div>
+                            </div>
+                        </div>
+
+                        <div class="book-callout style-info">
+                            📌 <strong>Thông lệ:</strong> Đỏ đi trước.
+                        </div>
+                    </div>
+
+                    <!-- Page 2 -->
+                    <div class="book-page" data-page="2" hidden>
+                        <h2 class="book-chapter-title">2) Quân cờ</h2>
+                        <p class="book-summary">Mỗi bên có 16 quân chia thành 7 loại:</p>
+
+                        <div class="rule-cards rule-cards-pieces">
+                            <div class="rule-card rc-piece"><strong>Tướng (Soái)</strong> ×1</div>
+                            <div class="rule-card rc-piece"><strong>Sĩ</strong> ×2</div>
+                            <div class="rule-card rc-piece"><strong>Tượng</strong> ×2</div>
+                            <div class="rule-card rc-piece"><strong>Xe</strong> ×2</div>
+                            <div class="rule-card rc-piece"><strong>Pháo</strong> ×2</div>
+                            <div class="rule-card rc-piece"><strong>Mã</strong> ×2</div>
+                            <div class="rule-card rc-piece"><strong>Tốt</strong> ×5</div>
+                        </div>
+                    </div>
+
+                    <!-- Page 3 -->
+                    <div class="book-page" data-page="3" hidden>
+                        <h2 class="book-chapter-title">3) Xếp quân ban đầu</h2>
+                        <p class="book-summary">Bố trí 16 quân cờ trên các điểm giao hợp lệ.</p>
+
+                        <div class="rule-cards">
+                            <div class="rule-card"><strong>Hàng đáy:</strong><br>Xe – Mã – Tượng – Sĩ – Tướng – Sĩ –
+                                Tượng – Mã – Xe</div>
+                            <div class="rule-card"><strong>Pháo:</strong> Hàng 3 (tính từ đáy), cột 1 và 7</div>
+                            <div class="rule-card"><strong>Tốt:</strong> Hàng 4 (tính từ đáy), cột 0, 2, 4, 6, 8</div>
+                        </div>
+                    </div>
+
+                    <!-- Page 4 -->
+                    <div class="book-page" data-page="4" hidden>
+                        <h2 class="book-chapter-title">4) Xếp quân (chi tiết tọa độ)</h2>
+                        <p class="book-summary">Vị trí khi đánh số hàng 0 (Đen) → 9 (Đỏ) và cột 0 → 8.</p>
+
+                        <div class="mini-table">
+                            <div class="mt-row mt-header">
+                                <div class="mt-key">Bên Đen</div>
+                                <div class="mt-val"></div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Hàng 0</div>
+                                <div class="mt-val">Xe(0) Mã(1) Tượng(2) Sĩ(3) Tướng(4) Sĩ(5) Tượng(6) Mã(7) Xe(8)</div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Hàng 2</div>
+                                <div class="mt-val">Pháo tại cột 1 và 7</div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Hàng 3</div>
+                                <div class="mt-val">Tốt tại cột 0, 2, 4, 6, 8</div>
+                            </div>
+                        </div>
+
+                        <div class="mini-table" style="margin-top: 15px;">
+                            <div class="mt-row mt-header">
+                                <div class="mt-key">Bên Đỏ</div>
+                                <div class="mt-val"></div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Hàng 9</div>
+                                <div class="mt-val">Xe(0) Mã(1) Tượng(2) Sĩ(3) Tướng(4) Sĩ(5) Tượng(6) Mã(7) Xe(8)</div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Hàng 7</div>
+                                <div class="mt-val">Pháo tại cột 1 và 7</div>
+                            </div>
+                            <div class="mt-row">
+                                <div class="mt-key">Hàng 6</div>
+                                <div class="mt-val">Tốt tại cột 0, 2, 4, 6, 8</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page 5 -->
+                    <div class="book-page" data-page="5" hidden>
+                        <h2 class="book-chapter-title">5) Luật đi quân (Phần 1)</h2>
+                        <p class="book-summary">Quy tắc di chuyển của nhóm phòng thủ bảo vệ Tướng.</p>
+
+                        <div class="rule-cards">
+                            <div class="rule-card">
+                                <strong>Tướng (Soái)</strong> <br>
+                                • Đi 1 bước ngang/dọc, không ra khỏi cung. <br>
+                                • Luật "phi tướng": Cấm 2 Tướng đối mặt cùng cột không có cản.
+                            </div>
+                            <div class="rule-card">
+                                <strong>Sĩ</strong> <br>
+                                • Đi 1 bước chéo. <br>
+                                • Chỉ di chuyển trong cung (tối đa 5 vị trí).
+                            </div>
+                            <div class="rule-card">
+                                <strong>Tượng</strong> <br>
+                                • Đi chéo 2 bước, không qua sông. <br>
+                                • Bị cản nếu "mắt tượng" (ô giữa chéo) có quân.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page 6 -->
+                    <div class="book-page" data-page="6" hidden>
+                        <h2 class="book-chapter-title">6) Luật đi quân (Phần 2)</h2>
+                        <p class="book-summary">Quy tắc di chuyển của nhóm tấn công.</p>
+
+                        <div class="rule-cards">
+                            <div class="rule-card">
+                                <strong>Xe</strong> <br>
+                                • Đi ngang/dọc tùy ý (nếu không vướng). <br>
+                                • Ăn quân ngay trên đường đi.
+                            </div>
+                            <div class="rule-card">
+                                <strong>Mã</strong> <br>
+                                • Đi chữ L (1 bước thẳng + 1 bước chéo). <br>
+                                • Bị cản nếu "chân mã" có quân chặn.
+                            </div>
+                            <div class="rule-card">
+                                <strong>Pháo</strong> <br>
+                                • Đi như Xe (ngang/dọc). <br>
+                                • Ăn quân <strong>phải nhảy qua đúng 1 quân</strong> ("ngòi").
+                            </div>
+                            <div class="rule-card">
+                                <strong>Tốt</strong> <br>
+                                • 1 bước tiến. Qua sông được đi ngang. <br>
+                                • Cấm lùi. Không phong hậu.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page 7 -->
+                    <div class="book-page" data-page="7" hidden>
+                        <h2 class="book-chapter-title">7) Ăn quân, Chiếu & Bí</h2>
+                        <p class="book-summary">Các tình huống khống chế và kết thúc mấu chốt.</p>
+
+                        <div class="rule-cards">
+                            <div class="rule-card">
+                                <strong>Ăn quân</strong>: Thay thế quân đối phương, loại khỏi bàn. (Không bắt buộc).
+                            </div>
+                            <div class="rule-card">
+                                <strong>Chiếu tướng</strong>: Đe dọa Tướng. <br>
+                                Phải chạy, che cản, hoặc ăn quân chiếu đe dọa.
+                            </div>
+                            <div class="rule-card">
+                                <strong>Chiếu hết</strong>: Bị chiếu nhưng hết cách đỡ → Thua.
+                            </div>
+                            <div class="rule-card">
+                                <strong>Bí</strong>: Không bị chiếu nhưng hết nước đi hợp lệ → Thường xử thua.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page 8 -->
+                    <div class="book-page" data-page="8" hidden>
+                        <h2 class="book-chapter-title">8) Hòa & Ghi nhớ nhanh</h2>
+
+                        <p class="book-summary" style="margin-bottom: 8px;">Quy ước thi đấu phổ biến:</p>
+                        <div class="rule-cards">
+                            <div class="rule-card"><strong>Hòa</strong>: Lặp lại cùng 1 vị trí nhiều lần (thường là 3).
+                            </div>
+                            <div class="rule-card"><strong>Chiếu / Đuổi dai</strong>: Bị cấm hoặc xử thua tùy giải.
+                            </div>
+                        </div>
+
+                        <div class="book-callout style-warning" style="margin-top: 20px;">
+                            <strong>Ghi nhớ thần tốc:</strong> <br>
+                            • Cung "nhốt" Tướng & Sĩ. Sông "cản" Tượng.<br>
+                            • Mã "cản chân", Tượng "cản mắt".<br>
+                            • Pháo "cần ngòi" mới ăn được.
+                        </div>
+                    </div>
+
+                </div> <!-- .book-content -->
+
+                <!-- Red Seal Decoration -->
+                <div class="book-right-seal">律</div>
+
+                <!-- Page Numbering -->
+                <div class="book-page-number" id="rulesPageIndicator">Mục 1 / 8</div>
+
+                <!-- Corner edge flip areas -->
+                <button class="corner-flip corner-prev" id="btnCornerPrev" aria-label="Trang trước"
+                    title="Trang trước"></button>
+                <button class="corner-flip corner-next" id="btnCornerNext" aria-label="Trang sau"
+                    title="Trang sau"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+            const startBtn = document.querySelector('.start-button');
+
+            if (form && startBtn) {
+                form.addEventListener('submit', function (e) {
+                    if (startBtn.classList.contains('loading')) {
+                        e.preventDefault();
+                        return;
+                    }
+                    startBtn.classList.add('loading');
+                    // We don't set startBtn.disabled = true; here because it might prevent the form from submitting in some older browsers if triggered by enter key.
+                    // Instead, we style it with pointer-events: none.
+                    startBtn.innerHTML = 'Starting...';
+                });
+            }
+
+            // Smooth scroll for nav
+            document.querySelectorAll('.nav-links a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Add active class
+                    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#rules') {
+                        openRulesModal();
+                        return;
+                    }
+                    if (targetId && targetId !== '#') {
+                        const targetEl = document.querySelector(targetId);
+                        if (targetEl) {
+                            targetEl.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Rules Modal Logic
+            const rulesOverlay = document.getElementById('rulesOverlay');
+            const btnCloseRules = document.getElementById('btnCloseRules');
+            const btnCornerPrev = document.getElementById('btnCornerPrev');
+            const btnCornerNext = document.getElementById('btnCornerNext');
+            const pageIndicator = document.getElementById('rulesPageIndicator');
+            const pages = document.querySelectorAll('.book-page');
+            const tocItems = document.querySelectorAll('#bookToc li');
+            const bookRightWrapper = document.getElementById('bookRightWrapper');
+            let currentPage = 0;
+            const totalPages = pages.length;
+
+            function openRulesModal() {
+                rulesOverlay.hidden = false;
+                currentPage = 0;
+                updatePages(false);
+                btnCloseRules.focus();
+
+                // Add keyboard listeners
+                document.addEventListener('keydown', handleRulesKeydown);
+            }
+
+            function closeRulesModal() {
+                rulesOverlay.hidden = true;
+                document.removeEventListener('keydown', handleRulesKeydown);
+            }
+
+            function updatePages(animate = true) {
+                // Update TOC highlights
+                tocItems.forEach((li, index) => {
+                    if (index === currentPage) {
+                        li.classList.add('active');
+                    } else {
+                        li.classList.remove('active');
+                    }
+                });
+
+                // Update right content visibility with flip animation
+                if (animate) {
+                    bookRightWrapper.classList.add('flipping');
+                    setTimeout(() => {
+                        swapPages();
+                    }, 130); // half flip animation duration
+
+                    setTimeout(() => {
+                        bookRightWrapper.classList.remove('flipping');
+                    }, 260); // full flip animation duration
+                } else {
+                    swapPages();
+                }
+
+                function swapPages() {
+                    pages.forEach((page, index) => {
+                        page.classList.remove('active');
+                        page.hidden = true;
+                        if (index === currentPage) {
+                            page.hidden = false;
+                            page.classList.add('active');
+                            // scroll back to top of page
+                            page.scrollTop = 0;
+                        }
+                    });
+                    pageIndicator.textContent = `Trang ${currentPage + 1} / ${totalPages}`;
+
+                    if (btnCornerPrev) btnCornerPrev.disabled = currentPage === 0;
+                    if (btnCornerNext) btnCornerNext.disabled = currentPage === totalPages - 1;
+                }
+            }
+
+            function nextPage() {
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    updatePages(true);
+                }
+            }
+
+            function prevPage() {
+                if (currentPage > 0) {
+                    currentPage--;
+                    updatePages(true);
+                }
+            }
+
+            function handleRulesKeydown(e) {
+                if (rulesOverlay.hidden) return;
+                if (e.key === 'Escape') closeRulesModal();
+                if (e.key === 'ArrowRight') { e.preventDefault(); nextPage(); }
+                if (e.key === 'ArrowLeft') { e.preventDefault(); prevPage(); }
+                if (e.key === 'Home') {
+                    e.preventDefault();
+                    if (currentPage !== 0) {
+                        currentPage = 0;
+                        updatePages(true);
+                    }
+                }
+                if (e.key === 'End') {
+                    e.preventDefault();
+                    if (currentPage !== totalPages - 1) {
+                        currentPage = totalPages - 1;
+                        updatePages(true);
+                    }
+                }
+            }
+
+            if (btnCloseRules) btnCloseRules.addEventListener('click', closeRulesModal);
+            if (btnCornerNext) btnCornerNext.addEventListener('click', nextPage);
+            if (btnCornerPrev) btnCornerPrev.addEventListener('click', prevPage);
+
+            // TOC click to navigate
+            tocItems.forEach((li) => {
+                li.addEventListener('click', () => {
+                    const targetIndex = parseInt(li.getAttribute('data-target'));
+                    if (currentPage !== targetIndex) {
+                        currentPage = targetIndex;
+                        updatePages(true);
+                    }
+                });
+            });
+
+            // Close on backdrop click
+            if (rulesOverlay) {
+                rulesOverlay.addEventListener('click', (e) => {
+                    // Only close if clicked outside the book spread container
+                    if (e.target === rulesOverlay) closeRulesModal();
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
