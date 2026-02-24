@@ -47,7 +47,7 @@
 }
 
 body {
-    font-family: 'Noto Serif SC', 'Georgia', serif;
+    font-family: 'Noto Serif', 'Georgia', serif;
     height: 100vh;
     width: 100vw;
     overflow: hidden;
@@ -86,15 +86,15 @@ body {
             rgba(255, 255, 255, 0.012) 4px);
 }
 
-/* Inner shadow "thick wood frame" around viewport */
+/* Inner shadow "thick wood frame" around viewport and deeper vignette */
 .wood-background::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
     box-shadow:
-        inset 0 0 80px 30px rgba(0, 0, 0, 0.55),
-        inset 0 0 200px 60px rgba(0, 0, 0, 0.25);
+        inset 0 0 100px 40px rgba(0, 0, 0, 0.75),
+        inset 0 0 250px 80px rgba(0, 0, 0, 0.4);
     z-index: 1;
 }
 
@@ -175,19 +175,20 @@ body {
 .nav-links a {
     color: var(--header-cream);
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 400;
-    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Noto Serif', serif;
     letter-spacing: 1px;
     text-transform: uppercase;
-    opacity: 0.8;
+    opacity: 0.85;
     transition: all 0.3s ease;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-.nav-links a:hover {
+.nav-links a:hover,
+.nav-links a.active {
     opacity: 1;
-    color: var(--gold);
+    color: var(--gold-bright);
     transform: translateY(-1px);
 }
 
@@ -309,7 +310,7 @@ body {
 .plaque-content {
     position: relative;
     border-radius: 12px;
-    padding: 32px 28px;
+    padding: 40px 32px;
 
     /* Cream parchment + subtle diagonal highlight */
     background:
@@ -384,11 +385,11 @@ body {
 }
 
 .subtitle {
-    font-size: 14px;
-    font-family: 'Noto Serif SC', 'Georgia', serif;
+    font-size: 15px;
+    font-family: 'Noto Serif', 'Georgia', serif;
     color: var(--text-muted);
     text-align: center;
-    margin: 0 0 30px 0;
+    margin: 0 0 36px 0;
     font-style: italic;
 }
 
@@ -398,21 +399,21 @@ body {
 form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 24px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 14px;
 }
 
 .form-group label {
-    font-size: 14px;
-    font-family: 'Noto Serif SC', 'Georgia', serif;
+    font-size: 15px;
+    font-family: 'Noto Serif', 'Georgia', serif;
     font-weight: 700;
     color: var(--text-body);
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 /* --- Wooden pill dropdown --- */
@@ -423,42 +424,43 @@ form {
 
 .select-wrapper select {
     width: 100%;
-    padding: 12px 42px 12px 18px;
-    font-family: 'Noto Serif SC', serif;
-    font-size: 14px;
+    padding: 14px 42px 14px 16px;
+    font-family: 'Noto Serif', serif;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-body);
     appearance: none;
     cursor: pointer;
     outline: none;
 
-    /* Wooden gradient – vertical */
-    background: linear-gradient(180deg, #c8a76e 0%, #b08e52 100%);
-    border: 1px solid #8c7040;
-    border-radius: 22px;
-    /* pill shape */
+    /* Wooden/Parchment tablet style */
+    background: linear-gradient(180deg, #efe2c4 0%, #d8c29a 100%);
+    border: 2px solid var(--gold);
+    border-radius: 6px;
 
     box-shadow:
-        0 3px 6px rgba(0, 0, 0, 0.2),
-        inset 0 1px 2px rgba(255, 255, 255, 0.25),
-        inset 0 -1px 3px rgba(80, 50, 20, 0.25);
+        0 3px 6px rgba(0, 0, 0, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        inset 0 -1px 3px rgba(80, 50, 20, 0.15);
 
     transition: all 0.25s ease;
 }
 
 .select-wrapper select:hover {
-    background: linear-gradient(180deg, #d4b47a 0%, #bc9a5e 100%);
+    background: linear-gradient(180deg, #f7ebd3 0%, #e0cba4 100%);
     transform: translateY(-1px);
     box-shadow:
-        0 5px 10px rgba(0, 0, 0, 0.25),
-        inset 0 1px 3px rgba(255, 255, 255, 0.3),
-        inset 0 -1px 3px rgba(80, 50, 20, 0.25);
+        0 5px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 3px rgba(255, 255, 255, 0.5),
+        inset 0 -1px 3px rgba(80, 50, 20, 0.15);
 }
 
 .select-wrapper select:focus {
     box-shadow:
-        0 0 0 2px rgba(202, 167, 106, 0.35),
+        0 0 0 2px rgba(202, 167, 106, 0.45),
         0 3px 8px rgba(0, 0, 0, 0.2),
-        inset 0 1px 2px rgba(255, 255, 255, 0.25);
+        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    border-color: var(--gold-bright);
 }
 
 /* Brass caret arrow */
@@ -471,9 +473,9 @@ form {
     height: 0;
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
-    border-top: 7px solid var(--gold);
+    border-top: 7px solid var(--text-body);
     pointer-events: none;
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.4));
 }
 
 /* =========================================
@@ -541,10 +543,23 @@ form {
 }
 
 .start-button:active {
-    transform: translateY(1px);
+    transform: translateY(2px);
     box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.4),
+        0 1px 4px rgba(0, 0, 0, 0.5),
+        inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.start-button.loading,
+.start-button:disabled {
+    opacity: 0.8;
+    pointer-events: none;
+    filter: grayscale(0.4) brightness(0.9);
+    background: linear-gradient(180deg, #7a2222 0%, #4a0f12 100%);
+    box-shadow:
         inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transform: translateY(1px);
+    color: rgba(255, 215, 0, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Focus state – gold outline for accessibility */
@@ -610,8 +625,9 @@ form {
    ========================================= */
 @media (max-width: 768px) {
     .plaque-container {
-        width: 92vw;
+        width: 100%;
         max-width: 480px;
+        padding: 0 16px;
     }
 
     .game-title {
@@ -620,7 +636,7 @@ form {
     }
 
     .plaque-content {
-        padding: 26px 20px;
+        padding: 32px 24px;
     }
 
     .plaque-frame {
@@ -638,7 +654,8 @@ form {
    ========================================= */
 @media (max-width: 480px) {
     .plaque-container {
-        width: 95vw;
+        width: 100%;
+        padding: 0 12px;
     }
 
     .game-title {
@@ -647,12 +664,12 @@ form {
     }
 
     .subtitle {
-        font-size: 13px;
-        margin-bottom: 22px;
+        font-size: 14px;
+        margin-bottom: 24px;
     }
 
     .plaque-content {
-        padding: 20px 16px;
+        padding: 24px 20px;
     }
 
     .plaque-frame {
@@ -661,12 +678,12 @@ form {
     }
 
     form {
-        gap: 14px;
+        gap: 16px;
     }
 
     .start-button {
-        padding: 12px 24px;
-        font-size: 14px;
+        padding: 14px 24px;
+        font-size: 15px;
     }
 
     .nav-links {
@@ -674,12 +691,21 @@ form {
     }
 
     .nav-links a {
-        font-size: 12px;
+        font-size: 13px;
     }
 
     .game-header {
         padding: 0 16px;
         top: 14px;
+        position: relative;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .wood-background {
+        flex-direction: column;
+        justify-content: center;
+        padding-top: 10px;
     }
 }
 
@@ -728,6 +754,8 @@ form {
     pointer-events: none;
     z-index: 3;
     opacity: 0;
+    /* Reduce overall dust opacity to make it less distracting */
+    filter: opacity(0.4);
 }
 
 .dust-1 {
@@ -1102,13 +1130,14 @@ form {
     left: 0;
     bottom: -4px;
     width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--gold), var(--gold-bright), var(--gold));
-    border-radius: 1px;
+    height: 3px;
+    background: var(--gold-bright);
+    border-radius: 4px 10px 4px 10px;
     transition: width 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow: 0 0 6px rgba(202, 167, 106, 0.4);
 }
 
-.nav-links a:hover::after {
+.nav-links a:hover::after,
+.nav-links a.active::after {
     width: 100%;
 }

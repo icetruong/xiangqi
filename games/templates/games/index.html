@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/start-screen.css' %}">
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Ma+Shan+Zheng&family=Noto+Serif:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 </head>
 
@@ -110,6 +110,46 @@
         <div class="dust dust-7"></div>
         <div class="dust dust-8"></div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+            const startBtn = document.querySelector('.start-button');
+            
+            if (form && startBtn) {
+                form.addEventListener('submit', function (e) {
+                    if (startBtn.classList.contains('loading')) {
+                        e.preventDefault();
+                        return;
+                    }
+                    startBtn.classList.add('loading');
+                    // We don't set startBtn.disabled = true; here because it might prevent the form from submitting in some older browsers if triggered by enter key.
+                    // Instead, we style it with pointer-events: none.
+                    startBtn.innerHTML = 'Starting...';
+                });
+            }
+
+            // Smooth scroll for nav
+            document.querySelectorAll('.nav-links a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Add active class
+                    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId && targetId !== '#') {
+                        const targetEl = document.querySelector(targetId);
+                        if (targetEl) {
+                            targetEl.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
