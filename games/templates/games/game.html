@@ -27,6 +27,81 @@
     <!-- game.js MUST come before the inline script so initGame() is defined -->
     <script src="{% static 'games/js/game.js' %}"></script>
     <script>
+        // ── Game Timer Logic ──
+        window.gameTimer = {
+            startTimestamp: 0,
+            pausedDurationTotal: 0,
+            pausedAt: 0,
+            intervalId: null,
+            isRunning: false,
+            isEnded: false,
+            el: null,
+
+            init: function (initialStatus) {
+                this.el = document.getElementById("gameTimerValue");
+                if (initialStatus === 'ongoing' || !initialStatus) {
+                    this.start();
+                } else {
+                    this.stop(true);
+                }
+            },
+            start: function () {
+                if (this.isEnded) return;
+                if (!this.startTimestamp) {
+                    this.startTimestamp = Date.now();
+                }
+                this.resume();
+            },
+            pause: function () {
+                if (!this.isRunning || this.isEnded) return;
+                this.isRunning = false;
+                this.pausedAt = Date.now();
+                clearInterval(this.intervalId);
+                if (this.el) this.el.classList.add("paused");
+            },
+            resume: function () {
+                if (this.isRunning || this.isEnded) return;
+                if (this.pausedAt) {
+                    this.pausedDurationTotal += (Date.now() - this.pausedAt);
+                    this.pausedAt = 0;
+                }
+                this.isRunning = true;
+                if (this.el) this.el.classList.remove("paused");
+                this.intervalId = setInterval(() => this.update(), 1000);
+                this.update();
+            },
+            stop: function (isOver) {
+                this.pause();
+                this.isEnded = true;
+                if (isOver && this.el) {
+                    this.el.classList.remove("paused");
+                    this.el.classList.add("ended");
+                }
+            },
+            update: function () {
+                if (!this.el) return;
+                let now = Date.now();
+                let elapsedMs = now - this.startTimestamp - this.pausedDurationTotal;
+                if (elapsedMs < 0) elapsedMs = 0;
+                let totalSecs = Math.floor(elapsedMs / 1000);
+
+                let h = Math.floor(totalSecs / 3600);
+                let m = Math.floor((totalSecs % 3600) / 60);
+                let s = totalSecs % 60;
+
+                let formatted = "";
+                if (h > 0) {
+                    formatted = String(h).padStart(2, '0') + ":" +
+                        String(m).padStart(2, '0') + ":" +
+                        String(s).padStart(2, '0');
+                } else {
+                    formatted = String(m).padStart(2, '0') + ":" +
+                        String(s).padStart(2, '0');
+                }
+                this.el.textContent = formatted;
+            }
+        };
+
         window.GAME_ID = "{{ game.id }}";
         initGame({
             gameId: "{{ game.id }}",
@@ -39,10 +114,21 @@
             lastMove: {{ last_move| safe }},
             inCheck: {{ in_check| safe }}
         });
+
+        // Initialize Timer when DOM is ready
+        document.addEventListener("DOMContentLoaded", () => {
+            window.gameTimer.init("{{ game.status }}");
+        });
     </script>
 
     <!-- ── Game Action Buttons (fixed top-right — phong cách cổ trang) ── -->
     <div class="game-actions" aria-label="Game controls" style="position:relative">
+        <!-- ── Đồng hồ ván đấu ── -->
+        <div class="timer-plaque" id="gameTimerBoard">
+            <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
+            <div class="timer-value" id="gameTimerValue">00:00</div>
+        </div>
+
         <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận thua</button>
         <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
         <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoái lui</a>
@@ -249,6 +335,7 @@
 
             /* ── Show modal ── */
             function showEndgameModal(type) {
+                if (window.gameTimer) window.gameTimer.stop(true);
                 // For "draw" we still use the old cuộn thư.
                 const overlay = document.getElementById("endgameOverlay");
                 const hanzi = document.getElementById("egmHanzi");
@@ -287,6 +374,7 @@
             let cfmToastTimer = null;
 
             function openConfirmModal() {
+                if (window.gameTimer) window.gameTimer.pause();
                 cfmOverlay.hidden = false;
                 document.body.style.overflow = "hidden";
                 cfmConfirm.disabled = false;
@@ -299,6 +387,7 @@
             }
 
             function closeConfirmModal() {
+                if (window.gameTimer) window.gameTimer.resume();
                 cfmOverlay.hidden = true;
                 document.body.style.overflow = "";
             }
@@ -360,6 +449,7 @@
             let cfmDrawToastTimer = null;
 
             function openDrawModal() {
+                if (window.gameTimer) window.gameTimer.pause();
                 cfmDrawOverlay.hidden = false;
                 document.body.style.overflow = "hidden";
                 cfmDrawConfirm.disabled = false;
@@ -370,6 +460,7 @@
             }
 
             function closeDrawModal() {
+                if (window.gameTimer) window.gameTimer.resume();
                 cfmDrawOverlay.hidden = true;
                 document.body.style.overflow = "";
             }
@@ -431,6 +522,7 @@
             const cfmExitCancel = document.getElementById("cfmExitCancel");
 
             function openExitModal() {
+                if (window.gameTimer) window.gameTimer.pause();
                 cfmExitOverlay.hidden = false;
                 document.body.style.overflow = "hidden";
                 cfmExitConfirm.disabled = false;
@@ -439,6 +531,7 @@
             }
 
             function closeExitModal() {
+                if (window.gameTimer) window.gameTimer.resume();
                 cfmExitOverlay.hidden = true;
                 document.body.style.overflow = "";
             }

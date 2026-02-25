@@ -800,6 +800,10 @@ function updateGameState(data) {
         logMove({ from: lastMove.from, to: lastMove.to }, "AI");
     }
 
+    if (status !== 'ongoing') {
+        if (window.gameTimer) window.gameTimer.stop(true);
+    }
+
     if (status === 'finished') {
         // Determine whether user won, lost, or drew
         var gameStatus = "draw";
