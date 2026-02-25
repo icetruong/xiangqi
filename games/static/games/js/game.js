@@ -1011,6 +1011,6 @@ window.getToastDisplayMsg = function (message) {
     if (msg.includes("invalid move")) return "Nước đi không hợp lệ.";
     if (msg.includes("not your turn")) return "Chưa tới lượt xuất chiêu.";
     if (msg.includes("piece from")) return "Không thể điều binh tướng này.";
-    if (msg.includes("check")) return "Tướng đang nguy cấp (bị chiếu)!";
+    if (msg.includes("check")) return "Tướng đang bị chiếu!";
     return message;
 };
