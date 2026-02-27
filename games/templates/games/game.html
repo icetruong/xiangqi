@@ -121,14 +121,17 @@
         });
     </script>
 
-    <!-- ── Game Action Buttons (fixed top-right — phong cách cổ trang) ── -->
-    <div class="game-actions" aria-label="Game controls" style="position:relative">
+    <!-- ── Timer Panel (fixed top-right) ── -->
+    <div class="game-actions timer-panel" aria-label="Game Timer">
         <!-- ── Đồng hồ ván đấu ── -->
         <div class="timer-plaque" id="gameTimerBoard">
             <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
             <div class="timer-value" id="gameTimerValue">00:00</div>
         </div>
+    </div>
 
+    <!-- ── Game Action Buttons (fixed top-left) ── -->
+    <div class="game-actions actions-panel" aria-label="Game controls">
         <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận thua</button>
         <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
         <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoái lui</a>

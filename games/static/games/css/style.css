@@ -431,13 +431,21 @@ body {
 .game-actions {
     position: fixed;
     top: calc(20px + env(safe-area-inset-top));
-    right: calc(18px + env(safe-area-inset-right));
     z-index: 9999;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     gap: 12px;
+
+    /* Per-panel positioning */
+    &.timer-panel {
+        right: calc(18px + env(safe-area-inset-right));
+    }
+    
+    &.actions-panel {
+        left: calc(18px + env(safe-area-inset-left));
+    }
 
     /* Bảng treo: chiều rộng cố định, ôm đủ 3 nút */
     width: clamp(170px, 14vw, 220px);
@@ -613,10 +621,22 @@ body {
         gap: 8px;
         padding: 10px 12px;
         top: auto;
+        border-radius: 6px;
+    }
+
+    .game-actions.timer-panel {
+        top: calc(10px + env(safe-area-inset-top));
+        bottom: auto;
+        right: 50%;
+        left: auto;
+        transform: translateX(50%);
+    }
+
+    .game-actions.actions-panel {
         bottom: calc(14px + env(safe-area-inset-bottom));
         right: 50%;
+        left: auto;
         transform: translateX(50%);
-        border-radius: 6px;
     }
 
     .game-actions::before {
