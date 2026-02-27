@@ -442,7 +442,7 @@ body {
     &.timer-panel {
         right: calc(18px + env(safe-area-inset-right));
     }
-    
+
     &.actions-panel {
         left: calc(18px + env(safe-area-inset-left));
     }
@@ -452,13 +452,12 @@ body {
     padding: 20px 16px;
 
     /* Gỗ mahogany sẫm + vân nhẹ */
-    background:
-        repeating-linear-gradient(178deg,
-            rgba(255, 220, 160, .025) 0px,
-            rgba(255, 220, 160, .025) 1px,
-            transparent 1px,
-            transparent 6px),
-        linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+    background: repeating-linear-gradient(178deg,
+        rgba(255, 220, 160, .025) 0px,
+        rgba(255, 220, 160, .025) 1px,
+        transparent 1px,
+        transparent 6px),
+    linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
 
     /* Viền đồng hai lớp */
     border: 2px solid #7a5a28;
@@ -467,12 +466,11 @@ body {
     border-radius: 6px;
 
     /* Hiệu ứng chiều sâu như bảng đồng */
-    box-shadow:
-        0 0 0 1px #3a1c0e,
-        0 8px 32px rgba(0, 0, 0, .7),
-        0 2px 6px rgba(0, 0, 0, .5),
-        inset 0 1px 0 rgba(255, 200, 100, .18),
-        inset 0 -1px 0 rgba(0, 0, 0, .5);
+    box-shadow: 0 0 0 1px #3a1c0e,
+    0 8px 32px rgba(0, 0, 0, .7),
+    0 2px 6px rgba(0, 0, 0, .5),
+    inset 0 1px 0 rgba(255, 200, 100, .18),
+    inset 0 -1px 0 rgba(0, 0, 0, .5);
 }
 
 /* ── Hoa văn góc giả (corner ornaments via CSS) ── */
@@ -750,6 +748,99 @@ body {
     vertical-align: middle;
     letter-spacing: 0;
 }
+
+/* ── BGM Control ── */
+.bgm-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+.bgm-btn {
+    background: linear-gradient(160deg, #6b4e0a 0%, #4a3407 100%);
+    border: 1px solid #9a7220;
+    color: #f5e6c8;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-family: 'Ma Shan Zheng', serif;
+    font-size: 1.15rem;
+    box-shadow: inset 0 1px 0 rgba(255, 200, 100, .15), 0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s, filter 0.1s;
+    flex-shrink: 0;
+}
+
+.bgm-btn:hover {
+    filter: brightness(1.2);
+}
+
+.bgm-btn:active {
+    transform: translateY(1px);
+}
+
+.bgm-btn.muted {
+    filter: grayscale(1) brightness(0.6);
+    opacity: 0.8;
+}
+
+.bgm-slider {
+    flex-grow: 1;
+    -webkit-appearance: none;
+    background: transparent;
+    height: 20px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.bgm-slider:focus {
+    outline: none;
+}
+
+.bgm-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #7a5a28;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.bgm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 12px;
+    background: linear-gradient(to bottom, #f0b429, #c9944a);
+    border: 1px solid #4a3407;
+    border-radius: 2px;
+    margin-top: -6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.bgm-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #7a5a28;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.bgm-slider::-moz-range-thumb {
+    height: 16px;
+    width: 12px;
+    background: linear-gradient(to bottom, #f0b429, #c9944a);
+    border: 1px solid #4a3407;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
 
 
 /* ═══════════════════════════════════════════════════════════════════

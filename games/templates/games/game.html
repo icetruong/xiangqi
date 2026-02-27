@@ -121,8 +121,21 @@
         });
     </script>
 
+    <audio id="bgmAudio" loop preload="auto">
+        <source src="{% static 'games/audio/bgm.mp3' %}" type="audio/mpeg">
+    </audio>
+
     <!-- ── Timer Panel (fixed top-right) ── -->
     <div class="game-actions timer-panel" aria-label="Game Timer">
+        <!-- ── BGM Control (Nhạc nền) ── -->
+        <div class="timer-plaque bgm-control" id="bgmControl">
+            <button type="button" class="bgm-btn" id="btnBgmToggle" aria-label="Bật/Tắt nhạc" title="Bật/Tắt nhạc">
+                琴
+            </button>
+            <input type="range" id="bgmVolume" class="bgm-slider" min="0" max="1" step="0.05" value="0.3"
+                aria-label="Âm lượng nhạc">
+        </div>
+
         <!-- ── Đồng hồ ván đấu ── -->
         <div class="timer-plaque" id="gameTimerBoard">
             <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
@@ -563,6 +576,53 @@
                 e.preventDefault();
                 openExitModal();
             });
+
+            /* ── Background Music Logic ── */
+            const bgmAudio = document.getElementById("bgmAudio");
+            const btnBgmToggle = document.getElementById("btnBgmToggle");
+            const bgmVolume = document.getElementById("bgmVolume");
+
+            // Cài đặt âm lượng ban đầu
+            bgmAudio.volume = bgmVolume.value;
+
+            // Xử lý bật/tắt nhạc
+            function toggleBgm() {
+                if (bgmAudio.paused) {
+                    bgmAudio.play().then(() => {
+                        btnBgmToggle.classList.remove("muted");
+                    }).catch(err => {
+                        console.log("Trình duyệt chặn autoplay âm thanh:", err);
+                    });
+                } else {
+                    bgmAudio.pause();
+                    btnBgmToggle.classList.add("muted");
+                }
+            }
+
+            btnBgmToggle.addEventListener("click", toggleBgm);
+
+            // Xử lý thanh trượt âm lượng
+            bgmVolume.addEventListener("input", (e) => {
+                const vol = parseFloat(e.target.value);
+                bgmAudio.volume = vol;
+                if (vol === 0) {
+                    bgmAudio.pause();
+                    btnBgmToggle.classList.add("muted");
+                } else if (bgmAudio.paused) {
+                    bgmAudio.play().then(() => {
+                        btnBgmToggle.classList.remove("muted");
+                    }).catch(e => { });
+                }
+            });
+
+            // Tự động phát khi người dùng tương tác với trang (để lách luật autoplay)
+            document.addEventListener("click", function startBgm() {
+                if (bgmAudio.paused && !btnBgmToggle.classList.contains("muted") && document.activeElement !== btnBgmToggle && document.activeElement !== bgmVolume) {
+                    bgmAudio.play().catch(e => console.log("Chưa thể phát nhạc tự động"));
+                }
+                document.removeEventListener("click", startBgm);
+            }, { once: true });
+
         })();
     </script>
 </body>
