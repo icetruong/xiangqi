@@ -405,6 +405,94 @@ body {
     z-index: 20;
 }
 
+/* ─── Check Overlay Text "將軍" ─── */
+@keyframes checkTextAnim {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.75);
+    }
+
+    12% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+}
+
+.check-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 200;
+    font-family: 'Ma Shan Zheng', 'KaiTi', cursive;
+    font-size: 3.6rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: #c0392b;
+    text-shadow:
+        0 0 18px rgba(220, 38, 38, 0.8),
+        0 0 40px rgba(220, 38, 38, 0.35),
+        2px 3px 6px rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.check-overlay.show {
+    animation: checkTextAnim 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ─── Board Shake ─── */
+@keyframes boardShake {
+    0% {
+        transform: translateX(0);
+    }
+
+    18% {
+        transform: translateX(-5px);
+    }
+
+    36% {
+        transform: translateX(5px);
+    }
+
+    54% {
+        transform: translateX(-3px);
+    }
+
+    72% {
+        transform: translateX(3px);
+    }
+
+    88% {
+        transform: translateX(-1px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.board-wrapper.board--shaking {
+    animation: boardShake 0.22s ease-out;
+}
+
 /* ─── Old Position Marker (Transient) ─── */
 .old-pos-marker {
     position: absolute;

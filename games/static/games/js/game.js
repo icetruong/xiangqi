@@ -127,6 +127,65 @@ function playCaptureSound() {
     } catch (e) { /* silence */ }
 }
 
+// "Ping" — metallic ring for check announcement
+function playCheckSound() {
+    try {
+        var ctx = getAudioCtx();
+        var duration = 0.55;
+        var buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < data.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Metallic ping: two harmonics with long decay
+            var fundamental = Math.sin(2 * Math.PI * 880 * t) * Math.exp(-t * 8);
+            var harmonic = Math.sin(2 * Math.PI * 1760 * t) * Math.exp(-t * 12) * 0.4;
+            var shimmer = Math.sin(2 * Math.PI * 2640 * t) * Math.exp(-t * 18) * 0.15;
+            data[i] = fundamental + harmonic + shimmer;
+        }
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.42;
+        src.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silence */ }
+}
+
+// ── Check Effects: text overlay + board shake + sound ──
+var _checkOverlayTimer = null;
+function triggerCheckEffects() {
+    // 1. Metallic ping
+    playCheckSound();
+
+    // 2. Show "將軍" text overlay
+    var overlay = document.getElementById('check-overlay');
+    if (overlay) {
+        // Set text based on who is in check (for flavour)
+        overlay.textContent = '將軍';
+        // Re-trigger animation by removing then re-adding class
+        overlay.classList.remove('show');
+        void overlay.offsetWidth; // force reflow
+        overlay.classList.add('show');
+
+        clearTimeout(_checkOverlayTimer);
+        _checkOverlayTimer = setTimeout(function () {
+            overlay.classList.remove('show');
+        }, 1450);
+    }
+
+    // 3. Board shake
+    var wrapper = document.getElementById('boardWrapper');
+    if (wrapper) {
+        wrapper.classList.remove('board--shaking');
+        void wrapper.offsetWidth; // force reflow
+        wrapper.classList.add('board--shaking');
+        setTimeout(function () {
+            wrapper.classList.remove('board--shaking');
+        }, 250);
+    }
+}
+
 // ═══════════════════════════════════════════════
 //  SVG Grid Builder
 // ═══════════════════════════════════════════════
@@ -771,12 +830,18 @@ function sendMove(move) {
 
 function updateGameState(data) {
     var prevLastMove = lastMove;
+    var prevInCheck = inCheck;
     boardState = data.board_state;
     currentTurn = data.current_turn;
     status = data.status;
     lastMove = data.last_move;
     legalMoves = data.legal_moves || [];
     inCheck = data.in_check || null;
+
+    // Fire check effects only when check newly appears (not on every poll)
+    if (inCheck && inCheck !== prevInCheck) {
+        triggerCheckEffects();
+    }
 
     // Animate if there's a new move that differs from the previous one
     var shouldAnimate = !!(lastMove && (!prevLastMove ||
