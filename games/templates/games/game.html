@@ -17,6 +17,18 @@
     <div class="main-container">
         <!-- Game Toasts Container -->
         <div id="game-toast-container" class="game-toast-container" aria-live="polite"></div>
+
+        <!-- ── Player Panels (Turn Indicator) ── -->
+        <div class="player-panel player-panel--left" id="playerPanelLeft" aria-label="Người chơi">
+            <div class="pp-badge" id="ppBadgeLeft">⚡ ĐẾN LƯỢT</div>
+            <div class="pp-avatar" id="ppAvatarLeft">帥</div>
+            <div class="pp-name" id="ppNameLeft">Bạn</div>
+        </div>
+        <div class="player-panel player-panel--right" id="playerPanelRight" aria-label="Đối thủ">
+            <div class="pp-badge" id="ppBadgeRight">⚡ ĐẾN LƯỢT</div>
+            <div class="pp-avatar" id="ppAvatarRight">將</div>
+            <div class="pp-name" id="ppNameRight">Đối thủ</div>
+        </div>
         <div class="game-area">
             <div class="board-wrapper">
                 <div class="board-inner" id="board"></div>

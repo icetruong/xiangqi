@@ -700,6 +700,7 @@ function initGame(config) {
     initBoardStructure();
     renderBoard(false);
     updateStatusUI();
+    initTurnIndicator();
 }
 
 function handleCellClick(r, c) {
@@ -841,6 +842,43 @@ function updateStatusUI() {
         }
         statusDisplay.innerText = text;
     }
+    updateTurnIndicator();
+}
+
+// ── Turn Indicator Logic ──
+function initTurnIndicator() {
+    // Set the correct avatar glyphs and name labels based on player's side
+    var leftAvatar = document.getElementById('ppAvatarLeft');
+    var rightAvatar = document.getElementById('ppAvatarRight');
+    var leftName = document.getElementById('ppNameLeft');
+    var rightName = document.getElementById('ppNameRight');
+    if (!leftAvatar || !rightAvatar) return;
+
+    // Left panel = Bạn (player), Right panel = Đối thủ (AI)
+    // Red side uses 帥 (General, Red); Black side uses 將 (General, Black)
+    if (playerSide === 'r') {
+        leftAvatar.textContent = '帥';   // Red general
+        rightAvatar.textContent = '將';   // Black general
+    } else {
+        leftAvatar.textContent = '將';   // Black general
+        rightAvatar.textContent = '帥';   // Red general
+    }
+    if (leftName) leftName.textContent = 'Bạn';
+    if (rightName) rightName.textContent = 'Đối thủ';
+
+    updateTurnIndicator();
+}
+
+function updateTurnIndicator() {
+    var leftPanel = document.getElementById('playerPanelLeft');
+    var rightPanel = document.getElementById('playerPanelRight');
+    if (!leftPanel || !rightPanel) return;
+
+    var isMyTurn = (status === 'ongoing' && currentTurn === playerSide);
+    var isAITurn = (status === 'ongoing' && currentTurn !== playerSide);
+
+    leftPanel.classList.toggle('player-panel--active', isMyTurn);
+    rightPanel.classList.toggle('player-panel--active', isAITurn);
 }
 
 function logMove(move, who) {

@@ -1640,3 +1640,225 @@ body {
         max-width: 320px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Player Panels — Turn Indicator  (Bảng hiển thị lượt chơi)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Glow pulse animation (subtle, slow) ── */
+@keyframes ppGlowPulse {
+    0% {
+        box-shadow: 0 0 10px 3px rgba(240, 180, 41, 0.45),
+            0 0 24px 6px rgba(240, 180, 41, 0.18);
+    }
+
+    50% {
+        box-shadow: 0 0 18px 6px rgba(240, 180, 41, 0.65),
+            0 0 38px 12px rgba(240, 180, 41, 0.28);
+    }
+
+    100% {
+        box-shadow: 0 0 10px 3px rgba(240, 180, 41, 0.45),
+            0 0 24px 6px rgba(240, 180, 41, 0.18);
+    }
+}
+
+/* ── Badge slide-in animation ── */
+@keyframes ppBadgeSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ── Panel base ── */
+.player-panel {
+    position: fixed;
+    bottom: calc(28px + env(safe-area-inset-bottom));
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 14px 14px;
+    width: clamp(100px, 10vw, 140px);
+
+    /* Dark wood panel — matches .game-actions */
+    background: repeating-linear-gradient(178deg,
+            rgba(255, 220, 160, .025) 0px,
+            rgba(255, 220, 160, .025) 1px,
+            transparent 1px,
+            transparent 6px),
+        linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+    border: 2px solid #7a5a28;
+    outline: 1px solid #c9944a;
+    outline-offset: -5px;
+    border-radius: 8px;
+    box-shadow:
+        0 0 0 1px #3a1c0e,
+        0 8px 32px rgba(0, 0, 0, .7),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
+
+    /* Inactive: dimmed and desaturated */
+    opacity: 0.55;
+    filter: saturate(0.5);
+
+    /* Smooth transitions */
+    transition:
+        opacity 0.2s ease,
+        filter 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+/* Corner ornaments */
+.player-panel::before,
+.player-panel::after {
+    content: '◈';
+    position: absolute;
+    font-size: 0.6rem;
+    color: #c9944a;
+    opacity: 0.65;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.player-panel::before {
+    top: 5px;
+    left: 6px;
+}
+
+.player-panel::after {
+    bottom: 5px;
+    right: 6px;
+}
+
+/* Left panel position */
+.player-panel--left {
+    left: calc(18px + env(safe-area-inset-left));
+}
+
+/* Right panel position */
+.player-panel--right {
+    right: calc(18px + env(safe-area-inset-right));
+}
+
+/* ── Avatar circle ── */
+.pp-avatar {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'XiangqiSerif', 'Ma Shan Zheng', serif;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #f5e6c8;
+    background: radial-gradient(circle at 38% 32%,
+            #6b4e2a 0%,
+            #3e2512 45%,
+            #1e0d06 100%);
+    box-shadow:
+        0 0 0 2px #7a5a28,
+        0 0 0 4px #c9944a44,
+        0 4px 10px rgba(0, 0, 0, 0.5),
+        inset 0 2px 4px rgba(255, 200, 100, .15);
+    transition: box-shadow 0.2s ease;
+    position: relative;
+}
+
+/* ── Player name label ── */
+.pp-name {
+    font-family: 'Noto Serif', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #d4b87a;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+/* ── Turn badge pill ── */
+.pp-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: linear-gradient(135deg, #f0b429 0%, #c9840a 100%);
+    color: #1e0d06;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    box-shadow:
+        0 2px 8px rgba(240, 180, 41, 0.55),
+        0 1px 0 rgba(255, 240, 180, 0.4) inset;
+    pointer-events: none;
+    opacity: 0;
+    /* Hidden by default; shown when active */
+    transition: opacity 0.15s ease;
+}
+
+/* ══════════════════════════════
+   Active (currently-moving) side
+   ══════════════════════════════ */
+.player-panel--active {
+    opacity: 1;
+    filter: saturate(1);
+    transform: translateY(-3px);
+    box-shadow:
+        0 0 0 1px #3a1c0e,
+        0 10px 36px rgba(0, 0, 0, .75),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .25),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
+}
+
+.player-panel--active .pp-avatar {
+    animation: ppGlowPulse 2.4s ease-in-out infinite;
+}
+
+.player-panel--active .pp-badge {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    animation: ppBadgeSlide 0.2s ease-out forwards;
+}
+
+/* ══════════════════════════════
+   Responsive (narrow screens)
+   ══════════════════════════════ */
+@media (max-width: 700px) {
+    .player-panel {
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        width: clamp(76px, 15vw, 100px);
+        padding: 10px 8px 10px;
+        gap: 5px;
+    }
+
+    .pp-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .pp-name {
+        font-size: 0.65rem;
+    }
+
+    .pp-badge {
+        font-size: 0.52rem;
+        padding: 2px 6px;
+        top: -12px;
+    }
+}
