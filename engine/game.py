@@ -79,13 +79,34 @@ class Game:
 
         return self.make_move(src, dst)
     
-    def ai_move_time(self, time_limit_sec: float = 0.5, max_depth: int = 6) -> bool:
+    def get_dynamic_time_limit(self) -> float:
+        piece_count = 0
+        for r in range(self.board.ROWS):
+            for c in range(self.board.COLS):
+                if self.board.get(r, c) != ".":
+                    piece_count += 1
+                    
+        if piece_count >= 24:
+            return 5.0
+        elif piece_count >= 12:
+            return 3.0
+        else:
+            return 1.5
+
+    def ai_move_time(self, time_limit_sec: Optional[float] = None, max_depth: int = 6) -> bool:
         from engine.ai.time_search import best_move_with_time_limit
 
         turn_color = self.turn.value
-        move = best_move_with_time_limit(self.board, turn_color,max_depth= max_depth,time_limit_sec=time_limit_sec)
+        
+        # Nếu chưa truyền thời gian, tự động cấp phát thông minh
+        if time_limit_sec is None:
+            time_limit_sec = self.get_dynamic_time_limit()
+
+        move = best_move_with_time_limit(self.board, turn_color, max_depth=max_depth, time_limit_sec=time_limit_sec)
+        
         if move is None:
             return False
+            
         src, dst = move
         return self.make_move(src, dst)
 
