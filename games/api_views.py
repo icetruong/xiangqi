@@ -100,16 +100,22 @@ def make_move(request, game_id):
         # 1. Apply Player Move
         game, player_move_meta = game_service.apply_player_move(game_id, move_data)
         
-        # 2. Trigger AI Move in Background
+        # 2. AI Move (synchronous – required for serverless/Vercel)
+        ai_move_data = None
         if game.status == 'ongoing' and game.current_turn == game.ai_side:
-            t = threading.Thread(target=game_service.process_ai_move, args=(game_id,))
-            t.daemon = True # Daemon thread so it doesn't block server shutdown
-            t.start()
+            game_service.process_ai_move(game_id)
+            game.refresh_from_db()
+            # Get AI's last move
+            ai_last_move = game.moves.last()
+            if ai_last_move:
+                ai_move_data = {
+                    "from": [ai_last_move.from_row, ai_last_move.from_col],
+                    "to": [ai_last_move.to_row, ai_last_move.to_col],
+                    "piece": ai_last_move.piece,
+                    "captured": ai_last_move.captured
+                }
         
-        # 3. Construct Response (Immediate)
-        # We return the state AFTER player move.
-        # The frontend will see "Turn: b" (AI) and should start polling.
-        
+        # 3. Construct Response (includes AI move result)
         last_move_data = {
             "from": move_data['from'],
             "to": move_data['to'],
@@ -124,7 +130,8 @@ def make_move(request, game_id):
             "status": game.status,
             "winner": game.winner,
             "end_reason": game.end_reason,
-            "last_move": last_move_data,
+            "last_move": ai_move_data if ai_move_data else last_move_data,
+            "ai_move": ai_move_data,
             "in_check": _get_in_check(game.board_state)
         })
 

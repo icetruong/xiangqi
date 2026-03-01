@@ -42,3 +42,10 @@ Thumbs.db
 # Environment
 .env
 .env.local
+.venv/
+
+# Database
+db.sqlite3
+
+# Collected static files
+staticfiles/

@@ -127,6 +127,65 @@ function playCaptureSound() {
     } catch (e) { /* silence */ }
 }
 
+// "Ping" — metallic ring for check announcement
+function playCheckSound() {
+    try {
+        var ctx = getAudioCtx();
+        var duration = 0.55;
+        var buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var i = 0; i < data.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Metallic ping: two harmonics with long decay
+            var fundamental = Math.sin(2 * Math.PI * 880 * t) * Math.exp(-t * 8);
+            var harmonic = Math.sin(2 * Math.PI * 1760 * t) * Math.exp(-t * 12) * 0.4;
+            var shimmer = Math.sin(2 * Math.PI * 2640 * t) * Math.exp(-t * 18) * 0.15;
+            data[i] = fundamental + harmonic + shimmer;
+        }
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.42;
+        src.connect(gain);
+        gain.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silence */ }
+}
+
+// ── Check Effects: text overlay + board shake + sound ──
+var _checkOverlayTimer = null;
+function triggerCheckEffects() {
+    // 1. Metallic ping
+    playCheckSound();
+
+    // 2. Show "將軍" text overlay
+    var overlay = document.getElementById('check-overlay');
+    if (overlay) {
+        // Set text based on who is in check (for flavour)
+        overlay.textContent = '將軍';
+        // Re-trigger animation by removing then re-adding class
+        overlay.classList.remove('show');
+        void overlay.offsetWidth; // force reflow
+        overlay.classList.add('show');
+
+        clearTimeout(_checkOverlayTimer);
+        _checkOverlayTimer = setTimeout(function () {
+            overlay.classList.remove('show');
+        }, 1450);
+    }
+
+    // 3. Board shake
+    var wrapper = document.getElementById('boardWrapper');
+    if (wrapper) {
+        wrapper.classList.remove('board--shaking');
+        void wrapper.offsetWidth; // force reflow
+        wrapper.classList.add('board--shaking');
+        setTimeout(function () {
+            wrapper.classList.remove('board--shaking');
+        }, 250);
+    }
+}
+
 // ═══════════════════════════════════════════════
 //  SVG Grid Builder
 // ═══════════════════════════════════════════════
@@ -700,6 +759,7 @@ function initGame(config) {
     initBoardStructure();
     renderBoard(false);
     updateStatusUI();
+    initTurnIndicator();
 }
 
 function handleCellClick(r, c) {
@@ -770,12 +830,18 @@ function sendMove(move) {
 
 function updateGameState(data) {
     var prevLastMove = lastMove;
+    var prevInCheck = inCheck;
     boardState = data.board_state;
     currentTurn = data.current_turn;
     status = data.status;
     lastMove = data.last_move;
     legalMoves = data.legal_moves || [];
     inCheck = data.in_check || null;
+
+    // Fire check effects only when check newly appears (not on every poll)
+    if (inCheck && inCheck !== prevInCheck) {
+        triggerCheckEffects();
+    }
 
     // Animate if there's a new move that differs from the previous one
     var shouldAnimate = !!(lastMove && (!prevLastMove ||
@@ -841,6 +907,43 @@ function updateStatusUI() {
         }
         statusDisplay.innerText = text;
     }
+    updateTurnIndicator();
+}
+
+// ── Turn Indicator Logic ──
+function initTurnIndicator() {
+    // Set the correct avatar glyphs and name labels based on player's side
+    var leftAvatar = document.getElementById('ppAvatarLeft');
+    var rightAvatar = document.getElementById('ppAvatarRight');
+    var leftName = document.getElementById('ppNameLeft');
+    var rightName = document.getElementById('ppNameRight');
+    if (!leftAvatar || !rightAvatar) return;
+
+    // Left panel = Bạn (player), Right panel = Đối thủ (AI)
+    // Red side uses 帥 (General, Red); Black side uses 將 (General, Black)
+    if (playerSide === 'r') {
+        leftAvatar.textContent = '帥';   // Red general
+        rightAvatar.textContent = '將';   // Black general
+    } else {
+        leftAvatar.textContent = '將';   // Black general
+        rightAvatar.textContent = '帥';   // Red general
+    }
+    if (leftName) leftName.textContent = 'Bạn';
+    if (rightName) rightName.textContent = 'Đối thủ';
+
+    updateTurnIndicator();
+}
+
+function updateTurnIndicator() {
+    var leftPanel = document.getElementById('playerPanelLeft');
+    var rightPanel = document.getElementById('playerPanelRight');
+    if (!leftPanel || !rightPanel) return;
+
+    var isMyTurn = (status === 'ongoing' && currentTurn === playerSide);
+    var isAITurn = (status === 'ongoing' && currentTurn !== playerSide);
+
+    leftPanel.classList.toggle('player-panel--active', isMyTurn);
+    rightPanel.classList.toggle('player-panel--active', isAITurn);
 }
 
 function logMove(move, who) {
@@ -916,11 +1019,120 @@ window.showEndgame = function (result) {
                 setTimeout(function () { alert("Game Drawn"); }, 100);
             }
         } else {
-            // win
-            setTimeout(function () { alert("Chờ xíu, bạn Đã Chiến Thắng! (Win Modal hasn't been implemented)"); }, 100);
+            // ── WIN SCREEN ──
+            document.body.style.overflow = "hidden";
+
+            var overlay = document.getElementById("winOverlay");
+            if (!overlay) return;
+
+            // Set reason text
+            var reasonText = document.getElementById("winReason");
+            if (reasonText) {
+                var r = result.reason || "";
+                if (r === "checkmate") {
+                    reasonText.textContent = "Chiếu bí — đối thủ quy hàng.";
+                } else if (r === "resign") {
+                    reasonText.textContent = "Đối thủ đã nhận thua.";
+                } else if (r === "timeout") {
+                    reasonText.textContent = "Đối thủ hết thời gian.";
+                } else {
+                    reasonText.textContent = "Bạn đã đánh bại đối thủ!";
+                }
+            }
+
+            // Show overlay
+            overlay.hidden = false;
+
+            // Spawn golden particles
+            _spawnWinParticles();
+
+            // Trigger seal stamp animation + sound after panel animation settles
+            var seal = document.getElementById("winSeal");
+            if (seal) {
+                seal.classList.remove("win-seal--stamped");
+                void seal.offsetWidth;
+                setTimeout(function () {
+                    seal.classList.add("win-seal--stamped");
+                    if (typeof playThud === "function") playThud();
+                    else if (typeof window.playThud === "function") window.playThud();
+                    else playMoveSound();
+                }, 300);
+            }
+
+            // Victory gong sound (after a short delay for dramatic buildup)
+            setTimeout(function () { _playVictoryGong(); }, 150);
         }
     }
 };
+
+// ── Victory Gong Sound (Web Audio API — brass hit + bell shimmer) ──
+function _playVictoryGong() {
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var dur = 1.2;
+        var buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var i = 0; i < d.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Low brass hit (fundamental ~110 Hz)
+            d[i] = Math.sin(2 * Math.PI * 110 * t) * Math.exp(-t * 3) * 0.35
+                // Mid harmonic (220 Hz)
+                + Math.sin(2 * Math.PI * 220 * t) * Math.exp(-t * 4) * 0.2
+                // High bell shimmer (880 Hz)
+                + Math.sin(2 * Math.PI * 880 * t) * Math.exp(-t * 8) * 0.12
+                // Sparkle (1760 Hz, quiet)
+                + Math.sin(2 * Math.PI * 1760 * t) * Math.exp(-t * 14) * 0.06
+                // Noise burst for attack transient
+                + (Math.random() * 2 - 1) * Math.exp(-t * 50) * 0.18;
+        }
+        var src = ctx.createBufferSource();
+        var g = ctx.createGain();
+        src.buffer = buf;
+        g.gain.value = 0.5;
+        src.connect(g);
+        g.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silent fail */ }
+}
+
+// ── Spawn Golden Particles ──
+function _spawnWinParticles() {
+    var container = document.getElementById("winParticles");
+    if (!container) return;
+    container.innerHTML = ""; // Clear any old particles
+
+    var count = 35;
+    for (var i = 0; i < count; i++) {
+        var p = document.createElement("div");
+        p.className = "win-particle";
+
+        // Random size 3–8px
+        var size = 3 + Math.random() * 5;
+        p.style.width = size + "px";
+        p.style.height = size + "px";
+
+        // Random horizontal position
+        p.style.left = (Math.random() * 100) + "%";
+
+        // Start from bottom area (random 70%–100%)
+        p.style.bottom = (Math.random() * 30) + "%";
+
+        // Gold color with slight variation
+        var hue = 38 + Math.random() * 15;       // 38–53 (gold range)
+        var sat = 85 + Math.random() * 15;        // 85–100%
+        var light = 55 + Math.random() * 15;      // 55–70%
+        p.style.background = "hsl(" + hue + "," + sat + "%," + light + "%)";
+        p.style.boxShadow = "0 0 " + (size + 2) + "px hsla(" + hue + "," + sat + "%," + light + "%,0.5)";
+
+        // Random animation duration and delay
+        var duration = 3 + Math.random() * 4;     // 3–7s
+        var delay = Math.random() * 2;             // 0–2s delay
+        p.style.animationDuration = duration + "s";
+        p.style.animationDelay = delay + "s";
+
+        container.appendChild(p);
+    }
+}
 
 var pollInterval = null;
 

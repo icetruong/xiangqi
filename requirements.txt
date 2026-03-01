@@ -10,6 +10,9 @@ django-cors-headers==4.3.1
 # Environment variables
 python-dotenv==1.0.1
 
+# Static files serving (Vercel / Production)
+whitenoise==6.6.0
+
 # Database (PostgreSQL optional, SQLite default)
 # psycopg2-binary==2.9.9  # Uncomment if using PostgreSQL
 
