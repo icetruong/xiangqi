@@ -20,7 +20,7 @@ def generate_capture_moves(board: Board, color: str) -> List[Tuple[Tuple[int, in
     
     return capture
 
-def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, maximizing: bool, deadline: float | None = None) -> int:
+def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, maximizing: bool, deadline: float | None = None, q_depth=4) -> int:
     """
     Quiescence search:
     - Stand pat = evaluate hiện tại
@@ -29,6 +29,9 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
     if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
     stand_pat = evaluate_board(board, ai_color)
+
+    if q_depth == 0:
+        return stand_pat
 
     if maximizing:
         alpha = max(alpha, stand_pat)
@@ -48,7 +51,7 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
                 raise SearchTimeout()
             undo = board.apply_move(src, dst)
             try:
-                score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, False, deadline)
+                score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, not maximizing, deadline, q_depth - 1)
             finally:
                 board.undo_move(undo)
 
@@ -64,7 +67,7 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
                 raise SearchTimeout()
             undo = board.apply_move(src, dst)
             try:
-                score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, True, deadline)
+                score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, not maximizing, deadline, q_depth - 1)
             finally:
                 board.undo_move(undo)
 

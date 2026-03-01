@@ -13,9 +13,15 @@ def move_score(board: Board, move: Tuple[Tuple[int, int], Tuple[int, int]], turn
     capture = board.get(dr, dc)
     score = 0
     if not is_empty(capture):
-        score += 10000 + PIECE_VALUE.get(type_of(capture), 0)
+        # score += 10000 + PIECE_VALUE.get(type_of(capture), 0)
+        moved_piece = board.get(sr, sc)
+        victim_val = PIECE_VALUE.get(type_of(capture), 0)
+        attacker_val = PIECE_VALUE.get(type_of(moved_piece), 0)
+        score += 1000000 + 100 * victim_val - attacker_val
 
     return score
+
+
 
 def order_moves(board: Board, moves: List[Tuple[Tuple[int, int], Tuple[int, int]]], turn_color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
     return sorted(moves, key = lambda mv : move_score(board, mv, turn_color), reverse=True)

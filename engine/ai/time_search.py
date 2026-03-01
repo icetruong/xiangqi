@@ -24,7 +24,7 @@ def best_move_with_time_limit(board: Board, ai_color: str, max_depth: int = 6, t
             break
 
         try:
-            mv = find_best_move(board, ai_color, 2, deadline)
+            mv = find_best_move(board, ai_color, d, deadline)
             if mv is not None:
                 best = mv
         except SearchTimeout:
