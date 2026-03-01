@@ -1019,11 +1019,120 @@ window.showEndgame = function (result) {
                 setTimeout(function () { alert("Game Drawn"); }, 100);
             }
         } else {
-            // win
-            setTimeout(function () { alert("Chờ xíu, bạn Đã Chiến Thắng! (Win Modal hasn't been implemented)"); }, 100);
+            // ── WIN SCREEN ──
+            document.body.style.overflow = "hidden";
+
+            var overlay = document.getElementById("winOverlay");
+            if (!overlay) return;
+
+            // Set reason text
+            var reasonText = document.getElementById("winReason");
+            if (reasonText) {
+                var r = result.reason || "";
+                if (r === "checkmate") {
+                    reasonText.textContent = "Chiếu bí — đối thủ quy hàng.";
+                } else if (r === "resign") {
+                    reasonText.textContent = "Đối thủ đã nhận thua.";
+                } else if (r === "timeout") {
+                    reasonText.textContent = "Đối thủ hết thời gian.";
+                } else {
+                    reasonText.textContent = "Bạn đã đánh bại đối thủ!";
+                }
+            }
+
+            // Show overlay
+            overlay.hidden = false;
+
+            // Spawn golden particles
+            _spawnWinParticles();
+
+            // Trigger seal stamp animation + sound after panel animation settles
+            var seal = document.getElementById("winSeal");
+            if (seal) {
+                seal.classList.remove("win-seal--stamped");
+                void seal.offsetWidth;
+                setTimeout(function () {
+                    seal.classList.add("win-seal--stamped");
+                    if (typeof playThud === "function") playThud();
+                    else if (typeof window.playThud === "function") window.playThud();
+                    else playMoveSound();
+                }, 300);
+            }
+
+            // Victory gong sound (after a short delay for dramatic buildup)
+            setTimeout(function () { _playVictoryGong(); }, 150);
         }
     }
 };
+
+// ── Victory Gong Sound (Web Audio API — brass hit + bell shimmer) ──
+function _playVictoryGong() {
+    try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var dur = 1.2;
+        var buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var i = 0; i < d.length; i++) {
+            var t = i / ctx.sampleRate;
+            // Low brass hit (fundamental ~110 Hz)
+            d[i] = Math.sin(2 * Math.PI * 110 * t) * Math.exp(-t * 3) * 0.35
+                // Mid harmonic (220 Hz)
+                + Math.sin(2 * Math.PI * 220 * t) * Math.exp(-t * 4) * 0.2
+                // High bell shimmer (880 Hz)
+                + Math.sin(2 * Math.PI * 880 * t) * Math.exp(-t * 8) * 0.12
+                // Sparkle (1760 Hz, quiet)
+                + Math.sin(2 * Math.PI * 1760 * t) * Math.exp(-t * 14) * 0.06
+                // Noise burst for attack transient
+                + (Math.random() * 2 - 1) * Math.exp(-t * 50) * 0.18;
+        }
+        var src = ctx.createBufferSource();
+        var g = ctx.createGain();
+        src.buffer = buf;
+        g.gain.value = 0.5;
+        src.connect(g);
+        g.connect(ctx.destination);
+        src.start();
+    } catch (e) { /* silent fail */ }
+}
+
+// ── Spawn Golden Particles ──
+function _spawnWinParticles() {
+    var container = document.getElementById("winParticles");
+    if (!container) return;
+    container.innerHTML = ""; // Clear any old particles
+
+    var count = 35;
+    for (var i = 0; i < count; i++) {
+        var p = document.createElement("div");
+        p.className = "win-particle";
+
+        // Random size 3–8px
+        var size = 3 + Math.random() * 5;
+        p.style.width = size + "px";
+        p.style.height = size + "px";
+
+        // Random horizontal position
+        p.style.left = (Math.random() * 100) + "%";
+
+        // Start from bottom area (random 70%–100%)
+        p.style.bottom = (Math.random() * 30) + "%";
+
+        // Gold color with slight variation
+        var hue = 38 + Math.random() * 15;       // 38–53 (gold range)
+        var sat = 85 + Math.random() * 15;        // 85–100%
+        var light = 55 + Math.random() * 15;      // 55–70%
+        p.style.background = "hsl(" + hue + "," + sat + "%," + light + "%)";
+        p.style.boxShadow = "0 0 " + (size + 2) + "px hsla(" + hue + "," + sat + "%," + light + "%,0.5)";
+
+        // Random animation duration and delay
+        var duration = 3 + Math.random() * 4;     // 3–7s
+        var delay = Math.random() * 2;             // 0–2s delay
+        p.style.animationDuration = duration + "s";
+        p.style.animationDelay = delay + "s";
+
+        container.appendChild(p);
+    }
+}
 
 var pollInterval = null;
 

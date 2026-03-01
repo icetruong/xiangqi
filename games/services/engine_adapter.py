@@ -124,7 +124,7 @@ def pick_ai_move(
 
     if difficulty == 'hard':
         # Default time limits, 1.0s or whatever is appropriate, though ai_move_time defaults to 0.5s if not specified
-        success = game.ai_move_time(time_limit_sec=1.0, max_depth=6)
+        success = game.ai_move_time(time_limit_sec=2.5, max_depth=5)
     else:
         # Determine internal depth based on difficulty
         # easy=2, normal=3

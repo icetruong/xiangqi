@@ -292,6 +292,39 @@
     </div>
 
     <!-- ══════════════════════════════════════════════
+         Win Screen Overlay — Bảng gỗ cổ trang chiến thắng
+         ══════════════════════════════════════════════ -->
+    <div id="winOverlay" class="win-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="winTitle">
+        <!-- Golden particle container (populated by JS) -->
+        <div class="win-particles" id="winParticles"></div>
+
+        <div class="win-panel" id="winPanel">
+            <!-- Decorative separator top -->
+            <div class="win-deco-line"></div>
+
+            <!-- Title: Chữ Hán lớn -->
+            <div class="win-hanzi">大勝</div>
+            <div class="win-title" id="winTitle">CHIẾN THẮNG</div>
+
+            <!-- Decorative separator -->
+            <div class="win-deco-line"></div>
+
+            <!-- Reason + quote -->
+            <p class="win-reason" id="winReason">Bạn đã đánh bại đối thủ</p>
+            <p class="win-quote">「tướng soái quy hàng, thiên hạ thái bình」</p>
+
+            <!-- Action buttons -->
+            <div class="win-actions">
+                <button type="button" class="win-btn win-btn--retry" id="winRetry">⚔ Tái đấu</button>
+                <a class="win-btn win-btn--home" href="/" id="winHome">⛩ Về sảnh</a>
+            </div>
+
+            <!-- Gold seal stamp -->
+            <div class="win-seal" id="winSeal">勝</div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
          Endgame Modal — Cuộn thư cổ trang
          ══════════════════════════════════════════ -->
     <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
@@ -389,6 +422,11 @@
 
             /* ── CTA cho Lose Screen ── */
             document.getElementById("loseRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── CTA cho Win Screen ── */
+            document.getElementById("winRetry").addEventListener("click", () => {
                 window.location.href = "/";
             });
 
