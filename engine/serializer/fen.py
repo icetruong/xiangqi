@@ -95,4 +95,5 @@ def load_fen(board: Board, fen: str) -> Optional[str]:
             raise ValueError(f"Row {r} has {col} cols, expected {board.COLS}")
 
     board.board = new_board
+    board.update_king_positions()
     return turn

@@ -1,6 +1,5 @@
 from typing import Tuple, List
 from engine.utils.position import is_empty, type_of
-from engine.rules.check_rules import is_in_check
 from engine.board import Board
 
 from engine.ai.evaluator import PIECE_VALUE
@@ -15,11 +14,6 @@ def move_score(board: Board, move: Tuple[Tuple[int, int], Tuple[int, int]], turn
     score = 0
     if not is_empty(capture):
         score += 10000 + PIECE_VALUE.get(type_of(capture), 0)
-    
-    undo_info = board.apply_move((sr, sc), (dr, dc))
-    if is_in_check(board, turn_color):
-        score += 500
-    board.undo_move(undo_info)
 
     return score
 

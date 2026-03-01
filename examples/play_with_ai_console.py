@@ -11,8 +11,8 @@ def piece_to_char(cell: str) -> str:
 
 def print_board(game: Game):
     b = game.board
-    turn = getattr(game.turn, "value", game.turn)
-    status = getattr(game.status, "value", game.status)
+    turn = game.turn.value
+    status = game.status.value
 
     # Các dòng command sẽ hiển thị bên phải (mỗi dòng ứng với 1 dòng board)
     cmd_lines = [
@@ -74,16 +74,16 @@ def main():
     print_board(game)
 
     while True:
-        turn = getattr(game.turn, "value", game.turn)
+        turn = game.turn.value
 
         # AI turn
         if turn == ai_color:
             print("\nAI thinking...")
-            # game.ai_move_minimax(depth=3)
-            game.ai_move_time(0.5, 6)
+            game.ai_move_minimax(depth=3)
+            # game.ai_move_time(time_limit_sec=10, max_depth=6)
             print_board(game)
 
-            if getattr(game.status, "value", game.status) in ("CHECKMATE", "STALEMATE"):
+            if game.status.value in ("CHECKMATE", "STALEMATE"):
                 print("Game over.")
                 break
             continue
