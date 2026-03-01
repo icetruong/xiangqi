@@ -1,5 +1,5 @@
 # Bàn cờ 9x10
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 from engine.move import Move
 from engine.utils.position import EMPTY, in_bounds, in_palace
 class Board:
@@ -7,10 +7,21 @@ class Board:
     COLS = 9
 
     def __init__(self, state=None):
+        self.black_king: Optional[Tuple[int, int]] = None
+        self.red_king: Optional[Tuple[int, int]] = None
         if state is None:
             self.board = self._create_empty_board()
         else:
             self.board = state
+            self.update_king_positions()
+
+    def update_king_positions(self) -> None:
+        for r in range(self.ROWS):
+            for c in range(self.COLS):
+                if self.board[r][c] == "rK":
+                    self.red_king = (r, c)
+                elif self.board[r][c] == "bK":
+                    self.black_king = (r, c)
 
     def _create_empty_board(self) -> List[List[str]]:
         return [["." for _ in range(self.COLS)] for _ in range(self.ROWS)]
@@ -44,6 +55,9 @@ class Board:
         for c in range(0, 9, 2):
             self.board[6][c] = "rP"
 
+        self.update_king_positions()
+        
+
     def apply_move(self, src: Tuple[int, int], dst: Tuple[int, int]) -> Move:
         sr, sc = src
         dr, dc = dst
@@ -55,6 +69,11 @@ class Board:
         self.set(sr, sc, EMPTY)
         self.set(dr, dc, moved)
 
+        if moved == "rK":
+            self.red_king = (dr, dc)
+        elif moved == "bK":
+            self.black_king = (dr, dc)
+
         return Move(src=src, dst=dst, moved=moved, captured=captured)
     
     def undo_move(self, move:Move) -> None:
@@ -63,5 +82,10 @@ class Board:
 
         self.set(sr, sc, move.moved if move.moved is not None else EMPTY)
         self.set(dr, dc, move.captured if move.captured is not None else EMPTY)
+
+        if move.moved == "rK":
+            self.red_king = (sr, sc)
+        elif move.moved == "bK":
+            self.black_king = (sr, sc)
 
 
