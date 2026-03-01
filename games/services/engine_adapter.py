@@ -122,23 +122,14 @@ def pick_ai_move(
     game.turn = Color(ai_side)
     game._update_status()
 
-    # Determine internal depth based on difficulty
-    # easy=2, normal=3, hard=4 (from .env.example)
-    depth = 2
-    if difficulty == 'normal':
-        depth = 3
-    elif difficulty == 'hard':
-        depth = 4
-    
-    # Run AI
-    # make_move modifies the board inplace and returns success
-    # But we need the MOVE coordinates, not result.
-    # game.ai_move_minimax calls make_move internally.
-    # We might need to modify engine or subclass to extract the move OR compare board states.
-    # Better: Inspect logical AI function in engine/ai/search.py if possible,
-    # OR utilize the fact that game.history will update!
-    
-    success = game.ai_move_minimax(depth=depth)
+    if difficulty == 'hard':
+        # Default time limits, 1.0s or whatever is appropriate, though ai_move_time defaults to 0.5s if not specified
+        success = game.ai_move_time(time_limit_sec=1.0, max_depth=6)
+    else:
+        # Determine internal depth based on difficulty
+        # easy=2, normal=3
+        depth = 3 if difficulty == 'normal' else 2
+        success = game.ai_move_minimax(depth=depth)
     
     if not success:
         raise RuntimeError("AI could not find a valid move (Checkmate/Stalemate?)")
