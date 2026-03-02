@@ -122,13 +122,12 @@ def pick_ai_move(
     game.turn = Color(ai_side)
     game._update_status()
 
-    if difficulty == 'hard':
-        # Default time limits, 1.0s or whatever is appropriate, though ai_move_time defaults to 0.5s if not specified
-        success = game.ai_move_time(time_limit_sec=2.5, max_depth=5)
+    if difficulty == 'normal':
+        # Time search với thời gian động (tự động cấp phát)
+        success = game.ai_move_time()
     else:
-        # Determine internal depth based on difficulty
-        # easy=2, normal=3
-        depth = 3 if difficulty == 'normal' else 2
+        # easy=2, hard=4
+        depth = 4 if difficulty == 'hard' else 2
         success = game.ai_move_minimax(depth=depth)
     
     if not success:
