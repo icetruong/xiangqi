@@ -123,6 +123,11 @@ def make_move(request, game_id):
             "captured": player_move_meta.get('captured')
         }
 
+        # Compute legal moves for the next player turn
+        legal_moves = []
+        if game.status == 'ongoing' and game.current_turn == game.player_side:
+            legal_moves = engine_adapter.list_legal_moves(game.board_state, game.player_side)
+
         return Response({
             "ok": True,
             "board_state": game.board_state,
@@ -132,6 +137,7 @@ def make_move(request, game_id):
             "end_reason": game.end_reason,
             "last_move": ai_move_data if ai_move_data else last_move_data,
             "ai_move": ai_move_data,
+            "legal_moves": legal_moves,
             "in_check": _get_in_check(game.board_state)
         })
 
