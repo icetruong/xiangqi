@@ -222,13 +222,14 @@ body {
 .plaque-container::before {
     content: '';
     position: absolute;
-    top: -80px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    width: 500px;
-    height: 500px;
+    transform: translate(-50%, -50%);
+    width: 650px;
+    height: 650px;
     background: radial-gradient(ellipse at center,
-            rgba(202, 167, 106, 0.12) 0%,
+            rgba(220, 60, 20, 0.18) 0%,
+            rgba(202, 167, 106, 0.08) 30%,
             transparent 65%);
     pointer-events: none;
     z-index: -1;
@@ -240,6 +241,7 @@ body {
     border-radius: 18px;
     border: 3px solid var(--border-dark);
     padding: 24px;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
 
     /* Wood gradient with bevel highlights */
     background:
@@ -252,13 +254,25 @@ body {
 
     /* 3D floating effect – deep shadow + bevel */
     box-shadow:
-        /* drop shadow */
-        0 16px 40px rgba(0, 0, 0, 0.55),
-        0 6px 12px rgba(0, 0, 0, 0.35),
+        /* Border glow nhẹ */
+        0 0 15px rgba(202, 167, 106, 0.25),
+        /* Outer shadow đỏ nâu */
+        0 25px 50px rgba(58, 15, 10, 0.6),
+        0 10px 20px rgba(40, 10, 5, 0.5),
         /* bevel – highlight top-left */
         inset 2px 2px 4px rgba(255, 255, 255, 0.18),
         /* bevel – shadow bottom-right */
         inset -2px -2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.plaque-frame:hover {
+    transform: scale(1.01) translateY(-2px);
+    box-shadow:
+        0 0 20px rgba(202, 167, 106, 0.35),
+        0 30px 60px rgba(58, 15, 10, 0.7),
+        0 15px 25px rgba(40, 10, 5, 0.6),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.25),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* --- Carved frame edge decorations --- */
@@ -330,17 +344,24 @@ body {
 
     /* Cream parchment + subtle diagonal highlight */
     background:
+        /* Light highlight trên đầu card */
+        linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, transparent 20%, transparent 100%),
+        /* Texture giấy cổ */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E"),
+        /* Parchment diagonal highlight */
         linear-gradient(135deg,
             rgba(255, 255, 255, 0.22) 0%,
             transparent 40%,
             transparent 60%,
-            rgba(0, 0, 0, 0.03) 100%);
+            rgba(0, 0, 0, 0.05) 100%);
     background-color: var(--parchment);
 
     /* Recessed into frame */
     box-shadow:
-        inset 0 3px 8px rgba(106, 63, 31, 0.2),
-        inset 0 -2px 5px rgba(255, 255, 255, 0.15),
+        /* Inner shadow khắc lõm */
+        inset 0 0 40px rgba(106, 63, 31, 0.35),
+        inset 0 4px 12px rgba(106, 63, 31, 0.4),
+        inset 0 -2px 5px rgba(255, 255, 255, 0.2),
         0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
