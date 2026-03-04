@@ -415,10 +415,56 @@ body {
     text-align: center;
     margin: 0 0 8px 0;
     letter-spacing: 6px;
-    /* Carved-in feel: light highlight above, shadow below */
+
+    /* Carved-in feel + subtle gold base */
     text-shadow:
         1px 1px 0px rgba(255, 255, 255, 0.35),
-        0 2px 4px rgba(58, 32, 20, 0.15);
+        0 2px 4px rgba(58, 32, 20, 0.15),
+        0 0 6px rgba(202, 167, 106, 0.1);
+
+    opacity: 0;
+    animation:
+        titleFadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
+        titleLetterSpacing 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
+        titleGlowPulse 4s ease-in-out 0.8s infinite alternate;
+}
+
+@keyframes titleFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes titleLetterSpacing {
+    0% {
+        letter-spacing: 0px;
+    }
+
+    100% {
+        letter-spacing: 6px;
+    }
+}
+
+@keyframes titleGlowPulse {
+    0% {
+        text-shadow:
+            1px 1px 0px rgba(255, 255, 255, 0.35),
+            0 2px 4px rgba(58, 32, 20, 0.15),
+            0 0 6px rgba(202, 167, 106, 0.1);
+    }
+
+    100% {
+        text-shadow:
+            1px 1px 0px rgba(255, 255, 255, 0.35),
+            0 2px 4px rgba(58, 32, 20, 0.15),
+            0 0 16px rgba(202, 167, 106, 0.35);
+    }
 }
 
 .subtitle {
@@ -428,6 +474,22 @@ body {
     text-align: center;
     margin: 0 0 36px 0;
     font-style: italic;
+
+    opacity: 0;
+    animation: subtitleFadeIn 0.6s ease forwards;
+    animation-delay: 0.2s;
+}
+
+@keyframes subtitleFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* =========================================
