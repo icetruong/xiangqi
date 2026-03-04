@@ -57,40 +57,51 @@
 
                     <!-- Title -->
                     <h1 class="game-title">Xiangqi</h1>
-                    <p class="subtitle">Chọn cài đặt để bắt đầu một ván cờ mới.</p>
+                    <p class="subtitle">Prepare for Battle</p>
+
+                    <div class="ornamental-divider">──────── ◈ ────────</div>
 
                     <!-- Game Setup Form -->
                     <form method="POST">
                         {% csrf_token %}
 
-                        <!-- Difficulty Selection -->
-                        <div class="form-group">
-                            <label for="difficulty">Difficulty:</label>
-                            <div class="select-wrapper">
-                                <select name="difficulty" id="difficulty">
-                                    <option value="easy">Easy (max depth 2)</option>
-                                    <option value="normal" selected>Normal (time search)</option>
-                                    <option value="hard">Hard (max depth 4)</option>
-                                </select>
-                                <div class="select-arrow"></div>
-                            </div>
-                        </div>
+                        <div class="settings-group">
+                            <div class="settings-label">SETTINGS</div>
 
-                        <!-- Player Side Selection -->
-                        <div class="form-group">
-                            <label for="player_side">Play as:</label>
-                            <div class="select-wrapper">
-                                <select name="player_side" id="player_side">
-                                    <option value="r" selected>Red (Goes First)</option>
-                                    <option value="b">Black (Goes Second)</option>
-                                </select>
-                                <div class="select-arrow"></div>
+                            <!-- Difficulty Selection -->
+                            <div class="form-group">
+                                <label for="difficulty">Difficulty:</label>
+                                <div class="select-wrapper">
+                                    <select name="difficulty" id="difficulty">
+                                        <option value="easy">Easy (max depth 2)</option>
+                                        <option value="normal" selected>Normal (time search)</option>
+                                        <option value="hard">Hard (max depth 4)</option>
+                                    </select>
+                                    <div class="select-arrow"></div>
+                                </div>
+                            </div>
+
+                            <!-- Player Side Selection -->
+                            <div class="form-group">
+                                <label for="player_side">Play as:</label>
+                                <div class="select-wrapper">
+                                    <select name="player_side" id="player_side">
+                                        <option value="r" selected>Red (Goes First)</option>
+                                        <option value="b">Black (Goes Second)</option>
+                                    </select>
+                                    <div class="select-arrow"></div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Start Game Button -->
-                        <button type="submit" class="start-button"><span class="btn-text">Start Game</span></button>
+                        <div class="button-area">
+                            <button type="submit" class="start-button"><span class="btn-text">Start Game</span></button>
+                        </div>
                     </form>
+
+                    <!-- Bottom Decoration -->
+                    <div class="card-bottom-ornament"></div>
                 </div>
             </div>
         </div>
@@ -635,7 +646,7 @@
             // --- Floating Particles Effect ---
             const particlesContainer = document.getElementById('particlesContainer');
             if (particlesContainer) {
-                const particleCount = 25; // 20-30 particles
+                const particleCount = 75; // More particles for cinematic effect
 
                 for (let i = 0; i < particleCount; i++) {
                     const particle = document.createElement('div');

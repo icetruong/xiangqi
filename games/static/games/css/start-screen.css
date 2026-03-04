@@ -76,8 +76,8 @@ body {
     background-image:
         /* Layer 3 – vignette (dark edges focus on center) */
         radial-gradient(ellipse 85% 85% at 50% 50%,
-            transparent 30%,
-            rgba(0, 0, 0, 0.8) 100%),
+            transparent 20%,
+            rgba(0, 0, 0, 0.95) 100%),
         /* Layer 2 – warm centre glow (pulses via animation) */
         radial-gradient(ellipse at 50% 50%,
             var(--bg-mid) 0%,
@@ -206,6 +206,7 @@ body {
     opacity: 1;
     color: var(--gold-bright);
     transform: translateY(-1px);
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
 }
 
 /* =========================================
@@ -215,7 +216,7 @@ body {
 /* Warm glow behind the card */
 .plaque-container {
     position: relative;
-    width: 480px;
+    width: 520px;
     z-index: 10;
 }
 
@@ -225,12 +226,13 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 650px;
-    height: 650px;
+    width: 750px;
+    height: 750px;
     background: radial-gradient(ellipse at center,
-            rgba(220, 60, 20, 0.18) 0%,
-            rgba(202, 167, 106, 0.08) 30%,
-            transparent 65%);
+            rgba(200, 20, 10, 0.35) 0%,
+            rgba(180, 50, 10, 0.15) 35%,
+            rgba(202, 167, 106, 0.05) 55%,
+            transparent 75%);
     pointer-events: none;
     z-index: -1;
 }
@@ -340,7 +342,7 @@ body {
 .plaque-content {
     position: relative;
     border-radius: 12px;
-    padding: 40px 32px;
+    padding: 56px 48px;
 
     /* Cream parchment + subtle diagonal highlight */
     background:
@@ -409,18 +411,21 @@ body {
    ========================================= */
 .game-title {
     font-family: 'Ma Shan Zheng', 'Noto Serif SC', cursive, serif;
-    font-size: 48px;
+    font-size: 56px;
     font-weight: 400;
-    color: var(--text-title);
     text-align: center;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     letter-spacing: 6px;
 
-    /* Carved-in feel + subtle gold base */
-    text-shadow:
-        1px 1px 0px rgba(255, 255, 255, 0.35),
-        0 2px 4px rgba(58, 32, 20, 0.15),
-        0 0 6px rgba(202, 167, 106, 0.1);
+    /* Gold gradient */
+    background: linear-gradient(to bottom, #fffefe 0%, #ffeaa7 40%, #d4af37 80%, #aa7700 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+
+    /* Drop shadow since text-shadow doesn't work well with transparent text fill */
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 
     opacity: 0;
     animation:
@@ -453,26 +458,21 @@ body {
 
 @keyframes titleGlowPulse {
     0% {
-        text-shadow:
-            1px 1px 0px rgba(255, 255, 255, 0.35),
-            0 2px 4px rgba(58, 32, 20, 0.15),
-            0 0 6px rgba(202, 167, 106, 0.1);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 4px rgba(202, 167, 106, 0.2));
     }
 
     100% {
-        text-shadow:
-            1px 1px 0px rgba(255, 255, 255, 0.35),
-            0 2px 4px rgba(58, 32, 20, 0.15),
-            0 0 16px rgba(202, 167, 106, 0.35);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(202, 167, 106, 0.5));
     }
 }
 
 .subtitle {
-    font-size: 15px;
+    font-size: 18px;
     font-family: 'Noto Serif', 'Georgia', serif;
-    color: var(--text-muted);
+    color: var(--text-body);
     text-align: center;
-    margin: 0 0 36px 0;
+    margin: 0 0 24px 0;
+    letter-spacing: 1px;
     font-style: italic;
 
     opacity: 0;
@@ -493,8 +493,60 @@ body {
 }
 
 /* =========================================
-   FORM
+   FORM & UI ELEMENTS
    ========================================= */
+
+/* Ornamental Divider */
+.ornamental-divider {
+    text-align: center;
+    color: var(--gold);
+    font-size: 16px;
+    letter-spacing: 4px;
+    margin-bottom: 32px;
+    opacity: 0.65;
+    user-select: none;
+    animation: fadeIn 0.8s ease backwards;
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 0.65;
+    }
+}
+
+/* Settings Group */
+.settings-group {
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(202, 167, 106, 0.25);
+    border-radius: 8px;
+    padding: 24px 20px 16px 20px;
+    position: relative;
+    margin-bottom: 6px;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+    animation: staggerFadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: 0.5s;
+}
+
+.settings-label {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--parchment);
+    padding: 0 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    border-radius: 4px;
+}
+
 form {
     display: flex;
     flex-direction: column;
@@ -695,14 +747,17 @@ form {
 /* =========================================
    RED LACQUER BUTTON – "Start Game"
    ========================================= */
+.button-area {
+    margin-top: 6px;
+}
+
 .start-button {
-    margin-top: 10px;
-    padding: 14px 36px;
+    padding: 18px 36px;
     width: 100%;
     font-family: 'Cinzel', serif;
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 700;
-    letter-spacing: 2.5px;
+    letter-spacing: 4px;
     text-transform: uppercase;
     cursor: pointer;
     outline: none;
@@ -723,8 +778,26 @@ form {
 
     transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
 
-    animation: buttonEntrance 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
-    animation-delay: 0.9s;
+    animation: buttonEntrance 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards, buttonGlowPulse 2.5s infinite alternate ease-in-out forwards;
+    animation-delay: 0.9s, 1.4s;
+}
+
+@keyframes buttonGlowPulse {
+    0% {
+        box-shadow:
+            0 5px 14px rgba(0, 0, 0, 0.6),
+            0 0 10px rgba(177, 26, 31, 0.4),
+            inset 0 2px 3px rgba(255, 255, 255, 0.25),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    100% {
+        box-shadow:
+            0 5px 14px rgba(0, 0, 0, 0.6),
+            0 0 22px rgba(230, 40, 40, 0.7),
+            inset 0 2px 3px rgba(255, 255, 255, 0.35),
+            inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+    }
 }
 
 @keyframes buttonEntrance {
@@ -847,6 +920,32 @@ form {
 .custom-select-trigger:focus-visible {
     outline: 2px solid var(--gold);
     outline-offset: 2px;
+}
+
+/* Card Bottom Ornament */
+.card-bottom-ornament {
+    width: 100%;
+    height: 12px;
+    margin-top: 24px;
+    background-image: repeating-linear-gradient(90deg,
+            transparent 0px, transparent 6px,
+            rgba(202, 167, 106, 0.35) 6px, rgba(202, 167, 106, 0.35) 8px,
+            transparent 8px, transparent 14px,
+            rgba(160, 107, 61, 0.4) 14px, rgba(160, 107, 61, 0.4) 16px,
+            transparent 16px, transparent 22px);
+    opacity: 0.5;
+    animation: fadeInOrnament 0.8s ease backwards;
+    animation-delay: 1s;
+}
+
+@keyframes fadeInOrnament {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 0.5;
+    }
 }
 
 /* =========================================
