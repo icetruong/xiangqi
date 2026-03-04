@@ -646,10 +646,13 @@
                     const leftPos = Math.random() * 100; // 0% - 100%
                     const opacity = Math.random() * 0.3 + 0.2; // 0.2 - 0.5
 
-                    // Animation parameters
-                    const duration = Math.random() * 10 + 10; // 10s - 20s
-                    const delay = Math.random() * 15; // 0s - 15s
-                    const sway = Math.random() * 30 - 15; // -15px to 15px
+                    // Slow parallax parameters
+                    const duration = Math.random() * 30 + 30; // 30s - 60s
+                    const delay = Math.random() * -20; // start immediately at random offset
+
+                    // Parallax destinations
+                    const tx = Math.random() * 200 - 100; // -100px to 100px
+                    const ty = -(Math.random() * 60 + 40); // -40vh to -100vh
 
                     // Apply styles directly
                     particle.style.width = `${size}px`;
@@ -657,9 +660,9 @@
                     particle.style.left = `${leftPos}%`;
                     particle.style.opacity = opacity;
 
-                    // Custom properties for keyframes if we want to use them (using generic animation for now)
-                    particle.style.animation = `floatParticle ${duration}s ease-in-out ${delay}s infinite`;
-                    particle.style.setProperty('--sway', `${sway}px`);
+                    particle.style.animation = `floatParticle ${duration}s linear ${delay}s infinite`;
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}vh`);
 
                     particlesContainer.appendChild(particle);
                 }

@@ -505,6 +505,27 @@ form {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    animation: staggerFadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+.form-group:nth-of-type(1) {
+    animation-delay: 0.7s;
+}
+
+.form-group:nth-of-type(2) {
+    animation-delay: 0.8s;
+}
+
+@keyframes staggerFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .form-group label {
@@ -552,7 +573,7 @@ form {
         inset 0 1px 2px rgba(255, 255, 255, 0.4),
         inset 0 -1px 3px rgba(80, 50, 20, 0.15);
 
-    transition: all 0.25s ease;
+    transition: all 0.15s ease;
 }
 
 .custom-select-trigger:hover,
@@ -701,6 +722,21 @@ form {
         inset 0 -2px 3px rgba(0, 0, 0, 0.3);
 
     transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
+
+    animation: buttonEntrance 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: 0.9s;
+}
+
+@keyframes buttonEntrance {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .start-button .btn-text {
@@ -953,18 +989,30 @@ form {
    EFFECT 1 – Entrance Animation (slide up + fade in)
    ========================================= */
 .entrance-animate {
-    animation: entranceSlideUp 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation:
+        cardEntrance 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards,
+        cardFloat 5s ease-in-out 0.6s infinite alternate;
 }
 
-@keyframes entranceSlideUp {
+@keyframes cardEntrance {
     0% {
         opacity: 0;
-        transform: translateY(60px) scale(0.96);
+        transform: translateY(30px);
     }
 
     100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
+    }
+}
+
+@keyframes cardFloat {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-3px);
     }
 }
 
@@ -1013,21 +1061,16 @@ form {
         opacity: 0;
     }
 
-    10% {
+    20% {
         opacity: var(--max-opacity, 0.5);
     }
 
-    50% {
-        transform: translate(var(--sway), -50vh) scale(1.1);
-        opacity: calc(var(--max-opacity, 0.5) * 0.8);
-    }
-
-    90% {
+    80% {
         opacity: var(--max-opacity, 0.5);
     }
 
     100% {
-        transform: translate(calc(var(--sway) * -1), -110vh) scale(0.9);
+        transform: translate(var(--tx), var(--ty)) scale(1.1);
         opacity: 0;
     }
 }
