@@ -89,7 +89,7 @@
                         </div>
 
                         <!-- Start Game Button -->
-                        <button type="submit" class="start-button">Start Game</button>
+                        <button type="submit" class="start-button"><span class="btn-text">Start Game</span></button>
                     </form>
                 </div>
             </div>
@@ -397,9 +397,89 @@
                     startBtn.classList.add('loading');
                     // We don't set startBtn.disabled = true; here because it might prevent the form from submitting in some older browsers if triggered by enter key.
                     // Instead, we style it with pointer-events: none.
-                    startBtn.innerHTML = 'Starting...';
+                    startBtn.innerHTML = '<span class="btn-text">Starting...</span>';
                 });
             }
+
+            // Custom Select UI logic to replace native dropdowns
+            document.querySelectorAll('.select-wrapper').forEach(wrapper => {
+                const selectElement = wrapper.querySelector('select');
+                if (!selectElement) return;
+
+                // Hide original select visually but keep it focusable for a11y if needed,
+                // or just hide it and build a custom one
+                selectElement.style.display = 'none';
+
+                // Create custom select container
+                const customSelect = document.createElement('div');
+                customSelect.className = 'custom-select';
+
+                // Create trigger (the visible selected option)
+                const trigger = document.createElement('div');
+                trigger.className = 'custom-select-trigger';
+
+                const selectedText = document.createElement('span');
+                selectedText.textContent = selectElement.options[selectElement.selectedIndex].text;
+                trigger.appendChild(selectedText);
+
+                const arrow = document.createElement('div');
+                arrow.className = 'select-arrow';
+                trigger.appendChild(arrow);
+
+                // Create options dropdown
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'custom-select-options';
+
+                Array.from(selectElement.options).forEach((option, index) => {
+                    const customOption = document.createElement('div');
+                    customOption.className = 'custom-option';
+                    if (option.selected) customOption.classList.add('selected');
+                    customOption.textContent = option.text;
+
+                    customOption.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Update native select
+                        selectElement.selectedIndex = index;
+                        selectElement.dispatchEvent(new Event('change'));
+
+                        // Update UI
+                        selectedText.textContent = option.text;
+                        optionsContainer.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+                        customOption.classList.add('selected');
+
+                        // Close dropdown
+                        customSelect.classList.remove('open');
+                    });
+                    optionsContainer.appendChild(customOption);
+                });
+
+                customSelect.appendChild(trigger);
+                customSelect.appendChild(optionsContainer);
+
+                // Remove original arrow if exists inside wrapper
+                const oldArrow = wrapper.querySelector('.select-arrow:not(.custom-select .select-arrow)');
+                if (oldArrow) oldArrow.remove();
+
+                wrapper.appendChild(customSelect);
+
+                // Toggle dropdown Open/Close
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = customSelect.classList.contains('open');
+
+                    // Close all other open selects
+                    document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
+
+                    if (!isOpen) {
+                        customSelect.classList.add('open');
+                    }
+                });
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
+            });
 
             // Smooth scroll for nav
             document.querySelectorAll('.nav-links a[href^="#"]').forEach(anchor => {
@@ -556,16 +636,16 @@
             const particlesContainer = document.getElementById('particlesContainer');
             if (particlesContainer) {
                 const particleCount = 25; // 20-30 particles
-                
+
                 for (let i = 0; i < particleCount; i++) {
                     const particle = document.createElement('div');
                     particle.classList.add('floating-particle');
-                    
+
                     // Randomize properties
                     const size = Math.random() * 2 + 2; // 2px - 4px
                     const leftPos = Math.random() * 100; // 0% - 100%
                     const opacity = Math.random() * 0.3 + 0.2; // 0.2 - 0.5
-                    
+
                     // Animation parameters
                     const duration = Math.random() * 10 + 10; // 10s - 20s
                     const delay = Math.random() * 15; // 0s - 15s
@@ -576,11 +656,11 @@
                     particle.style.height = `${size}px`;
                     particle.style.left = `${leftPos}%`;
                     particle.style.opacity = opacity;
-                    
+
                     // Custom properties for keyframes if we want to use them (using generic animation for now)
                     particle.style.animation = `floatParticle ${duration}s ease-in-out ${delay}s infinite`;
                     particle.style.setProperty('--sway', `${sway}px`);
-                    
+
                     particlesContainer.appendChild(particle);
                 }
             }

@@ -5,9 +5,12 @@
 /* ---------- Design Tokens ---------- */
 :root {
     /* Wood background – dark mahogany range */
-    --bg-dark: #0a0503; /* blacker outer edge */
-    --bg-mid: #4a1510; /* red/hollow center */
-    --bg-pulse: #5a1c14; /* warmer pulse for center */
+    --bg-dark: #0a0503;
+    /* blacker outer edge */
+    --bg-mid: #4a1510;
+    /* red/hollow center */
+    --bg-pulse: #5a1c14;
+    /* warmer pulse for center */
 
     /* Ornate frame wood – lighter than background */
     --frame-light: #a06b3d;
@@ -85,7 +88,7 @@ body {
             transparent 3px,
             rgba(255, 255, 255, 0.012) 3px,
             rgba(255, 255, 255, 0.012) 4px);
-    
+
     animation: backgroundPulse 12s infinite alternate ease-in-out;
 }
 
@@ -93,6 +96,7 @@ body {
     0% {
         background-color: var(--bg-dark);
     }
+
     100% {
         background-color: #120502;
     }
@@ -428,22 +432,32 @@ form {
     letter-spacing: 1px;
 }
 
-/* --- Wooden pill dropdown --- */
+/* --- Custom Wooden Dropdown --- */
 .select-wrapper {
     position: relative;
     width: 100%;
+    /* Keep native select hidden via JS inline style or here */
 }
 
-.select-wrapper select {
+/* Custom Select Container */
+.custom-select {
+    position: relative;
     width: 100%;
-    padding: 14px 42px 14px 16px;
     font-family: 'Noto Serif', serif;
     font-size: 15px;
     font-weight: 600;
     color: var(--text-body);
-    appearance: none;
+    user-select: none;
+}
+
+/* Trigger Box (Replaces native select appearance) */
+.custom-select-trigger {
+    width: 100%;
+    padding: 14px 42px 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     cursor: pointer;
-    outline: none;
 
     /* Wooden/Parchment tablet style */
     background: linear-gradient(180deg, #efe2c4 0%, #d8c29a 100%);
@@ -458,7 +472,8 @@ form {
     transition: all 0.25s ease;
 }
 
-.select-wrapper select:hover {
+.custom-select-trigger:hover,
+.custom-select.open .custom-select-trigger {
     background: linear-gradient(180deg, #f7ebd3 0%, #e0cba4 100%);
     transform: translateY(-1px);
     box-shadow:
@@ -467,12 +482,90 @@ form {
         inset 0 -1px 3px rgba(80, 50, 20, 0.15);
 }
 
-.select-wrapper select:focus {
+.custom-select.open .custom-select-trigger {
     box-shadow:
         0 0 0 2px rgba(202, 167, 106, 0.45),
         0 3px 8px rgba(0, 0, 0, 0.2),
         inset 0 1px 2px rgba(255, 255, 255, 0.4);
     border-color: var(--gold-bright);
+}
+
+/* Options Dropdown Panel */
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: #eadebc;
+    /* Deep parchment color */
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 0 12px rgba(106, 63, 31, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 0s 200ms;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.custom-select.open .custom-select-options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 250ms cubic-bezier(0.2, 0, 0, 1), transform 250ms cubic-bezier(0.2, 0, 0, 1), visibility 0s 0s;
+}
+
+/* Individual Option */
+.custom-option {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(160, 107, 61, 0.15);
+    transition: background-color 150ms ease, color 150ms ease;
+    color: var(--text-body);
+    position: relative;
+    background: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-option:last-child {
+    border-bottom: none;
+}
+
+.custom-option:hover {
+    background: rgba(202, 167, 106, 0.2);
+    color: #2b160b;
+}
+
+.custom-option.selected {
+    background: rgba(202, 167, 106, 0.5);
+    /* Đậm hơn */
+    font-weight: 700;
+    color: #1a0a04;
+    /* Sáng / rõ hơn */
+}
+
+.custom-option.selected::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gold-bright);
+}
+
+.custom-option.selected::after {
+    content: '✓';
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--bg-mid);
+    margin-left: 10px;
 }
 
 /* Brass caret arrow */
@@ -488,6 +581,11 @@ form {
     border-top: 7px solid var(--text-body);
     pointer-events: none;
     filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.4));
+    transition: transform 200ms ease;
+}
+
+.custom-select.open .select-arrow {
+    transform: translateY(-50%) rotate(180deg);
 }
 
 /* =========================================
@@ -502,63 +600,101 @@ form {
     font-weight: 700;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: var(--gold-bright);
     cursor: pointer;
     outline: none;
-    border: 2px solid var(--red-bottom);
+    border: 1px solid rgba(255, 215, 0, 0.3);
     border-radius: 12px;
     position: relative;
     overflow: hidden;
 
-    /* Red lacquer gradient – bright top, dark bottom */
+    /* Red lacquer gradient */
     background: linear-gradient(180deg, var(--red-top) 0%, var(--red-bottom) 100%);
 
-    /* Bevel + depth */
+    /* Bevel + depth + initial outer glow */
     box-shadow:
-        0 5px 14px rgba(0, 0, 0, 0.4),
+        0 5px 14px rgba(0, 0, 0, 0.6),
+        0 0 10px rgba(177, 26, 31, 0.4),
         inset 0 2px 3px rgba(255, 255, 255, 0.25),
-        inset 0 -2px 3px rgba(0, 0, 0, 0.2);
+        inset 0 -2px 3px rgba(0, 0, 0, 0.3);
 
-    /* Gold text glow */
-    text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.5),
-        0 0 8px rgba(255, 215, 0, 0.25);
-
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Shine sweep effect */
-.start-button::before {
+.start-button .btn-text {
+    position: relative;
+    z-index: 2;
+    /* Gold gradient text */
+    background: linear-gradient(to bottom, #fff8dc 20%, #ffd700 60%, #b8860b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+    transition: all 0.15s ease;
+}
+
+/* Shine sweep running horizontally over the text/button */
+.start-button::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
+    left: -150%;
+    width: 50%;
     height: 100%;
     background: linear-gradient(90deg,
-            transparent, rgba(255, 255, 255, 0.25), transparent);
-    transition: left 0.5s ease;
+            transparent, rgba(255, 215, 0, 0.4), transparent);
+    transform: skewX(-25deg);
+    animation: goldShine 3.5s infinite ease-in-out;
+    z-index: 1;
+}
+
+@keyframes goldShine {
+
+    0%,
+    30% {
+        left: -150%;
+    }
+
+    50% {
+        left: 150%;
+    }
+
+    100% {
+        left: 150%;
+    }
 }
 
 .start-button:hover {
-    background: linear-gradient(180deg, #c42228 0%, #8d1318 100%);
-    transform: translateY(-1px);
+    background: linear-gradient(180deg, #d32025 0%, #8d1318 100%);
+    /* Hover scale 1.03 */
+    transform: translateY(-2px) scale(1.03);
+    border: 1px solid rgba(255, 215, 0, 0.7);
+    /* Stronger outer glow (deep red / gold mixed) */
     box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.45),
-        0 0 16px rgba(255, 215, 0, 0.12),
-        inset 0 2px 4px rgba(255, 255, 255, 0.3),
-        inset 0 -2px 3px rgba(0, 0, 0, 0.2);
+        0 8px 20px rgba(0, 0, 0, 0.6),
+        0 0 25px rgba(177, 26, 31, 0.8),
+        0 0 12px rgba(255, 215, 0, 0.5),
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.3);
 }
 
-.start-button:hover::before {
-    left: 100%;
+.start-button:hover .btn-text {
+    /* text brighter on hover */
+    background: linear-gradient(to bottom, #ffffff 0%, #ffe600 50%, #cca926 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
 }
 
 .start-button:active {
-    transform: translateY(2px);
+    /* Press down effect - scale down slightly */
+    transform: translateY(1px) scale(0.98);
+    transition: all 0.08s cubic-bezier(0.2, 0, 0, 1);
     box-shadow:
-        0 1px 4px rgba(0, 0, 0, 0.5),
-        inset 0 2px 6px rgba(0, 0, 0, 0.4);
+        0 2px 5px rgba(0, 0, 0, 0.7),
+        0 0 10px rgba(177, 26, 31, 0.5),
+        inset 0 4px 8px rgba(0, 0, 0, 0.6),
+        inset 0 -2px 3px rgba(255, 255, 255, 0.1);
 }
 
 .start-button.loading,
@@ -570,7 +706,16 @@ form {
     box-shadow:
         inset 0 2px 4px rgba(0, 0, 0, 0.3);
     transform: translateY(1px);
-    color: rgba(255, 215, 0, 0.7);
+}
+
+.start-button.loading .btn-text,
+.start-button:disabled .btn-text {
+    background: #ffd700;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.7;
+    filter: none;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -580,7 +725,7 @@ form {
     outline-offset: 3px;
 }
 
-.select-wrapper select:focus-visible {
+.custom-select-trigger:focus-visible {
     outline: 2px solid var(--gold);
     outline-offset: 2px;
 }
@@ -770,7 +915,8 @@ form {
 
 .floating-particle {
     position: absolute;
-    bottom: -10px; /* start slightly below view */
+    bottom: -10px;
+    /* start slightly below view */
     border-radius: 50%;
     background: rgba(255, 200, 100, 0.8);
     box-shadow: 0 0 6px 2px rgba(255, 100, 50, 0.4);
@@ -783,16 +929,20 @@ form {
         transform: translate(0, 0) scale(0.8);
         opacity: 0;
     }
+
     10% {
         opacity: var(--max-opacity, 0.5);
     }
+
     50% {
         transform: translate(var(--sway), -50vh) scale(1.1);
         opacity: calc(var(--max-opacity, 0.5) * 0.8);
     }
+
     90% {
         opacity: var(--max-opacity, 0.5);
     }
+
     100% {
         transform: translate(calc(var(--sway) * -1), -110vh) scale(0.9);
         opacity: 0;
