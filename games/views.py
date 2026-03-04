@@ -42,9 +42,22 @@ def game_board(request, game_id):
 
     in_check = _get_in_check(game.board_state)
 
+    all_moves = list(game.moves.all().order_by('ply'))
+    history_data = [
+        {
+            "ply": m.ply,
+            "side": m.side,
+            "from": [m.from_row, m.from_col],
+            "to": [m.to_row, m.to_col],
+            "piece": m.piece
+        }
+        for m in all_moves
+    ]
+
     return render(request, 'games/game.html', {
         'game': game, 
         'legal_moves': json.dumps(legal_moves),
         'last_move': json.dumps(last_move_data),
-        'in_check': json.dumps(in_check)
+        'in_check': json.dumps(in_check),
+        'move_history': json.dumps(history_data)
     })

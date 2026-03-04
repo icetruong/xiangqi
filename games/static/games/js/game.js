@@ -34,6 +34,7 @@ let selectedCell = null;
 let legalMoves = [];
 let isAnimating = false;
 let inCheck = null; // 'r', 'b', or null
+let moveHistory = [];
 window.gameLocked = false;
 
 // ── DOM (assigned in initGame after DOMContentLoaded) ──
@@ -751,12 +752,10 @@ function getCapturedPieces() {
 
 function updateCapturedUI(capturedEl) {
     var capturedAreaLeft = document.getElementById('capturedPiecesLeft');
-    var capturedAreaRight = document.getElementById('capturedPiecesRight');
-    if (!capturedAreaLeft || !capturedAreaRight) return;
+    if (!capturedAreaLeft) return;
 
     var capData = getCapturedPieces();
     var yourCapSide = playerSide === 'r' ? 'b' : 'r';
-    var oppCapSide = playerSide === 'r' ? 'r' : 'b';
 
     var newCaptureCode = null;
     if (capturedEl) {
@@ -765,7 +764,6 @@ function updateCapturedUI(capturedEl) {
     }
 
     renderCapturedGroup(capturedAreaLeft, capData[yourCapSide], newCaptureCode);
-    renderCapturedGroup(capturedAreaRight, capData[oppCapSide], newCaptureCode);
 }
 
 function renderCapturedGroup(container, items, newCode) {
@@ -842,6 +840,7 @@ function initGame(config) {
     legalMoves = config.legalMoves || [];
     lastMove = config.lastMove || null;
     inCheck = config.inCheck || null;
+    moveHistory = config.moveHistory || [];
 
     // Un-suspend AudioContext on first user interaction (browser autoplay policy)
     document.addEventListener('click', function resumeAudio() {
@@ -854,6 +853,7 @@ function initGame(config) {
     renderBoard(false);
     updateStatusUI();
     initTurnIndicator();
+    renderMoveHistory();
 }
 
 function handleCellClick(r, c) {
@@ -931,6 +931,17 @@ function updateGameState(data) {
     lastMove = data.last_move;
     legalMoves = data.legal_moves || [];
     inCheck = data.in_check || null;
+
+    if (lastMove && (!prevLastMove || lastMove.from[0] !== prevLastMove.from[0] || lastMove.from[1] !== prevLastMove.from[1] || lastMove.to[0] !== prevLastMove.to[0] || lastMove.to[1] !== prevLastMove.to[1])) {
+        var movedSide = currentTurn === 'r' ? 'b' : 'r';
+        moveHistory.push({
+            side: movedSide,
+            from: lastMove.from,
+            to: lastMove.to,
+            piece: lastMove.piece || (movedSide + '?')
+        });
+        renderMoveHistory();
+    }
 
     // Fire check effects only when check newly appears (not on every poll)
     if (inCheck && inCheck !== prevInCheck) {
@@ -1320,3 +1331,81 @@ window.getToastDisplayMsg = function (message) {
     if (msg.includes("check")) return "Tướng đang bị chiếu!";
     return message;
 };
+
+// ═══════════════════════════════════════════════
+//  Move History Rendering
+// ═══════════════════════════════════════════════
+function renderMoveHistory() {
+    var container = document.getElementById('moveHistoryList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!moveHistory || moveHistory.length === 0) {
+        container.innerHTML = '<div class="history-empty" style="text-align:center; padding: 10px; color:#d4b87a; font-style:italic;">Chưa có nước đi</div>';
+        return;
+    }
+
+    // Group by rounds (Red -> Black)
+    var rounds = [];
+    var currentRound = {};
+    for (var i = 0; i < moveHistory.length; i++) {
+        var m = moveHistory[i];
+        if (m.side === 'r') {
+            currentRound = { r: m, b: null };
+            rounds.push(currentRound);
+        } else {
+            if (rounds.length === 0) {
+                currentRound = { r: null, b: m };
+                rounds.push(currentRound);
+            } else {
+                rounds[rounds.length - 1].b = m;
+            }
+        }
+    }
+
+    var cols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'];
+    rounds.forEach(function (round, idx) {
+        var count = idx + 1;
+        var rStr = '';
+        var bStr = '';
+
+        if (round.r) {
+            var pnameRed = PIECE_NAMES[round.r.piece] || 'R';
+            rStr = pnameRed + ' (' + cols[round.r.from[1]] + (9 - round.r.from[0]) + ' ➝ ' + cols[round.r.to[1]] + (9 - round.r.to[0]) + ')';
+        }
+        if (round.b) {
+            var pnameBlack = PIECE_NAMES[round.b.piece] || 'B';
+            bStr = pnameBlack + ' (' + cols[round.b.from[1]] + (9 - round.b.from[0]) + ' ➝ ' + cols[round.b.to[1]] + (9 - round.b.to[0]) + ')';
+        }
+
+        var item = document.createElement('div');
+        item.className = 'history-item';
+
+        var numWrap = document.createElement('div');
+        numWrap.className = 'history-number';
+        numWrap.textContent = count + '.';
+
+        var movesWrap = document.createElement('div');
+        movesWrap.className = 'history-move';
+
+        if (rStr) {
+            var redMoveDiv = document.createElement('div');
+            redMoveDiv.textContent = rStr;
+            movesWrap.appendChild(redMoveDiv);
+        }
+
+        if (bStr) {
+            var blackMoveDiv = document.createElement('div');
+            blackMoveDiv.textContent = '... ' + bStr;
+            blackMoveDiv.style.opacity = '0.7';
+            movesWrap.appendChild(blackMoveDiv);
+        }
+
+        item.appendChild(numWrap);
+        item.appendChild(movesWrap);
+        container.appendChild(item);
+    });
+
+    // Auto scroll bottom
+    container.scrollTop = container.scrollHeight;
+}

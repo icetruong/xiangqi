@@ -29,23 +29,76 @@
             <div class="pp-avatar" id="ppAvatarRight">將</div>
             <div class="pp-name" id="ppNameRight">Đối thủ</div>
         </div>
-        <div class="game-area">
-            <!-- Left Captured Area (You) -->
-            <div class="captured-area captured-left" id="capturedLeft">
-                <div class="captured-header">Quân cờ đã ăn</div>
-                <div class="captured-pieces" id="capturedPiecesLeft"></div>
+        <div class="game-layout">
+            <!-- LEFT PANEL -->
+            <div class="layout-side layout-left">
+                <!-- Captured pieces -->
+                <div class="ui-panel">
+                    <div class="panel-header">CAPTURED BY YOU</div>
+                    <div class="captured-pieces" id="capturedPiecesLeft"></div>
+                </div>
+
+                <!-- Move history -->
+                <div class="ui-panel history-panel">
+                    <div class="panel-header">MOVE HISTORY</div>
+                    <div class="history-list" id="moveHistoryList">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
             </div>
 
-            <div class="board-wrapper" id="boardWrapper">
-                <div class="board-inner" id="board"></div>
-                <!-- Check overlay: "將軍" text shown when check occurs -->
-                <div id="check-overlay" class="check-overlay" aria-live="assertive" aria-atomic="true"></div>
+            <!-- CENTER PANEL -->
+            <div class="layout-center">
+                <div class="board-wrapper" id="boardWrapper">
+                    <div class="board-inner" id="board"></div>
+                    <!-- Check overlay: "將軍" text shown when check occurs -->
+                    <div id="check-overlay" class="check-overlay" aria-live="assertive" aria-atomic="true"></div>
+                </div>
             </div>
 
-            <!-- Right Captured Area (Opponent) -->
-            <div class="captured-area captured-right" id="capturedRight">
-                <div class="captured-header">Quân cờ bị ăn</div>
-                <div class="captured-pieces" id="capturedPiecesRight"></div>
+            <!-- RIGHT PANEL -->
+            <div class="layout-side layout-right">
+                <!-- Timer -->
+                <div class="ui-panel">
+                    <div class="panel-header">TIMER</div>
+                    <div class="timer-plaque" id="gameTimerBoard">
+                        <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
+                        <div class="timer-value" id="gameTimerValue">00:00</div>
+                    </div>
+                </div>
+
+                <!-- Game Info -->
+                <div class="ui-panel">
+                    <div class="panel-header">GAME INFO</div>
+                    <div class="info-row">
+                        <span class="info-label">Difficulty:</span>
+                        <span class="info-val">Normal</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">You play:</span>
+                        <span class="info-val">{% if game.player_side == 'r' %}Red{% else %}Black{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="ui-panel settings-panel">
+                    <div class="panel-header">SETTINGS</div>
+                    <div class="settings-content">
+                        <!-- BGM Control -->
+                        <div class="timer-plaque bgm-control" id="bgmControl">
+                            <button type="button" class="bgm-btn" id="btnBgmToggle" aria-label="Bật/Tắt nhạc"
+                                title="Bật/Tắt nhạc">琴</button>
+                            <input type="range" id="bgmVolume" class="bgm-slider" min="0" max="1" step="0.05"
+                                value="0.3" aria-label="Âm lượng nhạc">
+                        </div>
+
+                        <!-- Game Buttons -->
+                        <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận
+                            thua</button>
+                        <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
+                        <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoát</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -138,7 +191,8 @@
             aiSide: "{{ game.ai_side }}",
             legalMoves: {{ legal_moves| safe }},
             lastMove: {{ last_move| safe }},
-            inCheck: {{ in_check| safe }}
+            inCheck: {{ in_check| safe }},
+            moveHistory: {{ move_history| safe }}
         });
 
         // Initialize Timer when DOM is ready
@@ -151,30 +205,7 @@
         <source src="{% static 'games/audio/bgm.mp3' %}" type="audio/mpeg">
     </audio>
 
-    <!-- ── Timer Panel (fixed top-right) ── -->
-    <div class="game-actions timer-panel" aria-label="Game Timer">
-        <!-- ── BGM Control (Nhạc nền) ── -->
-        <div class="timer-plaque bgm-control" id="bgmControl">
-            <button type="button" class="bgm-btn" id="btnBgmToggle" aria-label="Bật/Tắt nhạc" title="Bật/Tắt nhạc">
-                琴
-            </button>
-            <input type="range" id="bgmVolume" class="bgm-slider" min="0" max="1" step="0.05" value="0.3"
-                aria-label="Âm lượng nhạc">
-        </div>
-
-        <!-- ── Đồng hồ ván đấu ── -->
-        <div class="timer-plaque" id="gameTimerBoard">
-            <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
-            <div class="timer-value" id="gameTimerValue">00:00</div>
-        </div>
-    </div>
-
-    <!-- ── Game Action Buttons (fixed top-left) ── -->
-    <div class="game-actions actions-panel" aria-label="Game controls">
-        <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận thua</button>
-        <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
-        <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoái lui</a>
-    </div>
+    <!-- End Layout Replacements -->
 
     <!-- ══════════════════════════════════════════════
          Confirm Resign Modal — Bảng gỗ cổ trang
