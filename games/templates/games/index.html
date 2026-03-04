@@ -16,6 +16,47 @@
 <body>
     <!-- Mahogany wood background -->
     <div class="wood-background">
+        <!-- Cinematic Background Elements -->
+        <div class="cinematic-bg-board">
+            <svg width="100%" height="100%" viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" opacity="0.12"
+                style="filter: blur(2px);">
+                <g stroke="#caa76a" stroke-width="2" fill="none">
+                    <rect x="50" y="50" width="800" height="900" stroke-width="4" />
+                    <line x1="50" y1="150" x2="850" y2="150" />
+                    <line x1="50" y1="250" x2="850" y2="250" />
+                    <line x1="50" y1="350" x2="850" y2="350" />
+                    <line x1="50" y1="450" x2="850" y2="450" />
+                    <line x1="50" y1="550" x2="850" y2="550" />
+                    <line x1="50" y1="650" x2="850" y2="650" />
+                    <line x1="50" y1="750" x2="850" y2="750" />
+                    <line x1="50" y1="850" x2="850" y2="850" />
+                    <line x1="150" y1="50" x2="150" y2="450" />
+                    <line x1="250" y1="50" x2="250" y2="450" />
+                    <line x1="350" y1="50" x2="350" y2="450" />
+                    <line x1="450" y1="50" x2="450" y2="450" />
+                    <line x1="550" y1="50" x2="550" y2="450" />
+                    <line x1="650" y1="50" x2="650" y2="450" />
+                    <line x1="750" y1="50" x2="750" y2="450" />
+                    <line x1="150" y1="550" x2="150" y2="950" />
+                    <line x1="250" y1="550" x2="250" y2="950" />
+                    <line x1="350" y1="550" x2="350" y2="950" />
+                    <line x1="450" y1="550" x2="450" y2="950" />
+                    <line x1="550" y1="550" x2="550" y2="950" />
+                    <line x1="650" y1="550" x2="650" y2="950" />
+                    <line x1="750" y1="550" x2="750" y2="950" />
+                    <line x1="350" y1="50" x2="550" y2="250" />
+                    <line x1="550" y1="50" x2="350" y2="250" />
+                    <line x1="350" y1="750" x2="550" y2="950" />
+                    <line x1="550" y1="750" x2="350" y2="950" />
+                </g>
+                <text x="250" y="525" font-family="'Ma Shan Zheng', serif" font-size="48" fill="#caa76a"
+                    text-anchor="middle" transform="rotate(-90 250 525)">楚河</text>
+                <text x="650" y="525" font-family="'Ma Shan Zheng', serif" font-size="48" fill="#caa76a"
+                    text-anchor="middle" transform="rotate(90 650 525)">漢界</text>
+            </svg>
+        </div>
+        <div class="cinematic-bg-character">將</div>
+
         <!-- Ornamental border corners -->
         <div class="border-ornament top-left"></div>
         <div class="border-ornament top-right"></div>
@@ -59,7 +100,7 @@
                     <h1 class="game-title">Xiangqi</h1>
                     <p class="subtitle">Prepare for Battle</p>
 
-                    <div class="ornamental-divider">──────── ◈ ────────</div>
+                    <div class="ornamental-divider">──── ✦ ────</div>
 
                     <!-- Game Setup Form -->
                     <form method="POST">
@@ -646,24 +687,24 @@
             // --- Floating Particles Effect ---
             const particlesContainer = document.getElementById('particlesContainer');
             if (particlesContainer) {
-                const particleCount = 75; // More particles for cinematic effect
+                const particleCount = 60; // Medium amount for subtle smoke/dust
 
                 for (let i = 0; i < particleCount; i++) {
                     const particle = document.createElement('div');
                     particle.classList.add('floating-particle');
 
-                    // Randomize properties
-                    const size = Math.random() * 2 + 2; // 2px - 4px
+                    // Randomize properties to look like dust/smoke
+                    const size = Math.random() * 4 + 2; // 2px - 6px
                     const leftPos = Math.random() * 100; // 0% - 100%
-                    const opacity = Math.random() * 0.3 + 0.2; // 0.2 - 0.5
+                    const opacity = Math.random() * 0.15 + 0.05; // 0.05 - 0.20
 
-                    // Slow parallax parameters
-                    const duration = Math.random() * 30 + 30; // 30s - 60s
-                    const delay = Math.random() * -20; // start immediately at random offset
+                    // Very slow drift
+                    const duration = Math.random() * 80 + 60; // 60s - 140s
+                    const delay = Math.random() * -100; // start everywhere
 
-                    // Parallax destinations
-                    const tx = Math.random() * 200 - 100; // -100px to 100px
-                    const ty = -(Math.random() * 60 + 40); // -40vh to -100vh
+                    // Random slow drift
+                    const tx = Math.random() * 300 - 150; // -150px to 150px
+                    const ty = -(Math.random() * 50 + 50); // -50vh to -100vh
 
                     // Apply styles directly
                     particle.style.width = `${size}px`;

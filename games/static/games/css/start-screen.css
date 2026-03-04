@@ -109,9 +109,39 @@ body {
     inset: 0;
     pointer-events: none;
     box-shadow:
-        inset 0 0 100px 40px rgba(0, 0, 0, 0.75),
-        inset 0 0 250px 80px rgba(0, 0, 0, 0.4);
+        inset 0 0 150px 80px rgba(0, 0, 0, 0.9),
+        inset 0 0 400px 150px rgba(0, 0, 0, 0.85);
     z-index: 1;
+}
+
+/* =========================================
+   CINEMATIC BACKGROUND ELEMENTS
+   ========================================= */
+.cinematic-bg-board {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.15;
+    filter: blur(1.5px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cinematic-bg-character {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Ma Shan Zheng', cursive, serif;
+    font-size: 85vh;
+    color: var(--gold);
+    opacity: 0.08;
+    filter: blur(4px);
+    pointer-events: none;
+    z-index: 2;
+    text-shadow: 0 0 60px rgba(202, 167, 106, 0.5);
 }
 
 /* ---------- Subtle corner ornaments ---------- */
@@ -229,10 +259,10 @@ body {
     width: 750px;
     height: 750px;
     background: radial-gradient(ellipse at center,
-            rgba(200, 20, 10, 0.35) 0%,
-            rgba(180, 50, 10, 0.15) 35%,
-            rgba(202, 167, 106, 0.05) 55%,
-            transparent 75%);
+            rgba(220, 30, 20, 0.45) 0%,
+            rgba(180, 20, 10, 0.25) 40%,
+            rgba(100, 10, 5, 0.1) 60%,
+            transparent 80%);
     pointer-events: none;
     z-index: -1;
 }
@@ -458,11 +488,11 @@ body {
 
 @keyframes titleGlowPulse {
     0% {
-        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 4px rgba(202, 167, 106, 0.2));
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.4));
     }
 
     100% {
-        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(202, 167, 106, 0.5));
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
     }
 }
 
@@ -752,12 +782,12 @@ form {
 }
 
 .start-button {
-    padding: 18px 36px;
+    padding: 22px 36px;
     width: 100%;
     font-family: 'Cinzel', serif;
-    font-size: 19px;
+    font-size: 24px;
     font-weight: 700;
-    letter-spacing: 4px;
+    letter-spacing: 8px;
     text-transform: uppercase;
     cursor: pointer;
     outline: none;
@@ -862,9 +892,9 @@ form {
     border: 1px solid rgba(255, 215, 0, 0.7);
     /* Stronger outer glow (deep red / gold mixed) */
     box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.6),
-        0 0 25px rgba(177, 26, 31, 0.8),
-        0 0 12px rgba(255, 215, 0, 0.5),
+        0 8px 20px rgba(0, 0, 0, 0.8),
+        0 0 35px rgba(220, 40, 40, 0.9),
+        0 0 18px rgba(255, 215, 0, 0.6),
         inset 0 2px 4px rgba(255, 255, 255, 0.4),
         inset 0 -2px 3px rgba(0, 0, 0, 0.3);
 }
@@ -1148,8 +1178,9 @@ form {
     bottom: -10px;
     /* start slightly below view */
     border-radius: 50%;
-    background: rgba(255, 200, 100, 0.8);
-    box-shadow: 0 0 6px 2px rgba(255, 100, 50, 0.4);
+    background: rgba(220, 190, 150, 0.3);
+    box-shadow: 0 0 12px 4px rgba(220, 190, 150, 0.15);
+    filter: blur(1px);
     pointer-events: none;
     will-change: transform, opacity;
 }
