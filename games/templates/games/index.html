@@ -100,15 +100,8 @@
         <div class="sparkle sparkle-2"></div>
         <div class="sparkle sparkle-3"></div>
 
-        <!-- Floating dust particles -->
-        <div class="dust dust-1"></div>
-        <div class="dust dust-2"></div>
-        <div class="dust dust-3"></div>
-        <div class="dust dust-4"></div>
-        <div class="dust dust-5"></div>
-        <div class="dust dust-6"></div>
-        <div class="dust dust-7"></div>
-        <div class="dust dust-8"></div>
+        <!-- Floating dust particles container -->
+        <div id="particlesContainer" class="particles-layer"></div>
     </div>
 
     <!-- ══════════════════════════════════════════════
@@ -557,6 +550,39 @@
                     // Only close if clicked outside the book spread container
                     if (e.target === rulesOverlay) closeRulesModal();
                 });
+            }
+
+            // --- Floating Particles Effect ---
+            const particlesContainer = document.getElementById('particlesContainer');
+            if (particlesContainer) {
+                const particleCount = 25; // 20-30 particles
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.classList.add('floating-particle');
+                    
+                    // Randomize properties
+                    const size = Math.random() * 2 + 2; // 2px - 4px
+                    const leftPos = Math.random() * 100; // 0% - 100%
+                    const opacity = Math.random() * 0.3 + 0.2; // 0.2 - 0.5
+                    
+                    // Animation parameters
+                    const duration = Math.random() * 10 + 10; // 10s - 20s
+                    const delay = Math.random() * 15; // 0s - 15s
+                    const sway = Math.random() * 30 - 15; // -15px to 15px
+
+                    // Apply styles directly
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${leftPos}%`;
+                    particle.style.opacity = opacity;
+                    
+                    // Custom properties for keyframes if we want to use them (using generic animation for now)
+                    particle.style.animation = `floatParticle ${duration}s ease-in-out ${delay}s infinite`;
+                    particle.style.setProperty('--sway', `${sway}px`);
+                    
+                    particlesContainer.appendChild(particle);
+                }
             }
         });
     </script>

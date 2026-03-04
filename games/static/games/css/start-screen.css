@@ -5,8 +5,9 @@
 /* ---------- Design Tokens ---------- */
 :root {
     /* Wood background – dark mahogany range */
-    --bg-dark: #2a120b;
-    --bg-mid: #4b2416;
+    --bg-dark: #0a0503; /* blacker outer edge */
+    --bg-mid: #4a1510; /* red/hollow center */
+    --bg-pulse: #5a1c14; /* warmer pulse for center */
 
     /* Ornate frame wood – lighter than background */
     --frame-light: #a06b3d;
@@ -70,20 +71,31 @@ body {
 
     /* Subtle radial warmth + wood grain simulation */
     background-image:
-        /* Layer 3 – vignette (dark edges) */
-        radial-gradient(ellipse 80% 80% at 50% 50%,
-            transparent 40%,
-            rgba(0, 0, 0, 0.65) 100%),
-        /* Layer 2 – warm centre glow */
-        radial-gradient(ellipse at 50% 40%,
+        /* Layer 3 – vignette (dark edges focus on center) */
+        radial-gradient(ellipse 85% 85% at 50% 50%,
+            transparent 30%,
+            rgba(0, 0, 0, 0.8) 100%),
+        /* Layer 2 – warm centre glow (pulses via animation) */
+        radial-gradient(ellipse at 50% 50%,
             var(--bg-mid) 0%,
-            var(--bg-dark) 70%),
+            var(--bg-dark) 80%),
         /* Layer 1 – very faint horizontal grain lines */
         repeating-linear-gradient(0deg,
             transparent,
             transparent 3px,
             rgba(255, 255, 255, 0.012) 3px,
             rgba(255, 255, 255, 0.012) 4px);
+    
+    animation: backgroundPulse 12s infinite alternate ease-in-out;
+}
+
+@keyframes backgroundPulse {
+    0% {
+        background-color: var(--bg-dark);
+    }
+    100% {
+        background-color: #120502;
+    }
 }
 
 /* Inner shadow "thick wood frame" around viewport and deeper vignette */
@@ -746,272 +758,44 @@ form {
 }
 
 /* =========================================
-   EFFECT 2 – Floating Golden Dust Particles
+   EFFECT 2 – Floating Dynamic Particles
    ========================================= */
-.dust {
+.particles-layer {
     position: absolute;
-    border-radius: 50%;
+    inset: 0;
     pointer-events: none;
     z-index: 3;
-    opacity: 0;
-    /* Reduce overall dust opacity to make it less distracting */
-    filter: opacity(0.4);
+    overflow: hidden;
 }
 
-.dust-1 {
-    width: 3px;
-    height: 3px;
-    background: rgba(202, 167, 106, 0.7);
-    box-shadow: 0 0 6px 1px rgba(202, 167, 106, 0.4);
-    top: 15%;
-    left: 10%;
-    animation: floatDust1 12s infinite ease-in-out;
+.floating-particle {
+    position: absolute;
+    bottom: -10px; /* start slightly below view */
+    border-radius: 50%;
+    background: rgba(255, 200, 100, 0.8);
+    box-shadow: 0 0 6px 2px rgba(255, 100, 50, 0.4);
+    pointer-events: none;
+    will-change: transform, opacity;
 }
 
-.dust-2 {
-    width: 2px;
-    height: 2px;
-    background: rgba(255, 215, 0, 0.6);
-    box-shadow: 0 0 5px 1px rgba(255, 215, 0, 0.3);
-    top: 70%;
-    left: 85%;
-    animation: floatDust2 15s 2s infinite ease-in-out;
-}
-
-.dust-3 {
-    width: 4px;
-    height: 4px;
-    background: rgba(202, 167, 106, 0.5);
-    box-shadow: 0 0 8px 2px rgba(202, 167, 106, 0.3);
-    top: 40%;
-    left: 5%;
-    animation: floatDust3 18s 1s infinite ease-in-out;
-}
-
-.dust-4 {
-    width: 2px;
-    height: 2px;
-    background: rgba(255, 215, 0, 0.5);
-    box-shadow: 0 0 4px 1px rgba(255, 215, 0, 0.25);
-    top: 80%;
-    left: 25%;
-    animation: floatDust4 14s 3s infinite ease-in-out;
-}
-
-.dust-5 {
-    width: 3px;
-    height: 3px;
-    background: rgba(202, 167, 106, 0.6);
-    box-shadow: 0 0 6px 1px rgba(202, 167, 106, 0.35);
-    top: 25%;
-    right: 12%;
-    animation: floatDust5 16s 0.5s infinite ease-in-out;
-}
-
-.dust-6 {
-    width: 2px;
-    height: 2px;
-    background: rgba(255, 215, 0, 0.45);
-    box-shadow: 0 0 5px 1px rgba(255, 215, 0, 0.25);
-    top: 60%;
-    left: 70%;
-    animation: floatDust6 13s 4s infinite ease-in-out;
-}
-
-.dust-7 {
-    width: 3px;
-    height: 3px;
-    background: rgba(202, 167, 106, 0.55);
-    box-shadow: 0 0 7px 2px rgba(202, 167, 106, 0.3);
-    top: 50%;
-    left: 20%;
-    animation: floatDust7 17s 2.5s infinite ease-in-out;
-}
-
-.dust-8 {
-    width: 2px;
-    height: 2px;
-    background: rgba(255, 215, 0, 0.5);
-    box-shadow: 0 0 4px 1px rgba(255, 215, 0, 0.2);
-    top: 30%;
-    right: 35%;
-    animation: floatDust8 11s 1.5s infinite ease-in-out;
-}
-
-/* Each particle has a unique float path */
-@keyframes floatDust1 {
-
-    0%,
-    100% {
+@keyframes floatParticle {
+    0% {
+        transform: translate(0, 0) scale(0.8);
         opacity: 0;
-        transform: translate(0, 0);
     }
-
     10% {
-        opacity: 0.8;
+        opacity: var(--max-opacity, 0.5);
     }
-
     50% {
-        opacity: 0.4;
-        transform: translate(80px, -120px);
+        transform: translate(var(--sway), -50vh) scale(1.1);
+        opacity: calc(var(--max-opacity, 0.5) * 0.8);
     }
-
     90% {
-        opacity: 0.7;
+        opacity: var(--max-opacity, 0.5);
     }
-}
-
-@keyframes floatDust2 {
-
-    0%,
     100% {
+        transform: translate(calc(var(--sway) * -1), -110vh) scale(0.9);
         opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    15% {
-        opacity: 0.7;
-    }
-
-    50% {
-        opacity: 0.3;
-        transform: translate(-60px, -90px);
-    }
-
-    85% {
-        opacity: 0.6;
-    }
-}
-
-@keyframes floatDust3 {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    12% {
-        opacity: 0.6;
-    }
-
-    50% {
-        opacity: 0.35;
-        transform: translate(100px, -150px);
-    }
-
-    88% {
-        opacity: 0.5;
-    }
-}
-
-@keyframes floatDust4 {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    10% {
-        opacity: 0.65;
-    }
-
-    50% {
-        opacity: 0.3;
-        transform: translate(50px, -100px);
-    }
-
-    90% {
-        opacity: 0.55;
-    }
-}
-
-@keyframes floatDust5 {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    14% {
-        opacity: 0.7;
-    }
-
-    50% {
-        opacity: 0.35;
-        transform: translate(-70px, -130px);
-    }
-
-    86% {
-        opacity: 0.6;
-    }
-}
-
-@keyframes floatDust6 {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    11% {
-        opacity: 0.6;
-    }
-
-    50% {
-        opacity: 0.25;
-        transform: translate(-40px, -80px);
-    }
-
-    89% {
-        opacity: 0.5;
-    }
-}
-
-@keyframes floatDust7 {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    13% {
-        opacity: 0.55;
-    }
-
-    50% {
-        opacity: 0.3;
-        transform: translate(90px, -110px);
-    }
-
-    87% {
-        opacity: 0.45;
-    }
-}
-
-@keyframes floatDust8 {
-
-    0%,
-    100% {
-        opacity: 0;
-        transform: translate(0, 0);
-    }
-
-    10% {
-        opacity: 0.7;
-    }
-
-    50% {
-        opacity: 0.35;
-        transform: translate(-55px, -95px);
-    }
-
-    90% {
-        opacity: 0.6;
     }
 }
 
