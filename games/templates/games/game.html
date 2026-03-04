@@ -30,10 +30,22 @@
             <div class="pp-name" id="ppNameRight">Đối thủ</div>
         </div>
         <div class="game-area">
+            <!-- Left Captured Area (You) -->
+            <div class="captured-area captured-left" id="capturedLeft">
+                <div class="captured-header">Quân cờ đã ăn</div>
+                <div class="captured-pieces" id="capturedPiecesLeft"></div>
+            </div>
+
             <div class="board-wrapper" id="boardWrapper">
                 <div class="board-inner" id="board"></div>
                 <!-- Check overlay: "將軍" text shown when check occurs -->
                 <div id="check-overlay" class="check-overlay" aria-live="assertive" aria-atomic="true"></div>
+            </div>
+
+            <!-- Right Captured Area (Opponent) -->
+            <div class="captured-area captured-right" id="capturedRight">
+                <div class="captured-header">Quân cờ bị ăn</div>
+                <div class="captured-pieces" id="capturedPiecesRight"></div>
             </div>
         </div>
     </div>

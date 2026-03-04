@@ -468,7 +468,10 @@ function renderBoard(shouldAnimate) {
         // Remove from DOM after animation
         setTimeout(function () {
             if (capturedEl.parentNode) capturedEl.parentNode.removeChild(capturedEl);
+            updateCapturedUI(capturedEl);
         }, 180);
+    } else {
+        updateCapturedUI(null);
     }
 
     // ── Build pool of remaining existing pieces by code ──
@@ -712,6 +715,97 @@ function getCaptureTargets() {
         }
     }
     return targets;
+}
+
+function getCapturedPieces() {
+    var counts = { r: {}, b: {} };
+    for (var r = 0; r < ROWS; r++) {
+        for (var c = 0; c < COLS; c++) {
+            var code = boardState[r][c];
+            if (code) {
+                var side = code.charAt(0);
+                var pct = code.substring(1);
+                if (pct === 'N') pct = 'H'; // Unify Knights
+                counts[side][pct] = (counts[side][pct] || 0) + 1;
+            }
+        }
+    }
+
+    var initial = { K: 1, A: 2, E: 2, H: 2, R: 2, C: 2, P: 5 };
+    var sortOrder = { K: 1, A: 2, E: 3, H: 4, R: 5, C: 6, P: 7 };
+
+    var captured = { r: [], b: [] };
+    ['r', 'b'].forEach(function (side) {
+        Object.keys(initial).forEach(function (pct) {
+            var onBoard = counts[side][pct] || 0;
+            var missing = initial[pct] - onBoard;
+            if (missing > 0) {
+                captured[side].push({ code: side + pct, count: missing, order: sortOrder[pct] });
+            }
+        });
+        captured[side].sort(function (a, b) { return a.order - b.order; });
+    });
+
+    return captured;
+}
+
+function updateCapturedUI(capturedEl) {
+    var capturedAreaLeft = document.getElementById('capturedPiecesLeft');
+    var capturedAreaRight = document.getElementById('capturedPiecesRight');
+    if (!capturedAreaLeft || !capturedAreaRight) return;
+
+    var capData = getCapturedPieces();
+    var yourCapSide = playerSide === 'r' ? 'b' : 'r';
+    var oppCapSide = playerSide === 'r' ? 'r' : 'b';
+
+    var newCaptureCode = null;
+    if (capturedEl) {
+        newCaptureCode = capturedEl.dataset.piece;
+        if (newCaptureCode.charAt(1) === 'N') newCaptureCode = newCaptureCode.charAt(0) + 'H';
+    }
+
+    renderCapturedGroup(capturedAreaLeft, capData[yourCapSide], newCaptureCode);
+    renderCapturedGroup(capturedAreaRight, capData[oppCapSide], newCaptureCode);
+}
+
+function renderCapturedGroup(container, items, newCode) {
+    container.innerHTML = '';
+
+    if (items.length === 0) {
+        var emptyMsg = document.createElement('div');
+        emptyMsg.className = 'captured-empty';
+        emptyMsg.textContent = 'No captured pieces.';
+        container.appendChild(emptyMsg);
+        return;
+    }
+
+    items.forEach(function (item) {
+        var wrap = document.createElement('div');
+        wrap.className = 'captured-mini-wrap';
+
+        var pieceCode = item.code;
+        // Map back to PIECE_NAMES code (use 'N' for Black Knight historically, or just stick to 'H')
+        if (pieceCode.charAt(1) === 'H' && !PIECE_NAMES[pieceCode]) {
+            pieceCode = pieceCode.charAt(0) + 'N';
+        }
+        var pieceEl = createPiece(pieceCode);
+        pieceEl.className += ' piece-mini';
+
+        if (newCode && (newCode === item.code || newCode === pieceCode)) {
+            pieceEl.classList.add('glow-new-capture');
+        }
+
+        wrap.appendChild(pieceEl);
+
+        if (item.count > 1) {
+            var badge = document.createElement('div');
+            badge.className = 'captured-badge';
+            badge.textContent = '×' + item.count;
+            wrap.appendChild(badge);
+        }
+
+        container.appendChild(wrap);
+    });
 }
 
 // (Function removed as we render declaratively now)

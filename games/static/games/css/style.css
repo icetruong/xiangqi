@@ -2313,3 +2313,173 @@ body {
         text-align: center;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Captured Pieces Area
+   ═══════════════════════════════════════════════════════════ */
+.captured-area {
+    display: flex;
+    flex-direction: column;
+    width: 14vw;
+    min-width: 120px;
+    max-width: 180px;
+    padding: 16px 14px;
+    /* Styles matching game settings panels */
+    background: repeating-linear-gradient(178deg,
+            rgba(255, 220, 160, .025) 0px,
+            rgba(255, 220, 160, .025) 1px,
+            transparent 1px,
+            transparent 6px),
+        linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+    border: 2px solid #7a5a28;
+    outline: 1px solid #c9944a;
+    outline-offset: -5px;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px #3a1c0e,
+        0 8px 32px rgba(0, 0, 0, .7),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
+    margin: 0 20px;
+    position: relative;
+    user-select: none;
+}
+
+/* Ornaments for captured corners */
+.captured-area::before,
+.captured-area::after {
+    content: '◈';
+    position: absolute;
+    font-size: 0.65rem;
+    color: #c9944a;
+    opacity: 0.75;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.captured-area::before {
+    top: 5px;
+    left: 6px;
+}
+
+.captured-area::after {
+    bottom: 5px;
+    right: 6px;
+}
+
+.captured-left {
+    margin-right: 25px;
+}
+
+.captured-right {
+    margin-left: 25px;
+}
+
+.captured-header {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #f5e6c8;
+    text-align: center;
+    margin-bottom: 12px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #7a5a28;
+    padding-bottom: 8px;
+    font-family: 'Noto Serif', serif;
+}
+
+.captured-pieces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    min-height: 48px;
+}
+
+/* ── Empty State ── */
+.captured-empty {
+    width: 100%;
+    color: #d4b87a;
+    font-size: 0.8rem;
+    text-align: center;
+    opacity: 0.6;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+/* ── Captured Piece Mini Icon ── */
+.captured-mini-wrap {
+    position: relative;
+    width: 36px;
+    height: 36px;
+}
+
+.captured-badge {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    background: #c0392b;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 1px 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    border: 1px solid #8b1a1a;
+    font-family: sans-serif;
+    line-height: 1;
+}
+
+/* Base class applied to the piece itself */
+.piece-mini {
+    width: 100% !important;
+    height: 100% !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    cursor: default;
+    border-width: 2px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.piece-mini:hover {
+    transform: none !important;
+    filter: none !important;
+}
+
+.piece-mini .piece-text {
+    font-size: 16px !important;
+}
+
+/* ── Glow Effect for New Capture ── */
+@keyframes captureGlow {
+    0% {
+        box-shadow: 0 0 0 2px var(--highlight-gold), 0 0 16px rgba(240, 180, 41, 0.9) !important;
+        filter: brightness(1.3);
+    }
+
+    100% {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        filter: brightness(1);
+    }
+}
+
+.glow-new-capture {
+    animation: captureGlow 1.2s ease-out forwards;
+}
+
+/* ── Overriding the old capture fade out for JS transition ── */
+.piece--captured-animating {
+    pointer-events: none !important;
+    z-index: 100 !important;
+}
+
+/* Hide captured areas on small mobile screens */
+@media (max-width: 768px) {
+    .captured-area {
+        display: none;
+    }
+}
