@@ -1766,15 +1766,15 @@ body {
 
 /* ── Panel base ── */
 .player-panel {
-    position: fixed;
-    bottom: calc(28px + env(safe-area-inset-bottom));
-    z-index: 9998;
+    position: relative;
+    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     padding: 16px 14px 14px;
-    width: clamp(100px, 10vw, 140px);
+    width: 100%;
+    box-sizing: border-box;
 
     /* Dark wood panel — matches .game-actions */
     background: repeating-linear-gradient(178deg,
@@ -1828,15 +1828,7 @@ body {
     right: 6px;
 }
 
-/* Left panel position */
-.player-panel--left {
-    left: calc(18px + env(safe-area-inset-left));
-}
-
-/* Right panel position */
-.player-panel--right {
-    right: calc(18px + env(safe-area-inset-right));
-}
+/* Left and Right panel positions are handled by parent flex column */
 
 /* ── Avatar circle ── */
 .pp-avatar {
@@ -1928,8 +1920,6 @@ body {
    ══════════════════════════════ */
 @media (max-width: 700px) {
     .player-panel {
-        bottom: calc(80px + env(safe-area-inset-bottom));
-        width: clamp(76px, 15vw, 100px);
         padding: 10px 8px 10px;
         gap: 5px;
     }
