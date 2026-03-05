@@ -2376,8 +2376,8 @@ body {
 
 .panel-header {
     font-family: 'Noto Serif', serif;
-    font-size: 0.85rem;
-    font-weight: bold;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: #f5e6c8;
     text-align: center;
     margin-bottom: 12px;
@@ -2394,6 +2394,7 @@ body {
     justify-content: space-between;
     padding: 6px 0;
     color: #f5e6c8;
+    font-family: 'Noto Serif', serif;
     font-size: 0.9rem;
     border-bottom: 1px dashed #7a5a28;
 }

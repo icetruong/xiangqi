@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
     <link
-        href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
 </head>
 
@@ -24,13 +24,13 @@
             <div class="layout-side layout-left">
                 <!-- Captured pieces -->
                 <div class="ui-panel">
-                    <div class="panel-header">CAPTURED BY YOU</div>
+                    <div class="panel-header">QUÂN ĐÃ BẮT</div>
                     <div class="captured-pieces" id="capturedPiecesLeft"></div>
                 </div>
 
                 <!-- Move history -->
                 <div class="ui-panel history-panel">
-                    <div class="panel-header">MOVE HISTORY</div>
+                    <div class="panel-header">LỊCH SỬ ĐI</div>
                     <div class="history-list" id="moveHistoryList">
                         <!-- Populated via JS -->
                     </div>
@@ -62,7 +62,7 @@
             <div class="layout-side layout-right">
                 <!-- Timer -->
                 <div class="ui-panel">
-                    <div class="panel-header">TIMER</div>
+                    <div class="panel-header">THỜI GIAN</div>
                     <div class="timer-plaque" id="gameTimerBoard">
                         <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
                         <div class="timer-value" id="gameTimerValue">00:00</div>
@@ -71,20 +71,24 @@
 
                 <!-- Game Info -->
                 <div class="ui-panel">
-                    <div class="panel-header">GAME INFO</div>
+                    <div class="panel-header">THÔNG TIN VÁN</div>
                     <div class="info-row">
-                        <span class="info-label">Difficulty:</span>
-                        <span class="info-val">Normal</span>
+                        <span class="info-label">Độ khó:</span>
+                        <span class="info-val">
+                            {% if game.difficulty == 'easy' %} Dễ
+                            {% elif game.difficulty == 'hard' %} Khó
+                            {% else %} Trung bình {% endif %}
+                        </span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">You play:</span>
-                        <span class="info-val">{% if game.player_side == 'r' %}Red{% else %}Black{% endif %}</span>
+                        <span class="info-label">Bạn cầm:</span>
+                        <span class="info-val">{% if game.player_side == 'r' %}Đỏ{% else %}Đen{% endif %}</span>
                     </div>
                 </div>
 
                 <!-- Settings -->
                 <div class="ui-panel settings-panel">
-                    <div class="panel-header">SETTINGS</div>
+                    <div class="panel-header">CÀI ĐẶT</div>
                     <div class="settings-content">
                         <!-- BGM Control -->
                         <div class="timer-plaque bgm-control" id="bgmControl">
