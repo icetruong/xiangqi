@@ -772,7 +772,7 @@ function renderCapturedGroup(container, items, newCode) {
     if (items.length === 0) {
         var emptyMsg = document.createElement('div');
         emptyMsg.className = 'captured-empty';
-        emptyMsg.textContent = 'No captured pieces.';
+        emptyMsg.textContent = 'Chưa có quân nào bị bắt.';
         container.appendChild(emptyMsg);
         return;
     }
@@ -1341,7 +1341,7 @@ function renderMoveHistory() {
     container.innerHTML = '';
 
     if (!moveHistory || moveHistory.length === 0) {
-        container.innerHTML = '<div class="history-empty" style="text-align:center; padding: 10px; color:#d4b87a; font-style:italic;">Chưa có nước đi</div>';
+        container.innerHTML = '<div class="history-empty" style="text-align:center; padding: 10px; color:#d4b87a; font-style:italic; opacity:0.5;">Chưa có nước đi</div>';
         return;
     }
 

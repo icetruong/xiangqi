@@ -2467,6 +2467,7 @@ body {
 
 /* ── Empty State ── */
 .captured-empty {
+    grid-column: 1 / -1;
     width: 100%;
     color: #d4b87a;
     font-size: 0.8rem;
