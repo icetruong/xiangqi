@@ -35,6 +35,7 @@ let legalMoves = [];
 let isAnimating = false;
 let inCheck = null; // 'r', 'b', or null
 let moveHistory = [];
+let boardFlipped = false; // true khi người chơi cầm quân Đen
 window.gameLocked = false;
 
 // ── DOM (assigned in initGame after DOMContentLoaded) ──
@@ -415,8 +416,8 @@ function initBoardStructure() {
 }
 
 function renderBoard(shouldAnimate) {
-    var px = function (c) { return BOARD_PAD + c * CELL_SIZE; };
-    var py = function (r) { return BOARD_PAD + r * CELL_SIZE; };
+    var px = function (c) { return boardFlipped ? BOARD_PAD + (COLS - 1 - c) * CELL_SIZE : BOARD_PAD + c * CELL_SIZE; };
+    var py = function (r) { return boardFlipped ? BOARD_PAD + (ROWS - 1 - r) * CELL_SIZE : BOARD_PAD + r * CELL_SIZE; };
 
     // ── Snapshot existing pieces by (row,col) ──
     var existingByPos = {};   // "r,c" → element
@@ -839,8 +840,14 @@ function initGame(config) {
         var rect = boardEl.getBoundingClientRect();
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
-        var c = Math.round((x - BOARD_PAD) / CELL_SIZE);
-        var r = Math.round((y - BOARD_PAD) / CELL_SIZE);
+        var c, r;
+        if (boardFlipped) {
+            c = Math.round((BOARD_W - (x - BOARD_PAD)) / CELL_SIZE);
+            r = Math.round((BOARD_H - (y - BOARD_PAD)) / CELL_SIZE);
+        } else {
+            c = Math.round((x - BOARD_PAD) / CELL_SIZE);
+            r = Math.round((y - BOARD_PAD) / CELL_SIZE);
+        }
         if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
             handleCellClick(r, c);
         }
@@ -855,6 +862,9 @@ function initGame(config) {
     lastMove = config.lastMove || null;
     inCheck = config.inCheck || null;
     moveHistory = config.moveHistory || [];
+
+    // Lật bàn cờ nếu người chơi cầm quân Đen
+    boardFlipped = (playerSide === 'b');
 
     // Un-suspend AudioContext on first user interaction (browser autoplay policy)
     document.addEventListener('click', function resumeAudio() {
