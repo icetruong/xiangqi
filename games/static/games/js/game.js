@@ -868,6 +868,11 @@ function initGame(config) {
     updateStatusUI();
     initTurnIndicator();
     renderMoveHistory();
+
+    // Nếu người chơi chọn Đen, AI Đỏ đang đi trước — tự poll để cập nhật bàn cờ
+    if (status === 'ongoing' && currentTurn !== playerSide) {
+        startPolling();
+    }
 }
 
 function handleCellClick(r, c) {

@@ -17,6 +17,16 @@ def create_new_game(difficulty='normal', player_side='r', ai_side='b') -> Game:
         player_side=player_side,
         ai_side=ai_side
     )
+
+    # Nếu người chơi chọn Đen, AI (Đỏ) đi trước ngay lập tức
+    if player_side == 'b':
+        import threading
+        threading.Thread(
+            target=process_ai_move,
+            args=(game.id,),
+            daemon=True
+        ).start()
+
     return game
 
 def apply_player_move(game_id, move_data):
