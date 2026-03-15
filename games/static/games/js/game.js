@@ -196,9 +196,9 @@ function createBoardSVG() {
     svg.setAttribute('viewBox', '0 0 ' + (BOARD_W + BOARD_PAD * 2) + ' ' + (BOARD_H + BOARD_PAD * 2));
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-    const strokeColor = '#8b6c42';
-    const strokeWidth = 1.5;
-    const thinStroke = 1;
+    const strokeColor = '#7a6042'; /* refined ink-brown, matching --grid-stroke */
+    const strokeWidth = 1.2;       /* softer, thinner — ink-drawn feel */
+    const thinStroke = 0.9;        /* palace diagonals & corner marks */
 
     var ix = function (c) { return BOARD_PAD + c * CELL_SIZE; };
     var iy = function (r) { return BOARD_PAD + r * CELL_SIZE; };
@@ -266,43 +266,57 @@ function createBoardSVG() {
         drawCornerMarks(svg, pawnPositions[i][0], pawnPositions[i][1], strokeColor, thinStroke);
     }
 
-    // River Text
+    // Subtle river band — warm amber tint to give the river area intentional visual presence
+    var riverY4 = iy(4);
+    var riverY5 = iy(5);
+    var riverBand = document.createElementNS(SVG_NS, 'rect');
+    riverBand.setAttribute('x', ix(0));
+    riverBand.setAttribute('y', riverY4);
+    riverBand.setAttribute('width', BOARD_W);
+    riverBand.setAttribute('height', riverY5 - riverY4);
+    riverBand.setAttribute('fill', 'rgba(180,140,70,0.055)');
+    riverBand.setAttribute('pointer-events', 'none');
+    svg.appendChild(riverBand);
+
+    // River Text — subtle, noble, brushed calligraphy
     var riverY = (iy(4) + iy(5)) / 2;
 
     var textLeft = document.createElementNS(SVG_NS, 'text');
     textLeft.setAttribute('x', ix(1.8));
-    textLeft.setAttribute('y', riverY + 12);
+    textLeft.setAttribute('y', riverY + 11);
     textLeft.setAttribute('font-family', "'Ma Shan Zheng', 'KaiTi', cursive");
-    textLeft.setAttribute('font-size', '36');
-    textLeft.setAttribute('fill', strokeColor);
-    textLeft.setAttribute('opacity', '0.55');
+    textLeft.setAttribute('font-size', '28');
+    textLeft.setAttribute('fill', '#8a6e48');
+    textLeft.setAttribute('opacity', '0.40');
     textLeft.setAttribute('text-anchor', 'middle');
-    textLeft.setAttribute('letter-spacing', '8');
-    textLeft.textContent = '\u695A\u6CB3';
+    textLeft.setAttribute('letter-spacing', '7');
+    textLeft.textContent = '\u695A\u6CB3'; /* 楚河 */
     svg.appendChild(textLeft);
 
     var textRight = document.createElementNS(SVG_NS, 'text');
     textRight.setAttribute('x', ix(6.2));
-    textRight.setAttribute('y', riverY + 12);
+    textRight.setAttribute('y', riverY + 11);
     textRight.setAttribute('font-family', "'Ma Shan Zheng', 'KaiTi', cursive");
-    textRight.setAttribute('font-size', '36');
-    textRight.setAttribute('fill', strokeColor);
-    textRight.setAttribute('opacity', '0.55');
+    textRight.setAttribute('font-size', '28');
+    textRight.setAttribute('fill', '#8a6e48');
+    textRight.setAttribute('opacity', '0.40');
     textRight.setAttribute('text-anchor', 'middle');
-    textRight.setAttribute('letter-spacing', '8');
-    textRight.textContent = '\u6F22\u754C';
+    textRight.setAttribute('letter-spacing', '7');
+    textRight.textContent = '\u6F22\u754C'; /* 漢界 */
     svg.appendChild(textRight);
 
     // Coordinates (1-9)
+    const coordColor = '#8a6e48';
+    const coordOpacity = '0.55';
     // Top (Black side): 1 to 9 (Left to Right)
     for (var i = 0; i < 9; i++) {
         var txt = document.createElementNS(SVG_NS, 'text');
         txt.setAttribute('x', ix(i));
         txt.setAttribute('y', BOARD_PAD - 12);
-        txt.setAttribute('font-family', 'sans-serif');
-        txt.setAttribute('font-size', '14');
-        txt.setAttribute('fill', strokeColor);
-        txt.setAttribute('opacity', '0.8');
+        txt.setAttribute('font-family', "'Noto Serif', 'Georgia', serif");
+        txt.setAttribute('font-size', '13');
+        txt.setAttribute('fill', coordColor);
+        txt.setAttribute('opacity', coordOpacity);
         txt.setAttribute('text-anchor', 'middle');
         txt.textContent = (i + 1).toString();
         svg.appendChild(txt);
@@ -313,10 +327,10 @@ function createBoardSVG() {
         var txt = document.createElementNS(SVG_NS, 'text');
         txt.setAttribute('x', ix(i));
         txt.setAttribute('y', iy(ROWS - 1) + 24);
-        txt.setAttribute('font-family', 'sans-serif');
-        txt.setAttribute('font-size', '14');
-        txt.setAttribute('fill', strokeColor);
-        txt.setAttribute('opacity', '0.8');
+        txt.setAttribute('font-family', "'Noto Serif', 'Georgia', serif");
+        txt.setAttribute('font-size', '13');
+        txt.setAttribute('fill', coordColor);
+        txt.setAttribute('opacity', coordOpacity);
         txt.setAttribute('text-anchor', 'middle');
         txt.textContent = (9 - i).toString();
         svg.appendChild(txt);

@@ -19,12 +19,12 @@
     --bg-color: #2a120b;
     --text-color: #f0f0f0;
 
-    /* Board */
-    --board-bg: #e8c88a;
-    --board-bg-light: #f0dca8;
-    --board-frame: #c4a060;
-    --board-frame-dark: #8b6530;
-    --grid-stroke: #8b6c42;
+    /* Board – Imperial Parchment */
+    --board-bg: #f0e6d0;          /* warm ivory surface */
+    --board-bg-light: #f7f1e4;    /* lighter ivory for gradient */
+    --board-frame: #c4a060;       /* muted gold accent (piece rim ref) */
+    --board-frame-dark: #8b6530;  /* lacquer-brown (piece rim ref) */
+    --grid-stroke: #7a6042;       /* refined ink-brown for SVG grid */
 
     /* Pieces */
     --piece-red-outer: #b5372a;
@@ -109,66 +109,151 @@ body::after {
     align-items: center;
 }
 
-/* ─────────────── Board Wrapper (Wood Frame) ─────────────── */
+/* ─────────────── Board Wrapper (Imperial Parchment Frame) ─────────────── */
 .board-wrapper {
-    padding: 28px;
-    background:
-        /* subtle wood grain */
-        repeating-linear-gradient(92deg,
-            rgba(0, 0, 0, 0.04) 0px,
-            rgba(0, 0, 0, 0.04) 1px,
-            transparent 1px,
-            transparent 7px),
-        repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.02) 0px,
-            rgba(0, 0, 0, 0.02) 1px,
-            transparent 1px,
-            transparent 14px),
-        linear-gradient(160deg, #d4b896 0%, #c4a87a 40%, #b8985a 100%);
-    border-radius: 16px;
-    box-shadow:
-        /* outer drop shadow */
-        0 12px 40px rgba(0, 0, 0, 0.55),
-        0 4px 12px rgba(0, 0, 0, 0.3),
-        /* top highlight rim */
-        inset 0 2px 0 rgba(255, 255, 255, 0.25),
-        /* inner shadow for depth */
-        inset 0 -2px 6px rgba(0, 0, 0, 0.15);
+    padding: 18px 18px 20px; /* slightly more bottom for coord labels */
     position: relative;
+    border-radius: 6px;
+
+    /* Aged parchment frame surface — ivory with faint warmth at edges */
+    background-color: #ede0c4;
+    background-image:
+        /* Very faint linen noise — same as start-screen .plaque-content */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+        /* Warm radial vignette toward edges */
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(150, 110, 55, 0.18) 100%),
+        /* Base warm ivory */
+        linear-gradient(165deg, #ede0c4 0%, #e4d0ae 60%, #d8c49a 100%);
+
+    /* Outer border: thin lacquer-brown line */
+    border: 1px solid rgba(136, 90, 42, 0.5);
+
+    /* Refined shadow — restrained, not bevel-heavy */
+    box-shadow:
+        0 16px 48px rgba(10, 5, 2, 0.52),
+        0 4px 14px rgba(10, 5, 2, 0.3),
+        inset 0 1px 0 rgba(255, 240, 200, 0.35),
+        inset 0 -1px 3px rgba(0, 0, 0, 0.12);
 }
 
-/* Inner reddish-brown border line */
+/* Thin muted-gold inner rule — replaces the chunky reddish border */
 .board-wrapper::before {
     content: "";
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    border: 2.5px solid var(--board-frame-dark);
-    border-radius: 10px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 1px solid rgba(180, 140, 70, 0.28);
+    border-radius: 4px;
     pointer-events: none;
     z-index: 0;
 }
 
-/* ─────────────── Board Inner (Grid Area) ─────────────── */
+/* ── Scroll rod bars — top and bottom (mirrors start-screen scroll rods) ── */
+.board-wrapper::after {
+    content: "";
+    position: absolute;
+    /* spans both top and bottom via box-shadow trick */
+    top: 0;
+    left: -10px;
+    right: -10px;
+    height: 9px;
+    border-radius: 5px 5px 0 0;
+    background: linear-gradient(180deg,
+        #c8a058 0%, #8c5e26 35%, #6b4418 65%, #b08040 100%);
+    box-shadow:
+        /* top rod shadow */
+        0 3px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 220, 140, 0.38),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.28),
+        /* bottom rod replicated via drop shadow */
+        0 calc(100% + var(--board-h, 500px) + 9px) 0 0 #b08040;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ── Scroll-rod knobs on left/right ends of THE WRAPPER top rod ── */
+.board-rod-top,
+.board-rod-bottom {
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    height: 9px;
+    border-radius: 5px;
+    background: linear-gradient(180deg,
+        #c8a058 0%, #8c5e26 35%, #6b4418 65%, #b08040 100%);
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 220, 140, 0.38),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.board-rod-top {
+    top: 0;
+    border-radius: 5px 5px 0 0;
+}
+
+.board-rod-bottom {
+    bottom: 0;
+    border-radius: 0 0 5px 5px;
+}
+
+/* Knob circles on rod ends */
+.board-rod-top::before,
+.board-rod-top::after,
+.board-rod-bottom::before,
+.board-rod-bottom::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #d4a94a 0%, #7e4e1a 60%, #c09040 100%);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.board-rod-top::before,
+.board-rod-bottom::before { left: -4px; }
+.board-rod-top::after,
+.board-rod-bottom::after  { right: -4px; }
+
+/* Corner ornament marks on the inner parchment area */
+.board-corner-ornament {
+    position: absolute;
+    font-size: 0.55rem;
+    color: #a07838;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 2;
+    line-height: 1;
+}
+
+.board-corner-ornament.tl { top: 11px;  left: 11px; }
+.board-corner-ornament.tr { top: 11px;  right: 11px; }
+.board-corner-ornament.bl { bottom: 11px; left: 11px; }
+.board-corner-ornament.br { bottom: 11px; right: 11px; }
+
+/* ─────────────── Board Inner (Parchment Grid Surface) ─────────────── */
 .board-inner {
     position: relative;
-    background:
-        /* subtle wood texture */
-        repeating-linear-gradient(90deg,
-            rgba(0, 0, 0, 0.02) 0px,
-            rgba(0, 0, 0, 0.02) 1px,
-            transparent 1px,
-            transparent 5px),
-        repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.012) 0px,
-            rgba(0, 0, 0, 0.012) 1px,
-            transparent 1px,
-            transparent 9px),
+
+    /* Imperial parchment surface — aged ivory with very subtle texture */
+    background-color: var(--board-bg);
+    background-image:
+        /* Very faint linen noise (matching start-screen) */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
+        /* Very soft warm vignette at parchment edges */
+        radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(160, 120, 60, 0.09) 100%),
+        /* Subtle horizontal sheen at top */
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 12%),
+        /* Base ivory gradient */
         linear-gradient(180deg, var(--board-bg-light) 0%, var(--board-bg) 50%, var(--board-bg-light) 100%);
 
-    /* Dimensions set by JS via CSS custom properties */
+    /* Dimensions set by JS */
     overflow: visible;
     user-select: none;
     -webkit-user-select: none;
