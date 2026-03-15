@@ -100,16 +100,53 @@
                 <!-- Inner content area -->
                 <div class="plaque-content">
                     <!-- Corner decorations -->
-                    <div class="corner-decoration tl"></div>
-                    <div class="corner-decoration tr"></div>
-                    <div class="corner-decoration bl"></div>
-                    <div class="corner-decoration br"></div>
+                    <div class="corner-decoration tl">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 4 L20 4 L4 20 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="4" y1="4" x2="28" y2="4" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="4" y1="4" x2="4" y2="28" stroke="currentColor" stroke-width="1.2"/>
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="corner-decoration tr">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M44 4 L28 4 L44 20 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="44" y1="4" x2="20" y2="4" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="44" y1="4" x2="44" y2="28" stroke="currentColor" stroke-width="1.2"/>
+                            <circle cx="36" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="corner-decoration bl">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 44 L20 44 L4 28 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="4" y1="44" x2="28" y2="44" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="4" y1="44" x2="4" y2="20" stroke="currentColor" stroke-width="1.2"/>
+                            <circle cx="12" cy="36" r="3" fill="none" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="corner-decoration br">
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M44 44 L28 44 L44 28 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="44" y1="44" x2="20" y2="44" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="44" y1="44" x2="44" y2="20" stroke="currentColor" stroke-width="1.2"/>
+                            <circle cx="36" cy="36" r="3" fill="none" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+
+                    <!-- Imperial seal crest -->
+                    <div class="title-crest" aria-hidden="true">
+                        <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="26" cy="26" r="23" stroke="#b5862a" stroke-width="1.4" fill="rgba(181,134,42,0.07)"/>
+                            <circle cx="26" cy="26" r="18" stroke="#b5862a" stroke-width="0.7" fill="none" stroke-dasharray="3 4"/>
+                            <text x="26" y="33" font-family="'Ma Shan Zheng', serif" font-size="20" fill="#9a6f22" text-anchor="middle">將</text>
+                        </svg>
+                    </div>
 
                     <!-- Title -->
                     <h1 class="game-title">Xiangqi</h1>
                     <p class="subtitle">Prepare for Battle</p>
 
-                    <div class="ornamental-divider">──── ✦ ────</div>
+                    <div class="ornamental-divider"><span>✦</span></div>
 
                     <!-- Game Setup Form -->
                     <form method="POST">
