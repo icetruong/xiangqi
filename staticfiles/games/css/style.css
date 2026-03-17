@@ -19,12 +19,12 @@
     --bg-color: #2a120b;
     --text-color: #f0f0f0;
 
-    /* Board */
-    --board-bg: #e8c88a;
-    --board-bg-light: #f0dca8;
-    --board-frame: #c4a060;
-    --board-frame-dark: #8b6530;
-    --grid-stroke: #8b6c42;
+    /* Board – Imperial Parchment */
+    --board-bg: #f0e6d0;          /* warm ivory surface */
+    --board-bg-light: #f7f1e4;    /* lighter ivory for gradient */
+    --board-frame: #c4a060;       /* muted gold accent (piece rim ref) */
+    --board-frame-dark: #8b6530;  /* lacquer-brown (piece rim ref) */
+    --grid-stroke: #7a6042;       /* refined ink-brown for SVG grid */
 
     /* Pieces */
     --piece-red-outer: #b5372a;
@@ -47,20 +47,50 @@
 /* ─────────────── Base ─────────────── */
 body {
     font-family: 'Noto Sans SC', sans-serif;
-    background:
-        radial-gradient(ellipse 80% 80% at 50% 50%,
-            transparent 40%,
-            rgba(0, 0, 0, 0.65) 100%),
-        radial-gradient(ellipse at 50% 40%,
-            #4b2416 0%,
-            #2a120b 70%);
-    color: var(--text-color);
+    position: relative;
     margin: 0;
     min-height: 100vh;
+    width: 100vw;
+    color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    /* Warm dark wood base gradient */
+    background:
+        radial-gradient(ellipse 80% 80% at 50% 50%,
+            transparent 35%,
+            rgba(0, 0, 0, 0.7) 100%),
+        radial-gradient(ellipse at 50% 40%,
+            #4b2416 0%,
+            #2a120b 70%);
+}
+
+/* Background image + vignette, giống start screen */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("../img/wuxia-battle-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    filter: blur(1.5px);
+    transform: scale(1.02);
+    pointer-events: none;
+    z-index: -2;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    box-shadow:
+        inset 0 0 120px 60px rgba(0, 0, 0, 0.7),
+        inset 0 0 260px 120px rgba(0, 0, 0, 0.65);
+    z-index: -1;
 }
 
 /* ─────────────── Layout ─────────────── */
@@ -79,66 +109,151 @@ body {
     align-items: center;
 }
 
-/* ─────────────── Board Wrapper (Wood Frame) ─────────────── */
+/* ─────────────── Board Wrapper (Imperial Parchment Frame) ─────────────── */
 .board-wrapper {
-    padding: 28px;
-    background:
-        /* subtle wood grain */
-        repeating-linear-gradient(92deg,
-            rgba(0, 0, 0, 0.04) 0px,
-            rgba(0, 0, 0, 0.04) 1px,
-            transparent 1px,
-            transparent 7px),
-        repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.02) 0px,
-            rgba(0, 0, 0, 0.02) 1px,
-            transparent 1px,
-            transparent 14px),
-        linear-gradient(160deg, #d4b896 0%, #c4a87a 40%, #b8985a 100%);
-    border-radius: 16px;
-    box-shadow:
-        /* outer drop shadow */
-        0 12px 40px rgba(0, 0, 0, 0.55),
-        0 4px 12px rgba(0, 0, 0, 0.3),
-        /* top highlight rim */
-        inset 0 2px 0 rgba(255, 255, 255, 0.25),
-        /* inner shadow for depth */
-        inset 0 -2px 6px rgba(0, 0, 0, 0.15);
+    padding: 18px 18px 20px; /* slightly more bottom for coord labels */
     position: relative;
+    border-radius: 6px;
+
+    /* Aged parchment frame surface — ivory with faint warmth at edges */
+    background-color: #ede0c4;
+    background-image:
+        /* Very faint linen noise — same as start-screen .plaque-content */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+        /* Warm radial vignette toward edges */
+        radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(150, 110, 55, 0.18) 100%),
+        /* Base warm ivory */
+        linear-gradient(165deg, #ede0c4 0%, #e4d0ae 60%, #d8c49a 100%);
+
+    /* Outer border: thin lacquer-brown line */
+    border: 1px solid rgba(136, 90, 42, 0.5);
+
+    /* Refined shadow — restrained, not bevel-heavy */
+    box-shadow:
+        0 16px 48px rgba(10, 5, 2, 0.52),
+        0 4px 14px rgba(10, 5, 2, 0.3),
+        inset 0 1px 0 rgba(255, 240, 200, 0.35),
+        inset 0 -1px 3px rgba(0, 0, 0, 0.12);
 }
 
-/* Inner reddish-brown border line */
+/* Thin muted-gold inner rule — replaces the chunky reddish border */
 .board-wrapper::before {
     content: "";
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    border: 2.5px solid var(--board-frame-dark);
-    border-radius: 10px;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: 1px solid rgba(180, 140, 70, 0.28);
+    border-radius: 4px;
     pointer-events: none;
     z-index: 0;
 }
 
-/* ─────────────── Board Inner (Grid Area) ─────────────── */
+/* ── Scroll rod bars — top and bottom (mirrors start-screen scroll rods) ── */
+.board-wrapper::after {
+    content: "";
+    position: absolute;
+    /* spans both top and bottom via box-shadow trick */
+    top: 0;
+    left: -10px;
+    right: -10px;
+    height: 9px;
+    border-radius: 5px 5px 0 0;
+    background: linear-gradient(180deg,
+        #c8a058 0%, #8c5e26 35%, #6b4418 65%, #b08040 100%);
+    box-shadow:
+        /* top rod shadow */
+        0 3px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 220, 140, 0.38),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.28),
+        /* bottom rod replicated via drop shadow */
+        0 calc(100% + var(--board-h, 500px) + 9px) 0 0 #b08040;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ── Scroll-rod knobs on left/right ends of THE WRAPPER top rod ── */
+.board-rod-top,
+.board-rod-bottom {
+    position: absolute;
+    left: -10px;
+    right: -10px;
+    height: 9px;
+    border-radius: 5px;
+    background: linear-gradient(180deg,
+        #c8a058 0%, #8c5e26 35%, #6b4418 65%, #b08040 100%);
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 220, 140, 0.38),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.board-rod-top {
+    top: 0;
+    border-radius: 5px 5px 0 0;
+}
+
+.board-rod-bottom {
+    bottom: 0;
+    border-radius: 0 0 5px 5px;
+}
+
+/* Knob circles on rod ends */
+.board-rod-top::before,
+.board-rod-top::after,
+.board-rod-bottom::before,
+.board-rod-bottom::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #d4a94a 0%, #7e4e1a 60%, #c09040 100%);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.board-rod-top::before,
+.board-rod-bottom::before { left: -4px; }
+.board-rod-top::after,
+.board-rod-bottom::after  { right: -4px; }
+
+/* Corner ornament marks on the inner parchment area */
+.board-corner-ornament {
+    position: absolute;
+    font-size: 0.55rem;
+    color: #a07838;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 2;
+    line-height: 1;
+}
+
+.board-corner-ornament.tl { top: 11px;  left: 11px; }
+.board-corner-ornament.tr { top: 11px;  right: 11px; }
+.board-corner-ornament.bl { bottom: 11px; left: 11px; }
+.board-corner-ornament.br { bottom: 11px; right: 11px; }
+
+/* ─────────────── Board Inner (Parchment Grid Surface) ─────────────── */
 .board-inner {
     position: relative;
-    background:
-        /* subtle wood texture */
-        repeating-linear-gradient(90deg,
-            rgba(0, 0, 0, 0.02) 0px,
-            rgba(0, 0, 0, 0.02) 1px,
-            transparent 1px,
-            transparent 5px),
-        repeating-linear-gradient(0deg,
-            rgba(0, 0, 0, 0.012) 0px,
-            rgba(0, 0, 0, 0.012) 1px,
-            transparent 1px,
-            transparent 9px),
+
+    /* Imperial parchment surface — aged ivory with very subtle texture */
+    background-color: var(--board-bg);
+    background-image:
+        /* Very faint linen noise (matching start-screen) */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"),
+        /* Very soft warm vignette at parchment edges */
+        radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(160, 120, 60, 0.09) 100%),
+        /* Subtle horizontal sheen at top */
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 12%),
+        /* Base ivory gradient */
         linear-gradient(180deg, var(--board-bg-light) 0%, var(--board-bg) 50%, var(--board-bg-light) 100%);
 
-    /* Dimensions set by JS via CSS custom properties */
+    /* Dimensions set by JS */
     overflow: visible;
     user-select: none;
     -webkit-user-select: none;
@@ -1766,15 +1881,15 @@ body {
 
 /* ── Panel base ── */
 .player-panel {
-    position: fixed;
-    bottom: calc(28px + env(safe-area-inset-bottom));
-    z-index: 9998;
+    position: relative;
+    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     padding: 16px 14px 14px;
-    width: clamp(100px, 10vw, 140px);
+    width: 100%;
+    box-sizing: border-box;
 
     /* Dark wood panel — matches .game-actions */
     background: repeating-linear-gradient(178deg,
@@ -1828,15 +1943,7 @@ body {
     right: 6px;
 }
 
-/* Left panel position */
-.player-panel--left {
-    left: calc(18px + env(safe-area-inset-left));
-}
-
-/* Right panel position */
-.player-panel--right {
-    right: calc(18px + env(safe-area-inset-right));
-}
+/* Left and Right panel positions are handled by parent flex column */
 
 /* ── Avatar circle ── */
 .pp-avatar {
@@ -1928,8 +2035,6 @@ body {
    ══════════════════════════════ */
 @media (max-width: 700px) {
     .player-panel {
-        bottom: calc(80px + env(safe-area-inset-bottom));
-        width: clamp(76px, 15vw, 100px);
         padding: 10px 8px 10px;
         gap: 5px;
     }
@@ -2311,5 +2416,255 @@ body {
         width: 100%;
         max-width: 100%;
         text-align: center;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Game Board Layout (3 columns)
+   ═══════════════════════════════════════════════════════════ */
+.game-layout {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 24px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.layout-side {
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.layout-center {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* ── Common UI Panel Style ── */
+.ui-panel {
+    position: relative;
+    background: repeating-linear-gradient(178deg,
+            rgba(255, 220, 160, .025) 0px,
+            rgba(255, 220, 160, .025) 1px,
+            transparent 1px,
+            transparent 6px),
+        linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+    border: 2px solid #7a5a28;
+    outline: 1px solid #c9944a;
+    outline-offset: -5px;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px #3a1c0e,
+        0 8px 32px rgba(0, 0, 0, .7),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
+    padding: 16px;
+    user-select: none;
+}
+
+/* Ornaments for panels */
+.ui-panel::before,
+.ui-panel::after {
+    content: '◈';
+    position: absolute;
+    font-size: 0.65rem;
+    color: #c9944a;
+    opacity: 0.75;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.ui-panel::before {
+    top: 5px;
+    left: 6px;
+}
+
+.ui-panel::after {
+    bottom: 5px;
+    right: 6px;
+}
+
+.panel-header {
+    font-family: 'Noto Serif', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f5e6c8;
+    text-align: center;
+    margin-bottom: 12px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #7a5a28;
+    padding-bottom: 8px;
+    text-transform: uppercase;
+}
+
+/* ── Panel Specific Styles ── */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    color: #f5e6c8;
+    font-family: 'Noto Serif', serif;
+    font-size: 0.9rem;
+    border-bottom: 1px dashed #7a5a28;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #d4b87a;
+}
+
+.info-val {
+    font-weight: bold;
+}
+
+.history-list {
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    color: #f5e6c8;
+    padding-right: 4px;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background: #7a5a28;
+    border-radius: 4px;
+}
+
+.history-item {
+    display: flex;
+    justify-content: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(122, 90, 40, 0.4);
+    font-family: monospace;
+}
+
+.history-number {
+    color: #d4b87a;
+    width: 28px;
+    flex-shrink: 0;
+}
+
+.history-move {
+    flex: 1;
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.captured-pieces {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    justify-items: center;
+    min-height: 48px;
+}
+
+/* ── Empty State ── */
+.captured-empty {
+    grid-column: 1 / -1;
+    width: 100%;
+    color: #d4b87a;
+    font-size: 0.8rem;
+    text-align: center;
+    opacity: 0.6;
+    font-style: italic;
+    padding: 10px 0;
+}
+
+/* ── Captured Piece Mini Icon ── */
+.captured-mini-wrap {
+    position: relative;
+    width: 36px;
+    height: 36px;
+}
+
+.captured-badge {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    background: #c0392b;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 1px 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    border: 1px solid #8b1a1a;
+    font-family: sans-serif;
+    line-height: 1;
+}
+
+/* Base class applied to the piece itself */
+.piece-mini {
+    width: 100% !important;
+    height: 100% !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    cursor: default;
+    border-width: 2px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.piece-mini:hover {
+    transform: none !important;
+    filter: none !important;
+}
+
+.piece-mini .piece-text {
+    font-size: 16px !important;
+}
+
+/* ── Glow Effect for New Capture ── */
+@keyframes captureGlow {
+    0% {
+        box-shadow: 0 0 0 2px var(--highlight-gold), 0 0 16px rgba(240, 180, 41, 0.9) !important;
+        filter: brightness(1.3);
+    }
+
+    100% {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+        filter: brightness(1);
+    }
+}
+
+.glow-new-capture {
+    animation: captureGlow 1.2s ease-out forwards;
+}
+
+/* ── Overriding the old capture fade out for JS transition ── */
+.piece--captured-animating {
+    pointer-events: none !important;
+    z-index: 100 !important;
+}
+
+/* Hide captured areas on small mobile screens */
+@media (max-width: 768px) {
+    .captured-area {
+        display: none;
     }
 }

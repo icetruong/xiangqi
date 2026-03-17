@@ -47,5 +47,5 @@ Thumbs.db
 # Database
 db.sqlite3
 
-# Collected static files
-staticfiles/
+# Collected static files - tracked for Vercel deployment via WhiteNoise
+# staticfiles/ is intentionally NOT gitignored; WhiteNoise serves from this dir
