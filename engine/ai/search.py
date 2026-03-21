@@ -20,8 +20,7 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
 
     # Quiescence Search
     if depth == 0:
-        # return quiescence(board, turn_color, ai_color, alpha, beta, maximizing, deadline)
-        return evaluate_board(board, ai_color)
+        return quiescence(board, turn_color, ai_color, alpha, beta, maximizing, deadline)
     
     moves = generate_legal_moves(board, turn_color)
     if not moves:
