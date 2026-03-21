@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-l&_3j%(j&mz+xfg*r!wagg6ib5$__r448!hz9ipx041*3(^er-'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-l&_3j%(j&mz+xfg*r!wagg6ib5$__r448!hz9ipx041*3(^er-')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -32,7 +32,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.up.railway.app',
     'https://*.railway.app',
 ]
+
+# HTTPS / Proxy settings (Railway dùng HTTPS)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 
 # Application definition
 
