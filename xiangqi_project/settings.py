@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import os
+import urllib.parse
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -85,13 +86,32 @@ WSGI_APPLICATION = 'xiangqi_project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+#
+# On Railway: DATABASE_URL is injected automatically by the PostgreSQL plugin.
+# Locally: falls back to SQLite (no setup needed).
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+_DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if _DATABASE_URL:
+    _db = urllib.parse.urlparse(_DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _db.path.lstrip('/'),
+            'USER': _db.username,
+            'PASSWORD': _db.password,
+            'HOST': _db.hostname,
+            'PORT': _db.port or 5432,
+            'CONN_MAX_AGE': 600,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
