@@ -30,15 +30,36 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-l&_3j%(j&mz+xfg*r!wag
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = [
-    'https://xiangqi-production.up.railway.app',
-    'https://*.up.railway.app',
-    'https://*.railway.app',
-]
+def _split_csv(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+ALLOWED_HOSTS = _split_csv(os.environ.get('ALLOWED_HOSTS'))
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+_railway_public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
+if _railway_public_domain and _railway_public_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_public_domain)
+
+CSRF_TRUSTED_ORIGINS = _split_csv(os.environ.get('CSRF_TRUSTED_ORIGINS'))
+if _railway_public_domain:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_railway_public_domain}')
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend([
+        'http://localhost',
+        'http://127.0.0.1',
+    ])
+
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
 # HTTPS / Proxy settings (Railway dùng HTTPS)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 
@@ -97,6 +118,17 @@ _DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if _DATABASE_URL:
     _db = urllib.parse.urlparse(_DATABASE_URL)
+    _db_query = urllib.parse.parse_qs(_db.query)
+    _db_options = {
+        key: values[-1]
+        for key, values in _db_query.items()
+        if values and key != 'sslmode'
+    }
+
+    ssl_mode = _db_query.get('sslmode', [None])[-1]
+    if ssl_mode:
+        _db_options['sslmode'] = ssl_mode
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -106,6 +138,7 @@ if _DATABASE_URL:
             'HOST': _db.hostname,
             'PORT': _db.port or 5432,
             'CONN_MAX_AGE': 600,
+            'OPTIONS': _db_options,
         }
     }
 else:
@@ -153,7 +186,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'games' / 'static'] if (BASE_DIR / 'games' / 'static').exists() else []
 
 # Whitenoise storage (Django 4.2+ format)
 STORAGES = {
