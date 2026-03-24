@@ -45,6 +45,10 @@ if _railway_public_domain and _railway_public_domain not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_railway_public_domain)
 
 CSRF_TRUSTED_ORIGINS = _split_csv(os.environ.get('CSRF_TRUSTED_ORIGINS'))
+CSRF_TRUSTED_ORIGINS.extend([
+    'https://*.up.railway.app',
+    'https://*.railway.app',
+])
 if _railway_public_domain:
     CSRF_TRUSTED_ORIGINS.append(f'https://{_railway_public_domain}')
 
