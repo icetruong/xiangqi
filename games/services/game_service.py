@@ -78,6 +78,11 @@ def process_ai_move(game_id):
     Calculate and apply AI move.
     Designed to run in a background thread.
     """
+    # Sleep briefly to ensure the player's HTTP response is fully sent 
+    # before the AI thread hogs the Global Interpreter Lock (GIL).
+    import time
+    time.sleep(0.1)
+
     logger.info(f"Starting AI move for game {game_id}")
     try:
         game = Game.objects.get(id=game_id)
