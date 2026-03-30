@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.csrf import ensure_csrf_cookie
 from games.models import Game
 from games.services import game_service
 from games.api_views import _get_in_check
 import json
 
+@ensure_csrf_cookie
 def index(request):
     if request.method == "POST":
         # Create new game logic directly in view for simplicity, or call service
@@ -20,6 +22,7 @@ def index(request):
         
     return render(request, 'games/index.html')
 
+@ensure_csrf_cookie
 def game_board(request, game_id):
     # Verify game exists
     game = get_object_or_404(Game, id=game_id)
