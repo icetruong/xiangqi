@@ -7,6 +7,7 @@ class Game(models.Model):
     board_state = models.JSONField()  # 10x9 array
     current_turn = models.CharField(max_length=1, default='r')  # 'r' or 'b'
     status = models.CharField(max_length=20, default='ongoing')  # 'ongoing' | 'finished'
+    ai_thinking = models.BooleanField(default=False)
     
     # Settings
     player_side = models.CharField(max_length=1, default='r')
