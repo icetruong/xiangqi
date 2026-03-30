@@ -30,7 +30,18 @@ class Board:
         return self.board[row][col]
     
     def set(self, row: int, col: int, value: str) -> None:
+        previous = self.board[row][col]
         self.board[row][col] = value
+
+        if previous == "rK":
+            self.red_king = None
+        elif previous == "bK":
+            self.black_king = None
+
+        if value == "rK":
+            self.red_king = (row, col)
+        elif value == "bK":
+            self.black_king = (row, col)
         
     def in_bounds(self, row: int, col: int) -> bool:
         return in_bounds(row, col)
