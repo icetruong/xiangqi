@@ -66,9 +66,11 @@ Bắt đầu chạy project với lệnh:
 python manage.py runserver
 ```
 
+Mặc định project sẽ chạy ở `127.0.0.1:8001` để tránh xung đột với port `8000`.
+
 Server sẽ khởi chạy tại cổng nội bộ. Lúc này bạn có thể mở Website lên thông qua trình duyệt tại:
-- **Giao diện game (Người dùng)**: `http://127.0.0.1:8000/` (hoặc các đường dẫn views được quy định tuỳ theo config trong thư mục `xiangqi_project/urls.py`).
-- **Giao diện trang Quản trị**: `http://127.0.0.1:8000/admin/`
+- **Giao diện game (Người dùng)**: `http://127.0.0.1:8001/` (hoặc các đường dẫn views được quy định tuỳ theo config trong thư mục `xiangqi_project/urls.py`).
+- **Giao diện trang Quản trị**: `http://127.0.0.1:8001/admin/`
 
 ---
 
