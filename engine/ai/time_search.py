@@ -4,7 +4,7 @@ import time
 
 from engine.ai.search import find_best_move
 from engine.board import Board
-from engine.excaptions import SearchTimeout
+from engine.exceptions import SearchTimeout
 
 
 def best_move_with_time_limit(board: Board, ai_color: str, max_depth: int = 6, time_limit_sec: float = 0.5) -> Optional[Tuple[Tuple[int, int], Tuple[int, int]]]:

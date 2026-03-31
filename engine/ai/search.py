@@ -6,7 +6,7 @@ from engine.rules.check_rules import is_in_check
 from engine.ai.evaluator import evaluate_board
 from engine.ai.move_ordering import order_moves
 from engine.ai.quiescence import quiescence
-from engine.excaptions import SearchTimeout
+from engine.exceptions import SearchTimeout
 
 MATE_SCORE = 10**9
 

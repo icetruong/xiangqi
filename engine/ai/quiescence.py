@@ -4,7 +4,7 @@ from engine.ai.evaluator import evaluate_board
 from engine.rules.game_rules import generate_legal_moves
 from engine.utils.position import is_empty
 from engine.board import Board
-from engine.excaptions import SearchTimeout
+from engine.exceptions import SearchTimeout
 
 def generate_capture_moves(board: Board, color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
     """
