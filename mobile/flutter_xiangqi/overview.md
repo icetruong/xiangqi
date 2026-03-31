@@ -232,24 +232,35 @@ Request ví dụ:
 ```json
 {
   "difficulty": "normal",
-  "player_side": "red"
+  "player_side": "r"
 }
 ```
 
-Response ví dụ:
+Response ví dụ (theo chuẩn `CONTRACT.md`):
 ```json
 {
-  "id": "game_123",
-  "status": "playing",
+  "ok": true,
+  "game_id": "game_123",
+  "board_state": [
+    ["bR", "bH", "bE", "bA", "bK", "bA", "bE", "bH", "bR"],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "bC", "", "", "", "", "", "bC", ""],
+    ["bP", "", "bP", "", "bP", "", "bP", "", "bP"],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["rP", "", "rP", "", "rP", "", "rP", "", "rP"],
+    ["", "rC", "", "", "", "", "", "rC", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["rR", "rH", "rE", "rA", "rK", "rA", "rE", "rH", "rR"]
+  ],
+  "current_turn": "r",
+  "status": "ongoing",
+  "winner": null,
+  "end_reason": null,
+  "last_move": null,
   "difficulty": "normal",
-  "player_side": "red",
-  "side_to_move": "red",
-  "board": [],
-  "move_history": [],
-  "captured_red": [],
-  "captured_black": [],
-  "is_ai_thinking": false,
-  "result": null
+  "player_side": "r",
+  "ai_side": "b"
 }
 ```
 
@@ -260,24 +271,32 @@ Response ví dụ:
 Response ví dụ:
 ```json
 {
-  "id": "game_123",
-  "status": "playing",
-  "difficulty": "normal",
-  "player_side": "red",
-  "side_to_move": "black",
-  "board": [
-    {
-      "piece": "rook",
-      "side": "black",
-      "x": 0,
-      "y": 0
-    }
+  "ok": true,
+  "game_id": "game_123",
+  "board_state": [
+    ["bR", "bH", "bE", "bA", "bK", "bA", "bE", "bH", "bR"],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "bC", "", "", "", "", "", "bC", ""],
+    ["bP", "", "bP", "", "bP", "", "bP", "", "bP"],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["rP", "", "rP", "", "rP", "", "rP", "", "rP"],
+    ["", "rC", "", "", "", "", "", "rC", ""],
+    ["", "", "", "", "", "", "", "", ""],
+    ["rR", "rH", "rE", "rA", "rK", "rA", "rE", "rH", "rR"]
   ],
-  "move_history": [],
-  "captured_red": [],
-  "captured_black": [],
-  "is_ai_thinking": true,
-  "result": null
+  "current_turn": "b",
+  "status": "ongoing",
+  "winner": null,
+  "end_reason": null,
+  "last_move": {
+    "from": [6, 4],
+    "to": [5, 4],
+    "piece": "rP",
+    "captured": null
+  },
+  "legal_moves": [],
+  "in_check": null
 }
 ```
 
@@ -288,10 +307,8 @@ Response ví dụ:
 Request ví dụ:
 ```json
 {
-  "from_x": 0,
-  "from_y": 6,
-  "to_x": 0,
-  "to_y": 5
+  "from": [9, 4],
+  "to": [8, 4]
 }
 ```
 
@@ -299,19 +316,18 @@ Response ví dụ:
 ```json
 {
   "ok": true,
-  "game": {
-    "id": "game_123",
-    "status": "playing",
-    "player_side": "red",
-    "side_to_move": "black",
-    "board": [],
-    "move_history": [],
-    "captured_red": [],
-    "captured_black": [],
-    "is_ai_thinking": true,
-    "result": null
+  "board_state": [[...]],
+  "current_turn": "b",
+  "status": "ongoing",
+  "winner": null,
+  "end_reason": null,
+  "last_move": {
+    "from": [9, 4],
+    "to": [8, 4],
+    "piece": "rP",
+    "captured": null
   },
-  "message": "Move accepted"
+  "in_check": null
 }
 ```
 
@@ -324,7 +340,8 @@ Response ví dụ:
 {
   "ok": true,
   "status": "finished",
-  "result": "loss"
+  "winner": "b",
+  "end_reason": "resign"
 }
 ```
 
@@ -332,35 +349,36 @@ Response ví dụ:
 
 `POST /api/games/{id}/draw/`
 
-*Response tùy contract thật của backend.*
+Response ví dụ:
+```json
+{
+  "ok": true,
+  "status": "finished",
+  "winner": "draw",
+  "end_reason": "draw_agreement"
+}
+```
 
 ---
 
 ## 8. JSON model tối thiểu
 
-### PieceModel
+*Lưu ý: Backend trả về `board_state` là mảng 2D (10 hàng x 9 cột) chứa các chuỗi như "rK", "bR", "". Client (Flutter) cần tự parse mảng 2D này thành các `PieceModel` để dễ render.*
+
+### PieceModel (Dùng cho UI, không hứng trực tiếp từ JSON API)
 ```dart
 class PieceModel {
-  final String piece;
-  final String side;
-  final int x;
-  final int y;
+  final String code; // VD: 'K', 'R', 'P'
+  final String side; // 'r' hoặc 'b'
+  final int row; // 0 đến 9
+  final int col; // 0 đến 8
 
   PieceModel({
-    required this.piece,
+    required this.code,
     required this.side,
-    required this.x,
-    required this.y,
+    required this.row,
+    required this.col,
   });
-
-  factory PieceModel.fromJson(Map<String, dynamic> json) {
-    return PieceModel(
-      piece: json['piece'],
-      side: json['side'],
-      x: json['x'],
-      y: json['y'],
-    );
-  }
 }
 ```
 
@@ -371,43 +389,57 @@ class GameStateModel {
   final String status;
   final String difficulty;
   final String playerSide;
-  final String sideToMove;
-  final bool isAiThinking;
-  final String? result;
-  final List<PieceModel> board;
-  final List<dynamic> moveHistory;
-  final List<dynamic> capturedRed;
-  final List<dynamic> capturedBlack;
+  final String currentTurn;
+  final String? winner;
+  final String? endReason;
+  late final List<PieceModel> pieces; // Suy ra từ board_state của backend
+  final Map<String, dynamic>? lastMove;
 
   GameStateModel({
     required this.id,
     required this.status,
     required this.difficulty,
     required this.playerSide,
-    required this.sideToMove,
-    required this.isAiThinking,
-    required this.result,
-    required this.board,
-    required this.moveHistory,
-    required this.capturedRed,
-    required this.capturedBlack,
+    required this.currentTurn,
+    required this.winner,
+    required this.endReason,
+    required this.pieces,
+    this.lastMove,
   });
 
+  // Getter tự tính trạng thái AI
+  bool get isAiThinking => currentTurn != playerSide && status == 'ongoing';
+
   factory GameStateModel.fromJson(Map<String, dynamic> json) {
+    // Parse mảng 2D board_state thành List<PieceModel>
+    final List<PieceModel> parsedPieces = [];
+    final boardState = json['board_state'] as List<dynamic>? ?? [];
+    
+    for (int r = 0; r < boardState.length; r++) {
+      final rowItems = boardState[r] as List<dynamic>;
+      for (int c = 0; c < rowItems.length; c++) {
+        final cell = rowItems[c] as String;
+        if (cell.isNotEmpty && cell.length >= 2) {
+          parsedPieces.add(PieceModel(
+            side: cell[0], // 'r' hoặc 'b'
+            code: cell.substring(1), // 'K', 'R', 'P', vv
+            row: r,
+            col: c,
+          ));
+        }
+      }
+    }
+
     return GameStateModel(
-      id: json['id'].toString(),
-      status: json['status'],
+      id: json['game_id'].toString(),
+      status: json['status'] ?? 'ongoing',
       difficulty: json['difficulty'] ?? 'normal',
-      playerSide: json['player_side'] ?? 'red',
-      sideToMove: json['side_to_move'],
-      isAiThinking: json['is_ai_thinking'] ?? false,
-      result: json['result'],
-      board: (json['board'] as List? ?? [])
-          .map((e) => PieceModel.fromJson(e))
-          .toList(),
-      moveHistory: (json['move_history'] as List? ?? []),
-      capturedRed: (json['captured_red'] as List? ?? []),
-      capturedBlack: (json['captured_black'] as List? ?? []),
+      playerSide: json['player_side'] ?? 'r',
+      currentTurn: json['current_turn'] ?? 'r',
+      winner: json['winner'],
+      endReason: json['end_reason'],
+      pieces: parsedPieces,
+      lastMove: json['last_move'],
     );
   }
 }
@@ -428,10 +460,10 @@ abstract class GameRepository {
 
   Future<GameStateModel> makeMove({
     required String gameId,
-    required int fromX,
-    required int fromY,
-    required int toX,
-    required int toY,
+    required int fromRow,
+    required int fromCol,
+    required int toRow,
+    required int toCol,
   });
 
   Future<void> resign(String gameId);
@@ -468,13 +500,12 @@ Flow:
 
 Chức năng:
 - render bàn cờ
-- render quân cờ
+- render quân cờ (từ danh sách đã parse từ mảng 2D)
 - chọn quân
-- đi quân
-- hiển thị side to move
-- hiển thị trạng thái AI đang nghĩ
-- hiển thị move history
-- hiển thị quân bị ăn
+- đi quân (mảng index row/col hợp lệ)
+- hiển thị current turn
+- hiển thị trạng thái AI đang nghĩ (khi `currentTurn != playerSide`)
+- *(Ghi chú: Move history và Quân bị ăn backend chưa trực tiếp trả danh sách cồng kềnh, client có thể lưu vết via `last_move` hoặc tự giữ nội bộ)*
 - nút resign / draw / refresh
 
 ### 10.4 Result Dialog
@@ -498,17 +529,18 @@ Dùng:
 ### Tọa độ bàn cờ
 
 Cờ tướng có:
-- 9 cột
-- 10 hàng
-- quân nằm trên giao điểm
+- 9 cột (col 0 -> 8)
+- 10 hàng (row 0 -> 9, row 0 là phe đen trên cùng, row 9 là phe đỏ dưới cùng)
+- quân nằm trên giao điểm mạng lưới
 
 ### Công thức cơ bản
 ```dart
 final cellWidth = boardWidth / 8;
 final cellHeight = boardHeight / 9;
 
-final left = piece.x * cellWidth - pieceSize / 2;
-final top = piece.y * cellHeight - pieceSize / 2;
+// Trục x tương ứng với cột (col), trục y tương ứng với hàng (row)
+final left = piece.col * cellWidth - pieceSize / 2;
+final top = piece.row * cellHeight - pieceSize / 2;
 ```
 
 ### Lưu ý
@@ -553,13 +585,12 @@ AI backend đang chạy bất đồng bộ, nên sau khi player move xong:
 ### Rule polling
 
 Sau khi move thành công:
-- nếu `is_ai_thinking == true`
+- kiểm tra `gameState.isAiThinking == true` (tức là `currentTurn != playerSide` và `status == 'ongoing'`)
   - bắt đầu poll mỗi 800ms–1000ms
   - mỗi lần poll: gọi `GET /api/games/{id}/`, update `gameState`
   - stop polling khi:
-    - `is_ai_thinking == false`
-    - hoặc `side_to_move == player_side`
-    - hoặc `status == finished`
+    - `currentTurn == playerSide`
+    - hoặc `status == 'finished'`
 
 ### Lưu ý
 - stop timer ở `dispose`
@@ -697,15 +728,13 @@ Với mobile app chạy native:
 
 ## 18. Checklist công việc chi tiết
 
-### Backend
+### API / JSON Format
 - [ ] xác nhận endpoint create game
 - [ ] xác nhận endpoint game detail
 - [ ] xác nhận endpoint move
-- [ ] xác nhận JSON response thật
-- [ ] xác nhận field `is_ai_thinking`
-- [ ] xác nhận field `status`
-- [ ] xác nhận field `result`
-- [ ] xác nhận format `board`
+- [ ] hiểu cách map 2D array `board_state` thành object List
+- [ ] hiểu logic tự tính `is_ai_thinking` theo `current_turn`
+- [ ] hiểu cấu trúc `winner` và `end_reason`
 
 ### Flutter foundation
 - [ ] setup packages
@@ -786,5 +815,5 @@ AI IDE phải làm đúng thứ tự sau:
 12. Implement select piece / select destination
 13. Connect move API
 14. Implement AI polling
-15. Add move history / captured pieces / result dialog
+15. Add result dialog / resign / draw
 16. Refactor UI và polish
