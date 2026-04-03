@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../app/theme.dart';
 import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
@@ -45,11 +46,22 @@ class GameScreen extends ConsumerWidget {
     });
 
     return Scaffold(
+      backgroundColor: XiangqiColors.darkBrown,
       appBar: AppBar(
-        title: const Text('Xiangqi'),
+        backgroundColor: XiangqiColors.darkBrown,
+        foregroundColor: XiangqiColors.goldLight,
+        title: const Text(
+          'XIANGQI',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 4,
+            color: XiangqiColors.goldLight,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: XiangqiColors.goldLight),
             tooltip: 'Refresh',
             onPressed: () =>
                 ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
@@ -58,7 +70,11 @@ class GameScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: asyncGame.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(XiangqiColors.goldLight),
+            ),
+          ),
           error: (error, _) => _ErrorBody(
             error: error,
             onRetry: () =>
@@ -88,6 +104,9 @@ class _GameBody extends ConsumerWidget {
 
     return Stack(
       children: [
+        // ── Dark background behind the board area ──────────────────────────
+        Container(color: XiangqiColors.darkBrown),
+
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -97,22 +116,37 @@ class _GameBody extends ConsumerWidget {
             // ── AI thinking slim indicator ───────────────────────────────────
             AiThinkingIndicator(visible: game.isAiThinking),
 
-            // ── Captured pieces — black (taken by red) ───────────────────────
+            // ── Captured pieces ──────────────────────────────────────────────
             CapturedPiecesPanel(captured: captured),
 
-            // ── Board ────────────────────────────────────────────────────────
+            // ── Board ─────────────────────────────────────────────────────────
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Center(
                   child: AspectRatio(
                     aspectRatio: 9 / 10,
-                    child: XiangqiBoard(
-                      game: game,
-                      uiState: uiState,
-                      onIntersectionTap: (row, col) {
-                        uiNotifier.tapIntersection(row, col, game);
-                      },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: XiangqiColors.gold.withAlpha(160),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(120),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: XiangqiBoard(
+                        game: game,
+                        uiState: uiState,
+                        onIntersectionTap: (row, col) {
+                          uiNotifier.tapIntersection(row, col, game);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -125,9 +159,6 @@ class _GameBody extends ConsumerWidget {
         ),
 
         // ── Blocking overlays ────────────────────────────────────────────────
-        //
-        // AbsorbPointer at the Stack level ensures no tap reaches the board
-        // while a network request is in-flight or the AI is thinking.
         if (uiState.isSubmitting)
           const AbsorbPointer(child: _SubmittingOverlay())
         else if (game.isAiThinking)
@@ -146,23 +177,39 @@ class _SubmittingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: ColoredBox(
-        color: Colors.black.withAlpha(60),
-        child: const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
+        color: Colors.black.withAlpha(100),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: XiangqiColors.parchment,
+              border: Border.all(color: XiangqiColors.gold, width: 1.5),
+              boxShadow: const [
+                BoxShadow(color: Color(0x88000000), blurRadius: 20),
+              ],
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      XiangqiColors.crimson,
+                    ),
                   ),
-                  SizedBox(width: 14),
-                  Text('Sending move…'),
-                ],
-              ),
+                ),
+                SizedBox(width: 14),
+                Text(
+                  'Sending move…',
+                  style: TextStyle(
+                    color: XiangqiColors.darkBrown,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
