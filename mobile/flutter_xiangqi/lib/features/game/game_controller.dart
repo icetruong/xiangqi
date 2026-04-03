@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/game_state_model.dart';
 import '../../data/models/move_request_model.dart';
@@ -15,9 +18,13 @@ class GameController extends AsyncNotifier<GameStateModel> {
   GameController(this.gameId);
 
   final String gameId;
+  Timer? _pollTimer;
 
   @override
   Future<GameStateModel> build() async {
+    ref.onDispose(() {
+      _stopPolling();
+    });
     return ref.read(gameRepositoryProvider).getGame(gameId);
   }
 
@@ -29,8 +36,67 @@ class GameController extends AsyncNotifier<GameStateModel> {
   }
 
   /// Applies the updated game state returned by the move endpoint.
+  ///
+  /// Starts polling when it is now the AI's turn (status ongoing and
+  /// currentTurn != playerSide).  This works even if [isAiThinking] is
+  /// momentarily false because the backend hasn't flipped the flag yet.
   void applyMoveResponse(GameStateModel updated) {
     state = AsyncValue.data(updated);
+
+    final aiTurn = updated.status == 'ongoing' &&
+        updated.playerSide != null &&
+        updated.currentTurn != updated.playerSide;
+
+    debugPrint('[Poll] applyMoveResponse — '
+        'currentTurn=${updated.currentTurn} '
+        'playerSide=${updated.playerSide} '
+        'status=${updated.status} '
+        'isAiThinking=${updated.isAiThinking} '
+        'willPoll=$aiTurn');
+
+    if (aiTurn) {
+      _startPolling();
+    }
+  }
+
+  void _startPolling() {
+    if (_pollTimer != null && _pollTimer!.isActive) {
+      debugPrint('[Poll] Already polling — skipped duplicate start');
+      return;
+    }
+
+    debugPrint('[Poll] ▶ START polling game $gameId every 1 s');
+
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      debugPrint('[Poll] ↻ Tick #${timer.tick} — calling getGame($gameId)');
+      try {
+        final newState = await ref.read(gameRepositoryProvider).getGame(gameId);
+        state = AsyncValue.data(newState);
+
+        debugPrint('[Poll] ↳ currentTurn=${newState.currentTurn} '
+            'playerSide=${newState.playerSide} '
+            'status=${newState.status} '
+            'isAiThinking=${newState.isAiThinking}');
+
+        // Stop when the game is over OR it is the player's turn again.
+        final shouldStop = newState.status != 'ongoing' ||
+            (newState.playerSide != null &&
+                newState.currentTurn == newState.playerSide);
+
+        if (shouldStop) {
+          _stopPolling();
+        }
+      } catch (e) {
+        debugPrint('[Poll] ⚠ Error during poll: $e');
+        // Keep polling — transient network errors should not abort the loop.
+      }
+    });
+  }
+
+  void _stopPolling() {
+    debugPrint('[Poll] ■ STOP polling game $gameId');
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 }
 
@@ -80,6 +146,9 @@ class GameUiNotifier extends Notifier<GameUiState> {
   Future<void> tapIntersection(int row, int col, GameStateModel game) async {
     // 1. Ignore during in-flight request.
     if (state.isSubmitting) return;
+
+    // 2. Ignore while AI is computing its reply.
+    if (game.isAiThinking) return;
 
     final piece = game.boardState[row][col];
     final isOwnPiece = !piece.isEmpty && piece.color == game.currentTurn;

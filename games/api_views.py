@@ -37,6 +37,11 @@ def create_game(request):
             "current_turn": game.current_turn,
             "status": game.status,
             "difficulty": game.difficulty,
+            "player_side": game.player_side,
+            "ai_side": game.ai_side,
+            "ai_thinking": (
+                game.status == "ongoing" and game.current_turn == game.ai_side
+            ),
         }, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({
@@ -82,6 +87,11 @@ def game_detail(request, game_id):
         "last_move": last_move_data,
         "legal_moves": legal_moves,
         "in_check": _get_in_check(game.board_state),
+        "player_side": game.player_side,
+        "ai_side": game.ai_side,
+        "ai_thinking": (
+            game.status == "ongoing" and game.current_turn == game.ai_side
+        ),
     })
 
 
@@ -117,6 +127,11 @@ def make_move(request, game_id):
             "end_reason": game.end_reason,
             "last_move": last_move_data,
             "in_check": _get_in_check(game.board_state),
+            "player_side": game.player_side,
+            "ai_side": game.ai_side,
+            "ai_thinking": (
+                game.status == "ongoing" and game.current_turn == game.ai_side
+            ),
         })
 
     except ValueError as e:

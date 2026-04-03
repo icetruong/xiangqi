@@ -118,9 +118,14 @@ class _GameBody extends ConsumerWidget {
           ],
         ),
 
-        // ── Move-submission loading overlay ────────────────────────────────
+        // ── Overlays ────────────────────────────────────────────────────────
+        //
+        // AbsorbPointer ensures no tap event reaches the board while an
+        // overlay is active, providing both visual and input-level blocking.
         if (uiState.isSubmitting)
-          const _SubmittingOverlay(),
+          const AbsorbPointer(child: _SubmittingOverlay())
+        else if (game.isAiThinking)
+          const AbsorbPointer(child: _AiThinkingOverlay()),
       ],
     );
   }
@@ -150,6 +155,40 @@ class _SubmittingOverlay extends StatelessWidget {
                   ),
                   SizedBox(width: 14),
                   Text('Sending move…'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── AI Thinking overlay ───────────────────────────────────────────────────────
+
+class _AiThinkingOverlay extends StatelessWidget {
+  const _AiThinkingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withAlpha(60),
+        child: const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                  SizedBox(width: 14),
+                  Text('AI is thinking...'),
                 ],
               ),
             ),
