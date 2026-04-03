@@ -1,0 +1,3 @@
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\entrypoint\build.dart
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\dartpad\web_plugin_registrant.dart
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\test\widget_test.dart

@@ -1,0 +1,14 @@
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\dartpad
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\package_config.json
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\package_graph.json
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\version
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\asset_graph.json
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\entrypoint
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\entrypoint\build.dart
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\entrypoint\build.dart.dill
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\entrypoint\build.dart.dill.deps
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\build\entrypoint\build.dart.dill.digest
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\.dart_tool\dartpad\web_plugin_registrant.dart
+d:\TaiLieuNam3_DUT\HKII\Python\xiangqi\mobile\flutter_xiangqi\test\widget_test.dart
