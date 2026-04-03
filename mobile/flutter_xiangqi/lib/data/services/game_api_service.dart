@@ -10,14 +10,24 @@ class GameApiService {
   GameApiService(this._dio);
 
   Future<GameStateModel> createGame(String difficulty, String playerSide) async {
-    final response = await _dio.post(
-      ApiConstants.games,
-      data: {
-        'difficulty': difficulty,
-        'player_side': playerSide,
-      },
-    );
-    return GameStateModel.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final requestUrl = '${_dio.options.baseUrl}${ApiConstants.games}';
+      print('DEBUG [GameApiService]: POST createGame at $requestUrl');
+      final response = await _dio.post(
+        ApiConstants.games,
+        data: {
+          'difficulty': difficulty,
+          'player_side': playerSide,
+        },
+      );
+      return GameStateModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('DEBUG [GameApiService]: DioException in createGame! Type: ${e.type}, Message: ${e.message}');
+      if (e.response != null) {
+        print('DEBUG [GameApiService]: Error Response Data: ${e.response?.data}');
+      }
+      rethrow;
+    }
   }
 
   Future<GameStateModel> getGame(String gameId) async {

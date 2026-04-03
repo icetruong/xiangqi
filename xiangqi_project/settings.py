@@ -69,6 +69,8 @@ SESSION_COOKIE_SECURE = not DEBUG
 
 # Application definition
 
+# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -76,6 +78,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders', # Add corsheaders
     # Local
     'games',
 ]
@@ -83,6 +86,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # Add CorsMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -205,3 +209,16 @@ STORAGES = {
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:8001",
+    "http://127.0.0.1:8001",
+    # Flutter Web usually binds to random localhost ports during dev.
+    # If the exact port is variable, uncomment the line below:
+    # CORS_ALLOW_ALL_ORIGINS = True
+]
+
+# For local development with Flutter Web, we allow all ports on localhost
+CORS_ALLOW_ALL_ORIGINS = True # Falling back to this since Flutter web uses random ports, but leaving the list above for reference.

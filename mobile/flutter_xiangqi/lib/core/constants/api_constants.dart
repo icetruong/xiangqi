@@ -1,5 +1,6 @@
 class ApiConstants {
-  static const String baseUrl = 'https://YOUR-RAILWAY-DOMAIN';
+  static const String baseUrl =
+      'http://127.0.0.1:8001'; // Dùng 10.0.2.2 nếu chạy trên Android Emulator
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);
 
@@ -9,5 +10,6 @@ class ApiConstants {
   static String gameMove(String gameId) => '/api/games/$gameId/move/';
   static String gameResign(String gameId) => '/api/games/$gameId/resign/';
   static String gameDraw(String gameId) => '/api/games/$gameId/draw/';
-  static String gameLegalMoves(String gameId, int row, int col) => '/api/games/$gameId/legal-moves?from=$row,$col';
+  static String gameLegalMoves(String gameId, int row, int col) =>
+      '/api/games/$gameId/legal-moves?from=$row,$col';
 }
