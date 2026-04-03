@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
 import 'widgets/side_to_move_banner.dart';
 import 'widgets/xiangqi_board.dart';
@@ -122,14 +123,14 @@ class _ErrorBody extends StatelessWidget {
 /// One-line debug footer — key facts visible at a glance.
 /// Remove after Phase 5 (move submission) is validated.
 class _DebugFooter extends StatelessWidget {
-  final dynamic game;
+  final GameStateModel game;
 
   const _DebugFooter({required this.game});
 
   @override
   Widget build(BuildContext context) {
     final pieceCount = game.boardState
-        .expand((row) => row)
+        .expand<dynamic>((row) => row)
         .where((p) => !p.isEmpty)
         .length;
 
