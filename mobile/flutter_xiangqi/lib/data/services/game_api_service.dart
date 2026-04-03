@@ -36,11 +36,23 @@ class GameApiService {
   }
 
   Future<MoveResponseModel> makeMove(String gameId, MoveRequestModel request) async {
-    final response = await _dio.post(
-      ApiConstants.gameMove(gameId),
-      data: request.toJson(),
-    );
-    return MoveResponseModel.fromJson(response.data as Map<String, dynamic>);
+    final requestUrl = '${_dio.options.baseUrl}${ApiConstants.gameMove(gameId)}';
+    print('DEBUG [GameApiService]: POST makeMove for gameId $gameId at $requestUrl');
+    print('DEBUG [GameApiService]: Request payload: ${request.toJson()}');
+    
+    try {
+      final response = await _dio.post(
+        ApiConstants.gameMove(gameId),
+        data: request.toJson(),
+      );
+      return MoveResponseModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('DEBUG [GameApiService]: DioException in makeMove! StatusCode: ${e.response?.statusCode}');
+      if (e.response != null) {
+        print('DEBUG [GameApiService]: Error Response Data: ${e.response?.data}');
+      }
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> resignGame(String gameId) async {

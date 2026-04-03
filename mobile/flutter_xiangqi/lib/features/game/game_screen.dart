@@ -8,9 +8,11 @@ import 'widgets/xiangqi_board.dart';
 /// Game screen: composes [SideToMoveBanner] + [XiangqiBoard].
 ///
 /// Responsibilities:
-///   • Watch the game state provider.
-///   • Hand the data down to child widgets.
-///   • Show loading / error states.
+///   • Watch the game state provider and the UI state provider.
+///   • Forward board taps to [GameUiNotifier.tapIntersection].
+///   • Show a loading overlay during move submission.
+///   • Show a SnackBar when a move is rejected or a network error occurs.
+///   • Hand display data down to child widgets.
 ///
 /// Does NOT contain board rendering or game-rule logic.
 class GameScreen extends ConsumerWidget {
@@ -21,7 +23,22 @@ class GameScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncGame = ref.watch(gameControllerProvider(gameId));
-    final controller = ref.read(gameControllerProvider(gameId).notifier);
+
+    // Show SnackBar whenever a move error appears.
+    ref.listen(gameUiProvider(gameId), (prev, next) {
+      if (next.moveError != null && next.moveError != prev?.moveError) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(next.moveError!),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +47,7 @@ class GameScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
-            onPressed: controller.refreshGame,
+            onPressed: () => ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
           ),
         ],
       ),
@@ -39,39 +56,12 @@ class GameScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => _ErrorBody(
             error: error,
-            onRetry: controller.refreshGame,
+            onRetry: () =>
+                ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
           ),
-          data: (game) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Status banner ────────────────────────────────────────────────
-              SideToMoveBanner(game: game),
-
-              // ── Board ─────────────────────────────────────────────────────
-              // Expanded fills remaining vertical space; AspectRatio then
-              // scales the board so it is never taller than that space while
-              // keeping the correct Xiangqi proportions.
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  child: Center(
-                    child: AspectRatio(
-                      // Limit the board's own max height to leave room for
-                      // the debug footer without adding a scroll view.
-                      aspectRatio: 9 / 10, // matches BoardLayout.aspectRatio
-                      child: XiangqiBoard(game: game),
-                    ),
-                  ),
-                ),
-              ),
-
-              // ── Debug footer (remove after Phase 5) ────────────────────
-              const Divider(height: 1),
-              _DebugFooter(game: game),
-            ],
+          data: (game) => _GameBody(
+            game: game,
+            gameId: gameId,
           ),
         ),
       ),
@@ -79,7 +69,98 @@ class GameScreen extends ConsumerWidget {
   }
 }
 
-// ── Private sub-widgets ─────────────────────────────────────────────────────
+// ── Game body (when data is loaded) ─────────────────────────────────────────
+
+class _GameBody extends ConsumerWidget {
+  final GameStateModel game;
+  final String gameId;
+
+  const _GameBody({required this.game, required this.gameId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uiState = ref.watch(gameUiProvider(gameId));
+    final uiNotifier = ref.read(gameUiProvider(gameId).notifier);
+
+    return Stack(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Status banner ──────────────────────────────────────────────
+            SideToMoveBanner(game: game),
+
+            // ── Board ─────────────────────────────────────────────────────
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 9 / 10,
+                    child: XiangqiBoard(
+                      game: game,
+                      uiState: uiState,
+                      onIntersectionTap: (row, col) {
+                        uiNotifier.tapIntersection(row, col, game);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Debug footer ───────────────────────────────────────────────
+            const Divider(height: 1),
+            _DebugFooter(game: game, uiState: uiState),
+          ],
+        ),
+
+        // ── Move-submission loading overlay ────────────────────────────────
+        if (uiState.isSubmitting)
+          const _SubmittingOverlay(),
+      ],
+    );
+  }
+}
+
+// ── Submitting overlay ────────────────────────────────────────────────────────
+
+class _SubmittingOverlay extends StatelessWidget {
+  const _SubmittingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black.withAlpha(60),
+        child: const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                  SizedBox(width: 14),
+                  Text('Sending move…'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Private sub-widgets ──────────────────────────────────────────────────────
 
 class _ErrorBody extends StatelessWidget {
   final Object error;
@@ -121,11 +202,11 @@ class _ErrorBody extends StatelessWidget {
 }
 
 /// One-line debug footer — key facts visible at a glance.
-/// Remove after Phase 5 (move submission) is validated.
 class _DebugFooter extends StatelessWidget {
   final GameStateModel game;
+  final dynamic uiState;
 
-  const _DebugFooter({required this.game});
+  const _DebugFooter({required this.game, required this.uiState});
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +214,10 @@ class _DebugFooter extends StatelessWidget {
         .expand<dynamic>((row) => row)
         .where((p) => !p.isEmpty)
         .length;
+
+    final selInfo = (uiState.hasSelection)
+        ? 'Sel: (${uiState.selectedRow},${uiState.selectedCol})'
+        : 'Sel: —';
 
     final style = Theme.of(context)
         .textTheme
@@ -145,6 +230,7 @@ class _DebugFooter extends StatelessWidget {
         'ID: ${game.gameId ?? '—'} · '
         'Turn: ${game.currentTurn} · '
         'Pieces: $pieceCount · '
+        '$selInfo · '
         'Status: ${game.status}',
         style: style,
         maxLines: 2,
