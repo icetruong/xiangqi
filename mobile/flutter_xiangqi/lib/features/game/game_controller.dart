@@ -121,13 +121,47 @@ class GameUiNotifier extends Notifier<GameUiState> {
 
   // ── Public API used by GameScreen ─────────────────────────────────────────
 
-  /// Selects the piece at [row],[col].
+  /// Selects the piece at [row],[col] and pre-filters its legal destinations.
   ///
   /// Ownership check is done in [tapIntersection]; this method is called
   /// only when the caller has already confirmed the piece belongs to the
   /// current player.
-  void selectPiece(int row, int col) {
-    state = GameUiState(selectedRow: row, selectedCol: col, moveError: null);
+  ///
+  /// [game] is needed to access backend-provided [GameStateModel.legalMoves]
+  /// for the legal-moves overlay.  Gracefully handles null / missing data.
+  void selectPiece(int row, int col, GameStateModel game) {
+    final filtered = _filterLegalMovesFor(row, col, game.legalMoves);
+    state = GameUiState(
+      selectedRow: row,
+      selectedCol: col,
+      moveError: null,
+      legalMovesForSelected: filtered,
+    );
+  }
+
+  /// Extracts the [toRow, toCol] destinations from [legalMoves] that start
+  /// from ([fromRow], [fromCol]).  Returns null when data is unavailable.
+  static List<List<int>>? _filterLegalMovesFor(
+    int fromRow,
+    int fromCol,
+    List<dynamic>? legalMoves,
+  ) {
+    if (legalMoves == null || legalMoves.isEmpty) return null;
+    try {
+      final result = <List<int>>[];
+      for (final m in legalMoves) {
+        final map = m as Map<String, dynamic>;
+        final from = map['from'] as List;
+        if (from[0] as int == fromRow && from[1] as int == fromCol) {
+          final to = map['to'] as List;
+          result.add([to[0] as int, to[1] as int]);
+        }
+      }
+      return result.isEmpty ? null : result;
+    } catch (_) {
+      // Unexpected format — degrade gracefully.
+      return null;
+    }
   }
 
   /// Clears any active selection.
@@ -156,7 +190,7 @@ class GameUiNotifier extends Notifier<GameUiState> {
     if (!state.hasSelection) {
       // No active selection: only selecting own pieces makes sense.
       if (isOwnPiece) {
-        selectPiece(row, col);
+        selectPiece(row, col, game);
       }
       return;
     }
@@ -170,7 +204,7 @@ class GameUiNotifier extends Notifier<GameUiState> {
 
     if (isOwnPiece) {
       // 3. Tap another own piece → reselect.
-      selectPiece(row, col);
+      selectPiece(row, col, game);
       return;
     }
 

@@ -72,6 +72,19 @@ def game_detail(request, game_id):
             "captured": last_move.captured,
         }
 
+    # Full move history — used by Flutter for move history panel and captured pieces.
+    move_history_data = [
+        {
+            "ply": m.ply,
+            "side": m.side,
+            "from": [m.from_row, m.from_col],
+            "to": [m.to_row, m.to_col],
+            "piece": m.piece,
+            "captured": m.captured,
+        }
+        for m in game.moves.all()
+    ]
+
     legal_moves = []
     if game.status == 'ongoing' and game.current_turn == game.player_side:
         legal_moves = engine_adapter.list_legal_moves(game.board_state, game.player_side)
@@ -85,6 +98,7 @@ def game_detail(request, game_id):
         "winner": game.winner,
         "end_reason": game.end_reason,
         "last_move": last_move_data,
+        "move_history": move_history_data,
         "legal_moves": legal_moves,
         "in_check": _get_in_check(game.board_state),
         "player_side": game.player_side,

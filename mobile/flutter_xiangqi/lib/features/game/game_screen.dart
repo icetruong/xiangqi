@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
+import 'widgets/ai_thinking_indicator.dart';
+import 'widgets/captured_pieces_panel.dart';
+import 'widgets/move_history_panel.dart';
 import 'widgets/side_to_move_banner.dart';
 import 'widgets/xiangqi_board.dart';
 
-/// Game screen: composes [SideToMoveBanner] + [XiangqiBoard].
+/// Game screen: composes all game UI pieces.
 ///
 /// Responsibilities:
 ///   • Watch the game state provider and the UI state provider.
 ///   • Forward board taps to [GameUiNotifier.tapIntersection].
 ///   • Show a loading overlay during move submission.
 ///   • Show a SnackBar when a move is rejected or a network error occurs.
-///   • Hand display data down to child widgets.
+///   • Hand display data down to child widgets (keeps this class thin).
 ///
-/// Does NOT contain board rendering or game-rule logic.
+/// Does NOT contain board rendering, game-rule logic, or overlay painting.
 class GameScreen extends ConsumerWidget {
   final String gameId;
 
@@ -47,7 +51,8 @@ class GameScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
-            onPressed: () => ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
+            onPressed: () =>
+                ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
           ),
         ],
       ),
@@ -59,17 +64,14 @@ class GameScreen extends ConsumerWidget {
             onRetry: () =>
                 ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
           ),
-          data: (game) => _GameBody(
-            game: game,
-            gameId: gameId,
-          ),
+          data: (game) => _GameBody(game: game, gameId: gameId),
         ),
       ),
     );
   }
 }
 
-// ── Game body (when data is loaded) ─────────────────────────────────────────
+// ── Game body ────────────────────────────────────────────────────────────────
 
 class _GameBody extends ConsumerWidget {
   final GameStateModel game;
@@ -82,21 +84,26 @@ class _GameBody extends ConsumerWidget {
     final uiState = ref.watch(gameUiProvider(gameId));
     final uiNotifier = ref.read(gameUiProvider(gameId).notifier);
 
+    final captured = CapturedPiecesHelper.fromHistory(game.moveHistory);
+
     return Stack(
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Status banner ──────────────────────────────────────────────
+            // ── Status banner ────────────────────────────────────────────────
             SideToMoveBanner(game: game),
 
-            // ── Board ─────────────────────────────────────────────────────
+            // ── AI thinking slim indicator ───────────────────────────────────
+            AiThinkingIndicator(visible: game.isAiThinking),
+
+            // ── Captured pieces — black (taken by red) ───────────────────────
+            CapturedPiecesPanel(captured: captured),
+
+            // ── Board ────────────────────────────────────────────────────────
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Center(
                   child: AspectRatio(
                     aspectRatio: 9 / 10,
@@ -112,16 +119,15 @@ class _GameBody extends ConsumerWidget {
               ),
             ),
 
-            // ── Debug footer ───────────────────────────────────────────────
-            const Divider(height: 1),
-            _DebugFooter(game: game, uiState: uiState),
+            // ── Move history panel (collapsible) ─────────────────────────────
+            MoveHistoryPanel(moveHistory: game.moveHistory),
           ],
         ),
 
-        // ── Overlays ────────────────────────────────────────────────────────
+        // ── Blocking overlays ────────────────────────────────────────────────
         //
-        // AbsorbPointer ensures no tap event reaches the board while an
-        // overlay is active, providing both visual and input-level blocking.
+        // AbsorbPointer at the Stack level ensures no tap reaches the board
+        // while a network request is in-flight or the AI is thinking.
         if (uiState.isSubmitting)
           const AbsorbPointer(child: _SubmittingOverlay())
         else if (game.isAiThinking)
@@ -172,34 +178,13 @@ class _AiThinkingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: ColoredBox(
-        color: Colors.black.withAlpha(60),
-        child: const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                  SizedBox(width: 14),
-                  Text('AI is thinking...'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    // Transparent overlay: absorbs pointer events but does NOT dim the board.
+    // The slim [AiThinkingIndicator] banner above the board is the visual cue.
+    return const Positioned.fill(child: SizedBox.shrink());
   }
 }
 
-// ── Private sub-widgets ──────────────────────────────────────────────────────
+// ── Error body ────────────────────────────────────────────────────────────────
 
 class _ErrorBody extends StatelessWidget {
   final Object error;
@@ -235,45 +220,6 @@ class _ErrorBody extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// One-line debug footer — key facts visible at a glance.
-class _DebugFooter extends StatelessWidget {
-  final GameStateModel game;
-  final dynamic uiState;
-
-  const _DebugFooter({required this.game, required this.uiState});
-
-  @override
-  Widget build(BuildContext context) {
-    final pieceCount = game.boardState
-        .expand<dynamic>((row) => row)
-        .where((p) => !p.isEmpty)
-        .length;
-
-    final selInfo = (uiState.hasSelection)
-        ? 'Sel: (${uiState.selectedRow},${uiState.selectedCol})'
-        : 'Sel: —';
-
-    final style = Theme.of(context)
-        .textTheme
-        .labelSmall!
-        .copyWith(color: Colors.grey.shade600);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Text(
-        'ID: ${game.gameId ?? '—'} · '
-        'Turn: ${game.currentTurn} · '
-        'Pieces: $pieceCount · '
-        '$selInfo · '
-        'Status: ${game.status}',
-        style: style,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }
