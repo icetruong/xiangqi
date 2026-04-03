@@ -10,7 +10,6 @@ import 'widgets/xiangqi_board.dart';
 ///   • Watch the game state provider.
 ///   • Hand the data down to child widgets.
 ///   • Show loading / error states.
-///   • Provide a compact debug summary while board UI is being validated.
 ///
 /// Does NOT contain board rendering or game-rule logic.
 class GameScreen extends ConsumerWidget {
@@ -34,33 +33,45 @@ class GameScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: asyncGame.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _ErrorBody(
-          error: error,
-          onRetry: controller.refreshGame,
-        ),
-        data: (game) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Status banner ──────────────────────────────────────────
-            SideToMoveBanner(game: game),
+      body: SafeArea(
+        child: asyncGame.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => _ErrorBody(
+            error: error,
+            onRetry: controller.refreshGame,
+          ),
+          data: (game) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Status banner ────────────────────────────────────────────────
+              SideToMoveBanner(game: game),
 
-            // ── Board ──────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: XiangqiBoard(game: game),
-            ),
-
-            // ── Debug summary (keep until Phase 5 is done) ─────────────
-            const Divider(height: 1),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
-                child: _DebugSummary(game: game),
+              // ── Board ─────────────────────────────────────────────────────
+              // Expanded fills remaining vertical space; AspectRatio then
+              // scales the board so it is never taller than that space while
+              // keeping the correct Xiangqi proportions.
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: Center(
+                    child: AspectRatio(
+                      // Limit the board's own max height to leave room for
+                      // the debug footer without adding a scroll view.
+                      aspectRatio: 9 / 10, // matches BoardLayout.aspectRatio
+                      child: XiangqiBoard(game: game),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+
+              // ── Debug footer (remove after Phase 5) ────────────────────
+              const Divider(height: 1),
+              _DebugFooter(game: game),
+            ],
+          ),
         ),
       ),
     );
@@ -108,39 +119,36 @@ class _ErrorBody extends StatelessWidget {
   }
 }
 
-/// Compact raw data dump useful for verifying backend connectivity.
-/// Remove or collapse this panel once Phase 5 (move submission) is done.
-class _DebugSummary extends StatelessWidget {
+/// One-line debug footer — key facts visible at a glance.
+/// Remove after Phase 5 (move submission) is validated.
+class _DebugFooter extends StatelessWidget {
   final dynamic game;
 
-  const _DebugSummary({required this.game});
+  const _DebugFooter({required this.game});
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context)
-        .textTheme
-        .bodySmall!
-        .copyWith(color: Colors.grey.shade700);
-
     final pieceCount = game.boardState
         .expand((row) => row)
         .where((p) => !p.isEmpty)
         .length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('── Debug info ──', style: textStyle.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Text('Game ID : ${game.gameId ?? '—'}', style: textStyle),
-        Text('Difficulty : ${game.difficulty ?? '—'}', style: textStyle),
-        Text('Player side : ${game.playerSide ?? '—'}', style: textStyle),
-        Text('Side to move : ${game.currentTurn}', style: textStyle),
-        Text('AI thinking : ${game.isAiThinking}', style: textStyle),
-        Text('Winner : ${game.winner ?? '—'}', style: textStyle),
-        Text('Pieces on board : $pieceCount', style: textStyle),
-        Text('Move history : ${game.moveHistory.length}', style: textStyle),
-      ],
+    final style = Theme.of(context)
+        .textTheme
+        .labelSmall!
+        .copyWith(color: Colors.grey.shade600);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Text(
+        'ID: ${game.gameId ?? '—'} · '
+        'Turn: ${game.currentTurn} · '
+        'Pieces: $pieceCount · '
+        'Status: ${game.status}',
+        style: style,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
