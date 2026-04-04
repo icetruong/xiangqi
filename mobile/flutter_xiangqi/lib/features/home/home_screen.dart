@@ -67,51 +67,54 @@ class HomeScreen extends ConsumerWidget {
                   child: MusicControlButton(),
                 ),
 
-                // ── Centered panel ────────────────────────────────────────
+                // ── Centered panel (max 400 px wide) ────────────────────
                 Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 48,
-                    ),
-                    child: FramedPanel(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 32,
+                        horizontal: 32,
+                        vertical: 48,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // ── Title block ──────────────────────────────
-                          const XiangqiTitleBlock(),
+                      child: FramedPanel(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 32,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // ── Title block ──────────────────────────────
+                            const XiangqiTitleBlock(),
 
-                          OrnamentDivider(verticalPadding: 20),
+                            OrnamentDivider(verticalPadding: 20),
 
-                          // ── Difficulty ───────────────────────────────
-                          DifficultySelector(
-                            value: state.difficulty,
-                            onChanged: controller.setDifficulty,
-                          ),
+                            // ── Difficulty ───────────────────────────────
+                            DifficultySelector(
+                              value: state.difficulty,
+                              onChanged: controller.setDifficulty,
+                            ),
 
-                          const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                          // ── Side ─────────────────────────────────────
-                          SideSelector(
-                            value: state.playerSide,
-                            onChanged: controller.setPlayerSide,
-                          ),
+                            // ── Side ─────────────────────────────────────
+                            SideSelector(
+                              value: state.playerSide,
+                              onChanged: controller.setPlayerSide,
+                            ),
 
-                          const SizedBox(height: 28),
+                            const SizedBox(height: 28),
 
-                          // ── START GAME button ─────────────────────────
-                          StartButton(
-                            isLoading: state.creationState.isLoading,
-                            onPressed: state.creationState.isLoading
-                                ? null
-                                : controller.createGame,
-                          ),
-                        ],
+                            // ── START GAME button ─────────────────────────
+                            StartButton(
+                              isLoading: state.creationState.isLoading,
+                              onPressed: state.creationState.isLoading
+                                  ? null
+                                  : controller.createGame,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
