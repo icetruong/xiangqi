@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../new_game/new_game_controller.dart';
 import 'widgets/game_selectors.dart';
 import 'widgets/home_background.dart';
-import 'widgets/music_control_button.dart';
 import 'widgets/start_button.dart';
-import 'widgets/top_left_emblem_button.dart';
+import 'widgets/top_left_emblem_badge.dart';
+import 'widgets/top_right_header_cluster.dart';
 import 'widgets/xiangqi_title_block.dart';
 import '../../shared/widgets/framed_panel.dart';
 import '../../shared/widgets/ornament_divider.dart';
@@ -61,18 +61,18 @@ class HomeScreen extends ConsumerWidget {
           SafeArea(
             child: Stack(
               children: [
-                // ── Music toggle (top-right) ──────────────────────────────
+                // ── Header Cluster (top-right) ────────────────────────────
                 const Positioned(
-                  top: 12,
+                  top: 16,
                   right: 16,
-                  child: MusicControlButton(),
+                  child: TopRightHeaderCluster(),
                 ),
 
                 // ── Emblem (top-left) ─────────────────────────────────────
                 const Positioned(
-                  top: 12,
+                  top: 16,
                   left: 16,
-                  child: TopLeftEmblemButton(),
+                  child: TopLeftEmblemBadge(),
                 ),
 
                 // ── Centered panel (max 400 px wide) ────────────────────
