@@ -7,6 +7,7 @@ import 'widgets/game_selectors.dart';
 import 'widgets/home_background.dart';
 import 'widgets/music_control_button.dart';
 import 'widgets/start_button.dart';
+import 'widgets/top_left_emblem_button.dart';
 import 'widgets/xiangqi_title_block.dart';
 import '../../shared/widgets/framed_panel.dart';
 import '../../shared/widgets/ornament_divider.dart';
@@ -65,6 +66,13 @@ class HomeScreen extends ConsumerWidget {
                   top: 12,
                   right: 16,
                   child: MusicControlButton(),
+                ),
+
+                // ── Emblem (top-left) ─────────────────────────────────────
+                const Positioned(
+                  top: 12,
+                  left: 16,
+                  child: TopLeftEmblemButton(),
                 ),
 
                 // ── Centered panel (max 400 px wide) ────────────────────

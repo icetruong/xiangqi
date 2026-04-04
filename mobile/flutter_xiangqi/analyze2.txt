@@ -1,0 +1,13 @@
+Analyzing flutter_xiangqi...                                    
+
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:15:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:25:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:27:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:40:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:41:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:50:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\services\game_api_service.dart:52:9 - avoid_print
+   info - Unnecessary use of multiple underscores - lib\features\home\widgets\home_background.dart:23:29 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\home\widgets\home_background.dart:23:33 - unnecessary_underscores
+
+9 issues found. (ran in 1.7s)
