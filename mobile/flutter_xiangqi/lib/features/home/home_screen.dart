@@ -72,9 +72,11 @@ class HomeScreen extends ConsumerWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 400),
                     child: SingleChildScrollView(
+                      // Horizontal 36 px gives the 14 px rod overhang room
+                      // without clipping on narrow screens.
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 48,
+                        horizontal: 36,
+                        vertical: 44,
                       ),
                       child: FramedPanel(
                         padding: const EdgeInsets.symmetric(
