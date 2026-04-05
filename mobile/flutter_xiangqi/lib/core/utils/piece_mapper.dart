@@ -50,32 +50,17 @@ class PieceMapper {
   /// Returns the asset image path for a piece, or null if assets are not
   /// available.
   ///
-  /// Expected asset location: assets/images/pieces/{color}_{name}.png
-  /// e.g. assets/images/pieces/red_king.png
-  ///
-  /// Returns null when the corresponding asset file does not exist yet,
-  /// so callers can fall back to the text label.
+  /// Expected asset location: assets/images/pieces/{color}{type}.svg
+  /// e.g. assets/images/pieces/bK.svg for black king.
   static String? assetPath(String color, String type) {
-    final colorName = color == 'r' ? 'red' : 'black';
-    final typeName = _assetNames[type];
-    if (typeName == null) return null;
-    return 'assets/images/pieces/${colorName}_$typeName.png';
+    return 'assets/images/pieces/$color$type.svg';
   }
 
-  static const _assetNames = {
-    'K': 'king',
-    'A': 'advisor',
-    'E': 'elephant',
-    'H': 'horse',
-    'R': 'rook',
-    'C': 'cannon',
-    'P': 'pawn',
-  };
 
   // ── Convenience helpers ───────────────────────────────────────────────────
 
   /// Whether image assets are expected to be present.
   ///
   /// Set to false during early development to always show the text fallback.
-  static const bool assetsAvailable = false;
+  static const bool assetsAvailable = true;
 }

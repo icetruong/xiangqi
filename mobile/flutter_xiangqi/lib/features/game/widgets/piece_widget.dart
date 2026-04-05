@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/piece_mapper.dart';
 
 /// Renders a single Xiangqi piece.
@@ -141,14 +142,10 @@ class _ImagePiece extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: Image.asset(
+      child: SvgPicture.asset(
         assetPath,
         width: size,
         height: size,
-        errorBuilder: (_, _, _) {
-          // Asset missing — should not happen if assetsAvailable is accurate.
-          return const SizedBox.shrink();
-        },
       ),
     );
   }
