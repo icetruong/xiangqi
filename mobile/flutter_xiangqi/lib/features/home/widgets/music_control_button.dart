@@ -50,36 +50,39 @@ class _MusicControlButtonState extends State<MusicControlButton> {
           : _isPlaying
               ? 'Mute music'
               : 'Play music',
-      child: GestureDetector(
-        onTap: _toggle,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: XiangqiColors.bgDark.withAlpha(160),
-            border: Border.all(
-              color: _audioAvailable
-                  ? XiangqiColors.gold.withAlpha(200)
-                  : XiangqiColors.gold.withAlpha(80),
-              width: 1.5,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black45,
-                blurRadius: 4,
-                offset: Offset(0, 2),
+      child: MouseRegion(
+        cursor: _audioAvailable ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        child: GestureDetector(
+          onTap: _toggle,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: XiangqiColors.bgDark.withAlpha(160),
+              border: Border.all(
+                color: _audioAvailable
+                    ? XiangqiColors.gold.withAlpha(200)
+                    : XiangqiColors.gold.withAlpha(80),
+                width: 1.5,
               ),
-            ],
-          ),
-          child: Icon(
-            _audioAvailable
-                ? (_isPlaying ? Icons.music_note : Icons.music_off)
-                : Icons.music_off,
-            color: _audioAvailable
-                ? XiangqiColors.goldLight
-                : XiangqiColors.gold.withAlpha(80),
-            size: 20,
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black45,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              _audioAvailable
+                  ? (_isPlaying ? Icons.music_note : Icons.music_off)
+                  : Icons.music_off,
+              color: _audioAvailable
+                  ? XiangqiColors.goldLight
+                  : XiangqiColors.gold.withAlpha(80),
+              size: 20,
+            ),
           ),
         ),
       ),
