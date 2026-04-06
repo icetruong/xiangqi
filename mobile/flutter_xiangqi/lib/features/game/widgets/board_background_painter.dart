@@ -190,11 +190,11 @@ class BoardBackgroundPainter extends CustomPainter {
   ) {
     final x = BoardLayout.intersectionX(col, w);
     final y = BoardLayout.intersectionY(row, h);
-    final gap = cell * 0.16;
-    final len = cell * 0.24;
+    final gap = cell * 0.145;
+    final len = cell * 0.20;
     final paint = Paint()
       ..color = XiangqiColors.gridStroke
-      ..strokeWidth = _clamp(cell * 0.022, 0.9, 1.2)
+      ..strokeWidth = _clamp(cell * 0.02, 0.85, 1.1)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 

@@ -87,12 +87,12 @@ class BoardLayout {
 
   /// Recommended piece diameter.
   ///
-  /// 0.82 of the smaller cell dimension leaves visible gaps between adjacent
-  /// pieces even at the tightest point.
+  /// 0.92 of the smaller cell dimension makes the pieces sit tighter on the
+  /// board while still keeping a thin visual gap between adjacent tokens.
   static double pieceSize(double width, double height) {
     final cw = cellWidth(width);
     final ch = cellHeight(height);
-    return (cw < ch ? cw : ch) * 0.82;
+    return (cw < ch ? cw : ch) * 0.98;
   }
 
   // ── River ────────────────────────────────────────────────────────────────
