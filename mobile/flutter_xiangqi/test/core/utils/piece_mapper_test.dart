@@ -32,8 +32,10 @@ void main() {
     });
   });
 
-  test('builds uppercase asset paths', () {
-    expect(PieceMapper.assetPath('r', 'p'), 'assets/images/pieces/rP.svg');
-    expect(PieceMapper.assetPath('b', 'h'), 'assets/images/pieces/bH.svg');
+  test('uses a shared token base asset for each side', () {
+    expect(PieceMapper.assetPath('r', 'p'), 'assets/images/pieces/rK.svg');
+    expect(PieceMapper.assetPath('r', 'h'), 'assets/images/pieces/rK.svg');
+    expect(PieceMapper.assetPath('b', 'h'), 'assets/images/pieces/bK.svg');
+    expect(PieceMapper.assetPath('b', 'r'), 'assets/images/pieces/bK.svg');
   });
 }
