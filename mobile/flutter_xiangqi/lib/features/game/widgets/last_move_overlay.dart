@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+
+import '../../../app/theme.dart';
 import '../../../core/utils/board_layout.dart';
 import '../../../data/models/move_model.dart';
 
-/// Draws a pair of hollow rings on the board marking the from/to squares of
-/// the most recent move — works for both player moves and AI moves.
-///
-/// Drop this widget directly into the board [Stack] as a layer above
-/// [BoardBackground] and below the piece layer.
+/// Draws a pair of rings on the board marking the most recent move.
 class LastMoveOverlay extends StatelessWidget {
   final MoveModel? lastMove;
   final double boardW;
@@ -46,8 +44,7 @@ class _LastMovePainter extends CustomPainter {
   final double boardW;
   final double boardH;
 
-  // Amber gold — reads clearly on the warm board background.
-  static const _color = Color(0xFFFFB300);
+  static const _color = XiangqiColors.hintOrange;
 
   const _LastMovePainter({
     required this.fromRow,
@@ -60,19 +57,19 @@ class _LastMovePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final radius = BoardLayout.pieceSize(boardW, boardH) * 0.52;
+    final radius = BoardLayout.pieceSize(boardW, boardH) * 0.54;
 
-    final paint = Paint()
-      ..color = _color.withAlpha(200)
+    final strokePaint = Paint()
+      ..color = _color.withAlpha(210)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = radius * 0.18;
+      ..strokeWidth = radius * 0.14;
 
-    final fillPaint = Paint()
-      ..color = _color.withAlpha(45)
+    final glowPaint = Paint()
+      ..color = _color.withAlpha(52)
       ..style = PaintingStyle.fill;
 
-    _drawMarker(canvas, fromRow, fromCol, radius, paint, fillPaint);
-    _drawMarker(canvas, toRow, toCol, radius, paint, fillPaint);
+    _drawMarker(canvas, fromRow, fromCol, radius, strokePaint, glowPaint);
+    _drawMarker(canvas, toRow, toCol, radius, strokePaint, glowPaint);
   }
 
   void _drawMarker(
@@ -81,20 +78,22 @@ class _LastMovePainter extends CustomPainter {
     int col,
     double radius,
     Paint strokePaint,
-    Paint fillPaint,
+    Paint glowPaint,
   ) {
     final center = Offset(
       BoardLayout.intersectionX(col, boardW),
       BoardLayout.intersectionY(row, boardH),
     );
-    canvas.drawCircle(center, radius, fillPaint);
+
+    canvas.drawCircle(center, radius, glowPaint);
     canvas.drawCircle(center, radius, strokePaint);
   }
 
   @override
-  bool shouldRepaint(_LastMovePainter old) =>
-      old.fromRow != fromRow ||
-      old.fromCol != fromCol ||
-      old.toRow != toRow ||
-      old.toCol != toCol;
+  bool shouldRepaint(_LastMovePainter oldDelegate) {
+    return oldDelegate.fromRow != fromRow ||
+        oldDelegate.fromCol != fromCol ||
+        oldDelegate.toRow != toRow ||
+        oldDelegate.toCol != toCol;
+  }
 }

@@ -48,6 +48,7 @@ class XiangqiBoard extends StatelessWidget {
         final boardH = constraints.maxHeight;
 
         Widget board = Stack(
+          clipBehavior: Clip.none,
           children: [
             // Layer 1: board background
             const BoardBackground(),
@@ -103,7 +104,9 @@ class XiangqiBoard extends StatelessWidget {
       for (int col = 0; col < rowList.length; col++) {
         final piece = rowList[col];
         if (piece.isEmpty) continue;
-        pieces.add(_positionedPiece(piece, row, col, boardW, boardH, size, half));
+        pieces.add(
+          _positionedPiece(piece, row, col, boardW, boardH, size, half),
+        );
       }
     }
     return pieces;
@@ -119,10 +122,12 @@ class XiangqiBoard extends StatelessWidget {
     double half,
   ) {
     final isSelected =
-        uiState != null && uiState!.selectedRow == row && uiState!.selectedCol == col;
+        uiState != null &&
+        uiState!.selectedRow == row &&
+        uiState!.selectedCol == col;
 
     // Selection ring expands the widget; account for the extra radius.
-    final ringExtra = isSelected ? size * 0.14 : 0.0;
+    final ringExtra = isSelected ? size * 0.18 : 0.0;
     final x = BoardLayout.intersectionX(col, boardW) - half - ringExtra;
     final y = BoardLayout.intersectionY(row, boardH) - half - ringExtra;
 
@@ -148,7 +153,12 @@ class XiangqiBoard extends StatelessWidget {
 
   /// Converts a pixel tap position to the nearest board (row, col).
   /// Returns null if outside the grid.
-  (int, int)? _positionToRowCol(double px, double py, double boardW, double boardH) {
+  (int, int)? _positionToRowCol(
+    double px,
+    double py,
+    double boardW,
+    double boardH,
+  ) {
     final cellW = BoardLayout.cellWidth(boardW);
     final cellH = BoardLayout.cellHeight(boardH);
 
@@ -160,4 +170,3 @@ class XiangqiBoard extends StatelessWidget {
     return (row, col);
   }
 }
-

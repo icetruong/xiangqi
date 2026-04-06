@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
+
+import '../../../app/theme.dart';
 import '../../../core/utils/board_layout.dart';
 
 /// Draws small filled dots on valid destination squares for the currently
 /// selected piece, using backend-provided legal move data.
-///
-/// Only visible when [legalMoves] is non-null and non-empty.
-/// Drop into the board [Stack] above [LastMoveOverlay] and below pieces.
 class LegalMovesOverlay extends StatelessWidget {
-  /// Pre-filtered list of `[row, col]` destinations for the selected piece.
-  /// Each entry is a two-element list: `[row, col]`.
   final List<List<int>>? legalMoves;
   final double boardW;
   final double boardH;
@@ -41,8 +38,7 @@ class _LegalMovesPainter extends CustomPainter {
   final double boardW;
   final double boardH;
 
-  // Translucent green dot — clearly visible but not distracting.
-  static const _dotColor = Color(0xFF00C853);
+  static const _dotColor = XiangqiColors.hintOrange;
 
   const _LegalMovesPainter({
     required this.legalMoves,
@@ -52,29 +48,33 @@ class _LegalMovesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final pieceR = BoardLayout.pieceSize(boardW, boardH) / 2;
-    final dotR = pieceR * 0.38; // smaller than a piece
+    final pieceRadius = BoardLayout.pieceSize(boardW, boardH) / 2;
+    final dotRadius = pieceRadius * 0.28;
 
     final fillPaint = Paint()
-      ..color = _dotColor.withAlpha(170)
+      ..color = _dotColor.withAlpha(180)
       ..style = PaintingStyle.fill;
 
     final ringPaint = Paint()
-      ..color = _dotColor.withAlpha(220)
+      ..color = _dotColor.withAlpha(230)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = dotR * 0.25;
+      ..strokeWidth = dotRadius * 0.22;
 
     for (final dest in legalMoves) {
       if (dest.length < 2) continue;
+
       final center = Offset(
         BoardLayout.intersectionX(dest[1], boardW),
         BoardLayout.intersectionY(dest[0], boardH),
       );
-      canvas.drawCircle(center, dotR, fillPaint);
-      canvas.drawCircle(center, dotR, ringPaint);
+
+      canvas.drawCircle(center, dotRadius, fillPaint);
+      canvas.drawCircle(center, dotRadius, ringPaint);
     }
   }
 
   @override
-  bool shouldRepaint(_LegalMovesPainter old) => old.legalMoves != legalMoves;
+  bool shouldRepaint(_LegalMovesPainter oldDelegate) {
+    return oldDelegate.legalMoves != legalMoves;
+  }
 }

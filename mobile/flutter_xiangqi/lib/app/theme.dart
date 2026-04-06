@@ -11,38 +11,38 @@ class XiangqiColors {
   XiangqiColors._();
 
   // ── Background ───────────────────────────────────────────────────────────
-  static const Color bgDark      = Color(0xFF0A0503); // blacker outer edge
-  static const Color bgMid       = Color(0xFF4A1510); // red/hollow centre
+  static const Color bgDark = Color(0xFF0A0503); // blacker outer edge
+  static const Color bgMid = Color(0xFF4A1510); // red/hollow centre
 
   // ── Frame / scroll rod wood ──────────────────────────────────────────────
-  static const Color frameLight  = Color(0xFFA06B3D);
-  static const Color frameMid    = Color(0xFF8D5A30);
-  static const Color frameDark   = Color(0xFF6A3F1F);
+  static const Color frameLight = Color(0xFFA06B3D);
+  static const Color frameMid = Color(0xFF8D5A30);
+  static const Color frameDark = Color(0xFF6A3F1F);
 
   // ── Parchment ────────────────────────────────────────────────────────────
-  static const Color parchment     = Color(0xFFF7F0E0); // aged ivory
+  static const Color parchment = Color(0xFFF7F0E0); // aged ivory
   static const Color parchmentDark = Color(0xFFF5EDD8); // dropdown bg
 
   // ── Text ─────────────────────────────────────────────────────────────────
-  static const Color textTitle   = Color(0xFF4A2C0A); // warm ink-brown title
-  static const Color textBody    = Color(0xFF4B2D1E); // body/value text
-  static const Color textMuted   = Color(0xFF7A5020); // subtitle / labels
+  static const Color textTitle = Color(0xFF4A2C0A); // warm ink-brown title
+  static const Color textBody = Color(0xFF4B2D1E); // body/value text
+  static const Color textMuted = Color(0xFF7A5020); // subtitle / labels
 
   // Keep legacy aliases used elsewhere in the app
-  static const Color darkBrown   = Color(0xFF3E1F00);
-  static const Color medBrown    = Color(0xFF7A5020);
-  static const Color lightBrown  = Color(0xFF7A5020);
+  static const Color darkBrown = Color(0xFF3E1F00);
+  static const Color medBrown = Color(0xFF7A5020);
+  static const Color lightBrown = Color(0xFF7A5020);
   static const Color overlayDark = Color(0xCC1A0A00);
 
   // ── Button – red lacquer ─────────────────────────────────────────────────
-  static const Color crimson     = Color(0xFFC42028); // top of gradient
+  static const Color crimson = Color(0xFFC42028); // top of gradient
   static const Color crimsonDark = Color(0xFF8C1318); // bottom of gradient
-  static const Color crimsonLight= Color(0xFFD62530); // hover top
+  static const Color crimsonLight = Color(0xFFD62530); // hover top
 
   // ── Gold / brass ─────────────────────────────────────────────────────────
-  static const Color gold        = Color(0xFFCAA76A); // main gold
-  static const Color goldLight   = Color(0xFFD4AF37); // bright accent
-  static const Color goldDark    = Color(0xFF8B692A); // deep border gold
+  static const Color gold = Color(0xFFCAA76A); // main gold
+  static const Color goldLight = Color(0xFFD4AF37); // bright accent
+  static const Color goldDark = Color(0xFF8B692A); // deep border gold
 
   // ── Scroll rod gradient stops (top bar) ──────────────────────────────────
   static const List<Color> scrollRodColors = [
@@ -53,10 +53,27 @@ class XiangqiColors {
   ];
 
   // ── Board ────────────────────────────────────────────────────────────────
-  static const Color boardWood   = Color(0xFFF5CBA7);
-  static const Color boardLine   = Color(0xFF6D4C41);
-  static const Color boardBorder = Color(0xFF4E342E);
-  static const Color riverBlue   = Color(0xFFCCE5F3);
+  static const Color boardBg = Color(0xFFF0E6D0);
+  static const Color boardBgLight = Color(0xFFF7F1E4);
+  static const Color boardFrame = Color(0xFFC4A060);
+  static const Color boardFrameDark = Color(0xFF8B6530);
+  static const Color boardFrameFill = Color(0xFFEDE0C4);
+  static const Color gridStroke = Color(0xFF7A6042);
+  static const Color riverText = Color(0xFF8A6E48);
+  static const Color highlightGold = Color(0xFFF0B429);
+  static const Color hintOrange = Color(0xFFE67E22);
+  static const Color pieceRedOuter = Color(0xFFB5372A);
+  static const Color pieceRedInner = Color(0xFFD04A3A);
+  static const Color pieceRedHighlight = Color(0xFFE86050);
+  static const Color pieceBlackOuter = Color(0xFF2C2C2C);
+  static const Color pieceBlackInner = Color(0xFF4A4A4A);
+  static const Color pieceBlackHighlight = Color(0xFF666666);
+  static const Color pieceRim = Color(0xFFF5E6C8);
+
+  static const Color boardWood = boardBg;
+  static const Color boardLine = gridStroke;
+  static const Color boardBorder = boardFrameDark;
+  static const Color riverBlue = Color(0xFFCCE5F3);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -141,10 +158,10 @@ class XiangqiDecorations {
     ),
     // Thin lacquer-brown border lines, matching web exactly
     border: Border(
-      top:    BorderSide(color: Color(0x59885A2A), width: 1),// 35% opacity
+      top: BorderSide(color: Color(0x59885A2A), width: 1), // 35% opacity
       bottom: BorderSide(color: Color(0x59885A2A), width: 1),
-      left:   BorderSide(color: Color(0x2E885A2A), width: 1),// 18% opacity
-      right:  BorderSide(color: Color(0x2E885A2A), width: 1),
+      left: BorderSide(color: Color(0x2E885A2A), width: 1), // 18% opacity
+      right: BorderSide(color: Color(0x2E885A2A), width: 1),
     ),
     boxShadow: const [
       BoxShadow(
@@ -152,11 +169,7 @@ class XiangqiDecorations {
         blurRadius: 60,
         offset: Offset(0, 20),
       ),
-      BoxShadow(
-        color: Color(0x5914070A),
-        blurRadius: 18,
-        offset: Offset(0, 6),
-      ),
+      BoxShadow(color: Color(0x5914070A), blurRadius: 18, offset: Offset(0, 6)),
     ],
   );
 
@@ -177,16 +190,17 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: XiangqiColors.crimson,
-        brightness: Brightness.light,
-      ).copyWith(
-        primary: XiangqiColors.crimson,
-        secondary: XiangqiColors.gold,
-        surface: XiangqiColors.parchment,
-        onSurface: XiangqiColors.darkBrown,
-        error: XiangqiColors.crimsonDark,
-      ),
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: XiangqiColors.crimson,
+            brightness: Brightness.light,
+          ).copyWith(
+            primary: XiangqiColors.crimson,
+            secondary: XiangqiColors.gold,
+            surface: XiangqiColors.parchment,
+            onSurface: XiangqiColors.darkBrown,
+            error: XiangqiColors.crimsonDark,
+          ),
       scaffoldBackgroundColor: XiangqiColors.bgDark,
       appBarTheme: AppBarTheme(
         centerTitle: true,
