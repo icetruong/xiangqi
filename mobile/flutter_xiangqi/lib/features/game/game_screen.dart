@@ -10,7 +10,7 @@ import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
 import 'widgets/captured_pieces_panel.dart';
-import 'widgets/move_history_panel.dart';
+import 'widgets/move_history_strip.dart';
 import 'widgets/side_to_move_banner.dart';
 import 'widgets/xiangqi_board.dart';
 
@@ -165,45 +165,71 @@ class _GameBody extends ConsumerWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SideToMoveBanner(
-              game: game,
-            ),
+            SideToMoveBanner(game: game),
             CapturedPiecesPanel(captured: captured),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    const historyGap = 12.0;
+                    const historyHeight = 56.0;
                     final widthFactor = constraints.maxWidth < 480
                         ? 0.96
                         : constraints.maxWidth < 900
-                            ? 0.84
-                            : 0.72;
+                        ? 0.84
+                        : 0.72;
+                    final availableBoardHeight = math.max(
+                      0.0,
+                      constraints.maxHeight - historyHeight - historyGap,
+                    );
                     final widthFromHeight =
-                        constraints.maxHeight *
+                        availableBoardHeight *
                         BoardVisualConfig.wrapperAspectRatio;
                     final boardWidth = math.min(
                       math.min(constraints.maxWidth * widthFactor, 612.0),
                       widthFromHeight,
                     );
 
-                    return Center(
+                    if (boardWidth <= 0) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Align(
+                      alignment: Alignment.topCenter,
                       child: SizedBox(
                         width: boardWidth,
-                        child: AspectRatio(
-                          aspectRatio: BoardVisualConfig.wrapperAspectRatio,
-                          child: _BoardFrame(
-                            child: IgnorePointer(
-                              ignoring: isBoardInteractionLocked,
-                              child: XiangqiBoard(
-                                game: game,
-                                uiState: uiState,
-                                onIntersectionTap: (row, col) {
-                                  uiNotifier.tapIntersection(row, col, game);
-                                },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            AspectRatio(
+                              aspectRatio: BoardVisualConfig.wrapperAspectRatio,
+                              child: _BoardFrame(
+                                child: IgnorePointer(
+                                  ignoring: isBoardInteractionLocked,
+                                  child: XiangqiBoard(
+                                    game: game,
+                                    uiState: uiState,
+                                    onIntersectionTap: (row, col) {
+                                      uiNotifier.tapIntersection(
+                                        row,
+                                        col,
+                                        game,
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: historyGap),
+                            SizedBox(
+                              height: historyHeight,
+                              child: MoveHistoryStrip(
+                                moveHistory: game.moveHistory,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -211,7 +237,6 @@ class _GameBody extends ConsumerWidget {
                 ),
               ),
             ),
-            MoveHistoryPanel(moveHistory: game.moveHistory),
           ],
         ),
       ],
