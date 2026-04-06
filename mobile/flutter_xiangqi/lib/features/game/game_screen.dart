@@ -1,10 +1,11 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
-import '../../core/utils/board_layout.dart';
+import '../../core/utils/board_visual_config.dart';
 import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
@@ -111,13 +112,67 @@ class _GameBody extends ConsumerWidget {
     return Stack(
       children: [
         // ── Dark background behind the board area ──────────────────────────
-        Container(
-          decoration: const BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(0, -0.2),
-              radius: 1.1,
-              colors: [Color(0xFF4B2416), XiangqiColors.bgDark],
-              stops: [0.0, 0.78],
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+              child: Image.asset(
+                'assets/images/bg/battle-bg-portrait.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorBuilder: (_, _, _) =>
+                    const ColoredBox(color: XiangqiColors.bgDark),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.1,
+                  colors: [
+                    Color(0x00000000),
+                    Color(0x88000000),
+                    Color(0xEE000000),
+                  ],
+                  stops: [0.20, 0.65, 1.0],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x99000000),
+                    Color(0x11000000),
+                    Color(0x99000000),
+                  ],
+                  stops: [0.0, 0.45, 1.0],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.15),
+                  radius: 1.0,
+                  colors: [Color(0x664B2416), XiangqiColors.bgDark],
+                  stops: [0.0, 0.9],
+                ),
+              ),
             ),
           ),
         ),
@@ -146,9 +201,10 @@ class _GameBody extends ConsumerWidget {
                         ? 0.84
                         : 0.72;
                     final widthFromHeight =
-                        constraints.maxHeight * BoardLayout.aspectRatio;
+                        constraints.maxHeight *
+                        BoardVisualConfig.wrapperAspectRatio;
                     final boardWidth = math.min(
-                      math.min(constraints.maxWidth * widthFactor, 540.0),
+                      math.min(constraints.maxWidth * widthFactor, 612.0),
                       widthFromHeight,
                     );
 
@@ -156,7 +212,7 @@ class _GameBody extends ConsumerWidget {
                       child: SizedBox(
                         width: boardWidth,
                         child: AspectRatio(
-                          aspectRatio: BoardLayout.aspectRatio,
+                          aspectRatio: BoardVisualConfig.wrapperAspectRatio,
                           child: _BoardFrame(
                             child: XiangqiBoard(
                               game: game,
@@ -198,90 +254,151 @@ class _BoardFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0x80885A2A), width: 1),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            XiangqiColors.boardFrameFill,
-            Color(0xFFE4D0AE),
-            Color(0xFFD8C49A),
-          ],
-          stops: [0.0, 0.6, 1.0],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(132),
-            blurRadius: 48,
-            offset: const Offset(0, 16),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wrapperSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final scale = BoardVisualConfig.wrapperScale(wrapperSize);
+        final cornerRadius = 6 * scale;
+        final innerRuleInsets = BoardVisualConfig.innerRuleInsets(wrapperSize);
+        final boardInsets = BoardVisualConfig.boardInsets(wrapperSize);
+        final rodOverflow = BoardVisualConfig.rodOverflowPx * scale;
+        final cornerInset = BoardVisualConfig.cornerInsetPx * scale;
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(cornerRadius),
+            border: Border.all(
+              color: const Color(0x80885A2A),
+              width: math.max(0.9, scale),
+            ),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                XiangqiColors.boardFrameFill,
+                Color(0xFFE4D0AE),
+                Color(0xFFD8C49A),
+              ],
+              stops: [0.0, 0.6, 1.0],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x850A0502),
+                blurRadius: 48 * scale,
+                offset: Offset(0, 16 * scale),
+              ),
+              BoxShadow(
+                color: const Color(0x4D0A0502),
+                blurRadius: 14 * scale,
+                offset: Offset(0, 4 * scale),
+              ),
+            ],
           ),
-          BoxShadow(
-            color: Colors.black.withAlpha(76),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: XiangqiColors.boardFrame.withAlpha(72),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          const Color(0x59FFF0C8),
+                          Colors.transparent,
+                          Colors.black.withAlpha(24),
+                        ],
+                        stops: const [0.0, 0.16, 1.0],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const Positioned(left: -10, right: -10, top: 0, child: _BoardRod()),
-          const Positioned(
-            left: -10,
-            right: -10,
-            bottom: 0,
-            child: _BoardRod(isBottom: true),
-          ),
-          const Positioned(top: 11, left: 11, child: _BoardCorner()),
-          const Positioned(top: 11, right: 11, child: _BoardCorner()),
-          const Positioned(bottom: 11, left: 11, child: _BoardCorner()),
-          const Positioned(bottom: 11, right: 11, child: _BoardCorner()),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: XiangqiColors.boardFrameDark.withAlpha(38),
-                  width: 0.8,
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Padding(
+                    padding: innerRuleInsets,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4 * scale),
+                        border: Border.all(
+                          color: XiangqiColors.boardFrame.withAlpha(72),
+                          width: math.max(0.7, 0.9 * scale),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              child: child,
-            ),
+              Positioned(
+                left: -rodOverflow,
+                right: -rodOverflow,
+                top: 0,
+                child: _BoardRod(scale: scale),
+              ),
+              Positioned(
+                left: -rodOverflow,
+                right: -rodOverflow,
+                bottom: 0,
+                child: _BoardRod(scale: scale, isBottom: true),
+              ),
+              Positioned(
+                top: cornerInset,
+                left: cornerInset,
+                child: _BoardCorner(scale: scale),
+              ),
+              Positioned(
+                top: cornerInset,
+                right: cornerInset,
+                child: _BoardCorner(scale: scale),
+              ),
+              Positioned(
+                bottom: cornerInset,
+                left: cornerInset,
+                child: _BoardCorner(scale: scale),
+              ),
+              Positioned(
+                bottom: cornerInset,
+                right: cornerInset,
+                child: _BoardCorner(scale: scale),
+              ),
+              Padding(
+                padding: boardInsets,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: XiangqiColors.boardFrameDark.withAlpha(38),
+                      width: math.max(0.6, 0.8 * scale),
+                    ),
+                  ),
+                  child: child,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _BoardRod extends StatelessWidget {
   final bool isBottom;
+  final double scale;
 
-  const _BoardRod({this.isBottom = false});
+  const _BoardRod({required this.scale, this.isBottom = false});
 
   @override
   Widget build(BuildContext context) {
+    final height = BoardVisualConfig.rodHeightPx * scale;
+    final radius = Radius.circular(5 * scale);
+    final knobOffset = BoardVisualConfig.rodKnobOffsetPx * scale;
+    final knobTop = -3 * scale;
+
     return IgnorePointer(
       child: SizedBox(
-        height: 9,
+        height: height,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -289,8 +406,8 @@ class _BoardRod extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: isBottom
-                      ? const BorderRadius.vertical(bottom: Radius.circular(5))
-                      : const BorderRadius.vertical(top: Radius.circular(5)),
+                      ? BorderRadius.vertical(bottom: radius)
+                      : BorderRadius.vertical(top: radius),
                   gradient: const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -300,15 +417,23 @@ class _BoardRod extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withAlpha(102),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      blurRadius: 8 * scale,
+                      offset: Offset(0, 3 * scale),
                     ),
                   ],
                 ),
               ),
             ),
-            const Positioned(left: -4, top: -3, child: _BoardKnob()),
-            const Positioned(right: -4, top: -3, child: _BoardKnob()),
+            Positioned(
+              left: -knobOffset,
+              top: knobTop,
+              child: _BoardKnob(scale: scale),
+            ),
+            Positioned(
+              right: -knobOffset,
+              top: knobTop,
+              child: _BoardKnob(scale: scale),
+            ),
           ],
         ),
       ),
@@ -317,16 +442,18 @@ class _BoardRod extends StatelessWidget {
 }
 
 class _BoardKnob extends StatelessWidget {
-  const _BoardKnob();
+  final double scale;
+
+  const _BoardKnob({required this.scale});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 15,
-      height: 15,
-      decoration: const BoxDecoration(
+      width: BoardVisualConfig.rodKnobSizePx * scale,
+      height: BoardVisualConfig.rodKnobSizePx * scale,
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(
+        gradient: const RadialGradient(
           center: Alignment(-0.24, -0.3),
           radius: 0.82,
           colors: [Color(0xFFD4A94A), Color(0xFF7E4E1A), Color(0xFFC09040)],
@@ -335,8 +462,8 @@ class _BoardKnob extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Color(0x66000000),
-            blurRadius: 5,
-            offset: Offset(0, 2),
+            blurRadius: 5 * scale,
+            offset: Offset(0, 2 * scale),
           ),
         ],
       ),
@@ -345,15 +472,17 @@ class _BoardKnob extends StatelessWidget {
 }
 
 class _BoardCorner extends StatelessWidget {
-  const _BoardCorner();
+  final double scale;
+
+  const _BoardCorner({required this.scale});
 
   @override
   Widget build(BuildContext context) {
     return Text(
       '\u25C8',
       style: TextStyle(
-        color: XiangqiColors.boardFrameDark.withAlpha(110),
-        fontSize: 9,
+        color: const Color(0xFFA07838).withAlpha(115),
+        fontSize: BoardVisualConfig.cornerFontSizePx * scale,
         height: 1,
       ),
     );

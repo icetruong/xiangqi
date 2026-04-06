@@ -46,16 +46,13 @@ class PieceMapper {
 
   /// Returns the SVG asset path for a piece.
   ///
-  /// On mobile we only use the SVG as the token base. The Chinese character is
-  /// rendered separately by Flutter, so a single base asset per side keeps the
-  /// piece palette perfectly consistent.
+  /// Uses the exact same piece asset naming as the web repo:
+  /// `games/static/games/pieces/<side><type>.svg`.
   static String? assetPath(String color, String type) {
     final normalizedColor = color.toLowerCase();
-    if (normalizedColor == 'r') {
-      return 'assets/images/pieces/rK.svg';
-    }
-    if (normalizedColor == 'b') {
-      return 'assets/images/pieces/bK.svg';
+    final normalizedType = type.toUpperCase();
+    if (normalizedColor == 'r' || normalizedColor == 'b') {
+      return 'assets/images/pieces/$normalizedColor$normalizedType.svg';
     }
     return null;
   }

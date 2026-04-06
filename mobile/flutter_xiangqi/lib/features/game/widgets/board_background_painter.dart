@@ -2,9 +2,11 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/utils/board_layout.dart';
+import '../../../core/utils/board_visual_config.dart';
 
 /// Draws the Xiangqi board background using [CustomPainter].
 class BoardBackgroundPainter extends CustomPainter {
@@ -28,7 +30,7 @@ class BoardBackgroundPainter extends CustomPainter {
     _paintRiverBand(canvas, gridRect, riverTop, riverBottom);
     _drawGrid(canvas, w, h, gridRect, riverTop, riverBottom, cell);
     _drawAllMarks(canvas, w, h, cell);
-    _drawRiverLabel(canvas, w, riverTop, riverBottom);
+    _drawRiverLabel(canvas, w, h, riverTop, riverBottom);
   }
 
   void _paintBoardSurface(Canvas canvas, Size size) {
@@ -92,15 +94,16 @@ class BoardBackgroundPainter extends CustomPainter {
     double riverBottom,
     double cell,
   ) {
+    final cellScale = cell / BoardVisualConfig.webCellSize;
     final linePaint = Paint()
       ..color = XiangqiColors.gridStroke
-      ..strokeWidth = _clamp(cell * 0.024, 1.0, 1.35)
+      ..strokeWidth = BoardVisualConfig.gridStrokePx * cellScale
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final thinPaint = Paint()
       ..color = XiangqiColors.gridStroke
-      ..strokeWidth = _clamp(cell * 0.02, 0.9, 1.1)
+      ..strokeWidth = BoardVisualConfig.gridThinStrokePx * cellScale
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -190,11 +193,12 @@ class BoardBackgroundPainter extends CustomPainter {
   ) {
     final x = BoardLayout.intersectionX(col, w);
     final y = BoardLayout.intersectionY(row, h);
-    final gap = cell * 0.145;
-    final len = cell * 0.20;
+    final scale = cell / BoardVisualConfig.webCellSize;
+    final gap = BoardVisualConfig.cornerMarkGapPx * scale;
+    final len = BoardVisualConfig.cornerMarkLengthPx * scale;
     final paint = Paint()
       ..color = XiangqiColors.gridStroke
-      ..strokeWidth = _clamp(cell * 0.02, 0.85, 1.1)
+      ..strokeWidth = BoardVisualConfig.gridThinStrokePx * scale
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -248,19 +252,24 @@ class BoardBackgroundPainter extends CustomPainter {
   void _drawRiverLabel(
     Canvas canvas,
     double width,
+    double height,
     double riverTop,
     double riverBottom,
   ) {
-    final riverHeight = riverBottom - riverTop;
+    final cell = math.min(
+      BoardLayout.cellWidth(width),
+      BoardLayout.cellHeight(height),
+    );
+    final scale = cell / BoardVisualConfig.webCellSize;
     final centerY = (riverTop + riverBottom) / 2;
-    final fontSize = riverHeight * 0.5;
-    final style = TextStyle(
-      color: XiangqiColors.riverText.withAlpha(112),
-      fontSize: fontSize,
-      fontFamily: 'serif',
-      fontWeight: FontWeight.w700,
-      letterSpacing: fontSize * 0.22,
-      height: 1,
+    final style = GoogleFonts.maShanZheng(
+      textStyle: TextStyle(
+        color: XiangqiColors.riverText.withAlpha(102),
+        fontSize: BoardVisualConfig.riverTextFontPx * scale,
+        fontWeight: FontWeight.w700,
+        letterSpacing: BoardVisualConfig.riverTextLetterSpacingPx * scale,
+        height: 1,
+      ),
     );
 
     final left = TextPainter(
@@ -273,22 +282,33 @@ class BoardBackgroundPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final leftX = BoardLayout.intersectionX(2, width) - left.width / 2;
-    final rightX = BoardLayout.intersectionX(6, width) - right.width / 2;
-    final textY = centerY - left.height / 2 + riverHeight * 0.06;
+    final textY =
+        centerY -
+        left.height / 2 +
+        BoardVisualConfig.riverTextOffsetYPx * scale;
 
-    left.paint(canvas, Offset(leftX, textY));
-    right.paint(canvas, Offset(rightX, textY));
+    left.paint(
+      canvas,
+      Offset(
+        BoardLayout.cellWidth(width) * BoardVisualConfig.riverTextLeftCol +
+            BoardLayout.cellWidth(width) * BoardLayout.outerPaddingCells -
+            left.width / 2,
+        textY,
+      ),
+    );
+    right.paint(
+      canvas,
+      Offset(
+        BoardLayout.cellWidth(width) * BoardVisualConfig.riverTextRightCol +
+            BoardLayout.cellWidth(width) * BoardLayout.outerPaddingCells -
+            right.width / 2,
+        textY,
+      ),
+    );
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-double _clamp(double value, double min, double max) {
-  if (value < min) return min;
-  if (value > max) return max;
-  return value;
 }
 
 /// Stateless widget wrapper around [BoardBackgroundPainter].

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/utils/board_layout.dart';
+import '../../../core/utils/board_visual_config.dart';
 
 /// Draws small filled dots on valid destination squares for the currently
 /// selected piece, using backend-provided legal move data.
@@ -48,17 +49,20 @@ class _LegalMovesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final pieceRadius = BoardLayout.pieceSize(boardW, boardH) / 2;
-    final dotRadius = pieceRadius * 0.28;
+    final cell = BoardLayout.cellWidth(boardW);
+    final dotRadius =
+        BoardVisualConfig.scaledPx(BoardVisualConfig.hintDotSizePx, cell) / 2;
 
     final fillPaint = Paint()
       ..color = _dotColor.withAlpha(180)
       ..style = PaintingStyle.fill;
 
-    final ringPaint = Paint()
-      ..color = _dotColor.withAlpha(230)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = dotRadius * 0.22;
+    final glowPaint = Paint()
+      ..color = _dotColor.withAlpha(60)
+      ..maskFilter = MaskFilter.blur(
+        BlurStyle.normal,
+        BoardVisualConfig.scaledPx(6, cell) * 0.5,
+      );
 
     for (final dest in legalMoves) {
       if (dest.length < 2) continue;
@@ -68,8 +72,8 @@ class _LegalMovesPainter extends CustomPainter {
         BoardLayout.intersectionY(dest[0], boardH),
       );
 
+      canvas.drawCircle(center, dotRadius, glowPaint);
       canvas.drawCircle(center, dotRadius, fillPaint);
-      canvas.drawCircle(center, dotRadius, ringPaint);
     }
   }
 

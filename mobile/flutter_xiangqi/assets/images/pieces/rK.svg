@@ -1,19 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <radialGradient id="pieceFill" cx="38%" cy="32%" r="58%">
-      <stop offset="0%" stop-color="#e86050"/>
-      <stop offset="40%" stop-color="#d04a3a"/>
-      <stop offset="100%" stop-color="#b5372a"/>
+    <radialGradient id="rg" cx="40%" cy="35%" r="50%">
+      <stop offset="0%" stop-color="#e65c5c"/>
+      <stop offset="70%" stop-color="#c0392b"/>
+      <stop offset="100%" stop-color="#8b1a1a"/>
     </radialGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.38"/>
+    <filter id="shadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.4"/>
     </filter>
   </defs>
-
-  <g filter="url(#shadow)">
-    <circle cx="50" cy="50" r="42" fill="url(#pieceFill)" stroke="#b5372a" stroke-width="5"/>
-    <circle cx="50" cy="50" r="45" fill="none" stroke="#f5e6c8" stroke-width="4"/>
-    <circle cx="50" cy="50" r="48" fill="none" stroke="#8b1a1a" stroke-width="2.5"/>
-    <ellipse cx="41" cy="33" rx="18" ry="10" fill="#ffffff" opacity="0.14"/>
-  </g>
+  <circle cx="50" cy="50" r="44" fill="url(#rg)" stroke="#6b1010" stroke-width="2.5" filter="url(#shadow)"/>
+  <circle cx="50" cy="50" r="37" fill="none" stroke="#e8a0a0" stroke-width="1.5" opacity="0.6"/>
+  <text x="50" y="67" font-family="KaiTi, SimKai, STKaiti, serif" font-size="52" text-anchor="middle" fill="#fff" font-weight="bold">帥</text>
 </svg>

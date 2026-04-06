@@ -13,6 +13,8 @@ downloads/
 eggs/
 .eggs/
 lib/
+!mobile/flutter_xiangqi/lib/
+!mobile/flutter_xiangqi/lib/**
 lib64/
 parts/
 sdist/

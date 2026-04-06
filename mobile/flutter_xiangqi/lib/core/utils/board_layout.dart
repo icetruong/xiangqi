@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'board_visual_config.dart';
+
 /// Pure math/layout utility for a standard Xiangqi board.
 ///
 /// Xiangqi board layout:
@@ -18,10 +20,10 @@ class BoardLayout {
   // ── Board constants ──────────────────────────────────────────────────────
 
   /// Number of files (vertical lines) = number of columns of intersections.
-  static const int files = 9;
+  static const int files = BoardVisualConfig.files;
 
   /// Number of ranks (horizontal lines) = number of rows of intersections.
-  static const int ranks = 10;
+  static const int ranks = BoardVisualConfig.ranks;
 
   /// Number of gaps between adjacent columns.
   static const int columnGaps = files - 1; // 8
@@ -34,7 +36,8 @@ class BoardLayout {
   /// The total canvas width spans (columnGaps + 2 * outerPaddingCells) cells
   /// wide.  Keeping this at 0.5 means one full cell of breathing room is split
   /// equally left/right and top/bottom.
-  static const double outerPaddingCells = 0.5;
+  static const double outerPaddingCells =
+      BoardVisualConfig.webBoardPad / BoardVisualConfig.webCellSize;
 
   /// Total canvas width in "cell" units.
   static const double totalWidthCells = columnGaps + 2 * outerPaddingCells;
@@ -43,7 +46,7 @@ class BoardLayout {
   static const double totalHeightCells = rowGaps + 2 * outerPaddingCells;
 
   /// Aspect ratio (width : height) of the full canvas including outer padding.
-  static const double aspectRatio = totalWidthCells / totalHeightCells;
+  static const double aspectRatio = BoardVisualConfig.innerAspectRatio;
   // ≈ (8 + 1) / (9 + 1) = 9/10 = 0.900
 
   // ── Interval helpers ─────────────────────────────────────────────────────
@@ -87,12 +90,11 @@ class BoardLayout {
 
   /// Recommended piece diameter.
   ///
-  /// 0.92 of the smaller cell dimension makes the pieces sit tighter on the
-  /// board while still keeping a thin visual gap between adjacent tokens.
+  /// Mirrors the web renderer's `PIECE_SIZE = CELL_SIZE * 0.82`.
   static double pieceSize(double width, double height) {
     final cw = cellWidth(width);
     final ch = cellHeight(height);
-    return (cw < ch ? cw : ch) * 0.98;
+    return (cw < ch ? cw : ch) * BoardVisualConfig.pieceSizeRatio;
   }
 
   // ── River ────────────────────────────────────────────────────────────────

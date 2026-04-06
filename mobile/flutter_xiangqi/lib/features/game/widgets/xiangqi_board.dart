@@ -96,20 +96,43 @@ class XiangqiBoard extends StatelessWidget {
 
   List<Widget> _buildPieces(double boardW, double boardH) {
     final pieces = <Widget>[];
+    final selectedPieces = <Widget>[];
     final size = BoardLayout.pieceSize(boardW, boardH);
     final half = size / 2;
+    final captureTargets = _captureTargets();
+    final lastMove = game.lastMove;
 
     for (int row = 0; row < game.boardState.length; row++) {
       final rowList = game.boardState[row];
       for (int col = 0; col < rowList.length; col++) {
         final piece = rowList[col];
         if (piece.isEmpty) continue;
-        pieces.add(
-          _positionedPiece(piece, row, col, boardW, boardH, size, half),
+        final widget = _positionedPiece(
+          piece,
+          row,
+          col,
+          boardW,
+          boardH,
+          size,
+          half,
+          isCaptureTarget: captureTargets.contains('$row,$col'),
+          isLastMoveTarget:
+              lastMove != null &&
+              lastMove.to[0] == row &&
+              lastMove.to[1] == col,
+          isInCheck:
+              piece.type?.toUpperCase() == 'K' && game.inCheck == piece.color,
         );
+
+        final isSelected =
+            uiState != null &&
+            uiState!.selectedRow == row &&
+            uiState!.selectedCol == col;
+
+        (isSelected ? selectedPieces : pieces).add(widget);
       }
     }
-    return pieces;
+    return [...pieces, ...selectedPieces];
   }
 
   Widget _positionedPiece(
@@ -119,23 +142,27 @@ class XiangqiBoard extends StatelessWidget {
     double boardW,
     double boardH,
     double size,
-    double half,
-  ) {
+    double half, {
+    required bool isCaptureTarget,
+    required bool isLastMoveTarget,
+    required bool isInCheck,
+  }) {
     final isSelected =
         uiState != null &&
         uiState!.selectedRow == row &&
         uiState!.selectedCol == col;
 
-    // Selection ring expands the widget; account for the extra radius.
-    final ringExtra = isSelected ? size * 0.18 : 0.0;
-    final x = BoardLayout.intersectionX(col, boardW) - half - ringExtra;
-    final y = BoardLayout.intersectionY(row, boardH) - half - ringExtra;
+    final x = BoardLayout.intersectionX(col, boardW) - half;
+    final y = BoardLayout.intersectionY(row, boardH) - half;
 
     Widget pieceWidget = PieceWidget(
       color: piece.color!,
       type: piece.type!,
       size: size,
       isSelected: isSelected,
+      isCaptureTarget: isCaptureTarget,
+      isLastMoveTarget: isLastMoveTarget,
+      isInCheck: isInCheck,
     );
 
     if (onIntersectionTap != null) {
@@ -147,6 +174,23 @@ class XiangqiBoard extends StatelessWidget {
     }
 
     return Positioned(left: x, top: y, child: pieceWidget);
+  }
+
+  Set<String> _captureTargets() {
+    final moves = uiState?.legalMovesForSelected;
+    if (moves == null || moves.isEmpty) return const <String>{};
+
+    final targets = <String>{};
+    for (final move in moves) {
+      if (move.length < 2) continue;
+      final row = move[0];
+      final col = move[1];
+      final piece = game.boardState[row][col];
+      if (!piece.isEmpty && piece.color != game.currentTurn) {
+        targets.add('$row,$col');
+      }
+    }
+    return targets;
   }
 
   // ── Coordinate math ────────────────────────────────────────────────────────
