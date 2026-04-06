@@ -38,7 +38,12 @@ class PieceWidget extends StatelessWidget {
     if (PieceMapper.assetsAvailable) {
       final path = PieceMapper.assetPath(color, type);
       if (path != null) {
-        piece = _ImagePiece(size: size, assetPath: path);
+        piece = _ImagePiece(
+          color: color,
+          type: type,
+          size: size,
+          assetPath: path,
+        );
       } else {
         piece = _TextPiece(color: color, type: type, size: size);
       }
@@ -132,20 +137,61 @@ class _TextPiece extends StatelessWidget {
 // ── Image variant ─────────────────────────────────────────────────────────
 
 class _ImagePiece extends StatelessWidget {
+  final String color;
+  final String type;
   final double size;
   final String assetPath;
 
-  const _ImagePiece({required this.size, required this.assetPath});
+  const _ImagePiece({
+    required this.color,
+    required this.type,
+    required this.size,
+    required this.assetPath,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final label = PieceMapper.chineseLabel(color, type);
+    // Darker red for red pieces so it contrasts with the reddish SVG background? 
+    // Wait, the web SVG text was fill="#fff" for red and maybe black for black?
+    // Let's use white for everything, or "#fff" for red and "#fff" for black depending on the SVG.
+    // The SVGs generally use white text or dark text. In web: red pieces have white text, black pieces also have white text (black pieces use dark radial gradient background).
+    final textColor = Colors.white;
+
     return SizedBox(
       width: size,
       height: size,
-      child: SvgPicture.asset(
-        assetPath,
-        width: size,
-        height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SvgPicture.asset(
+            assetPath,
+            width: size,
+            height: size,
+          ),
+          // We apply a slight downward offset for the text to perfectly center it visually
+          // on the 3D-looking token (which has a shadow/bevel pushing it up).
+          Transform.translate(
+            offset: Offset(0, -size * 0.05),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontSize: size * 0.52,
+                fontFamily: 'serif',
+                fontWeight: FontWeight.bold,
+                height: 1.0,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withAlpha(120),
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
