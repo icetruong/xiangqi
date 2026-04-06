@@ -94,4 +94,60 @@ class GameStateModel {
       'legal_moves': legalMoves,
     };
   }
+
+  GameStateModel optimisticPlayerMove({
+    required int fromRow,
+    required int fromCol,
+    required int toRow,
+    required int toCol,
+  }) {
+    final movingPiece = boardState[fromRow][fromCol];
+    if (movingPiece.isEmpty) return this;
+
+    final capturedPiece = boardState[toRow][toCol];
+    final nextBoard = boardState
+        .map((row) => List<PieceModel>.from(row))
+        .toList(growable: false);
+
+    nextBoard[fromRow][fromCol] = PieceModel(code: '');
+    nextBoard[toRow][toCol] = movingPiece;
+
+    final nextTurn = aiSide ?? (currentTurn == 'r' ? 'b' : 'r');
+    final nextMove = MoveModel(
+      from: [fromRow, fromCol],
+      to: [toRow, toCol],
+      piece: movingPiece.code,
+      captured: capturedPiece.isEmpty ? null : capturedPiece.code,
+      ply: _nextPly(),
+      side: playerSide ?? currentTurn,
+    );
+
+    return GameStateModel(
+      gameId: gameId,
+      boardState: nextBoard,
+      currentTurn: nextTurn,
+      status: status,
+      winner: winner,
+      endReason: endReason,
+      lastMove: nextMove,
+      difficulty: difficulty,
+      playerSide: playerSide,
+      aiSide: aiSide,
+      inCheck: null,
+      isAiThinking:
+          status == 'ongoing' &&
+          playerSide != null &&
+          nextTurn != playerSide,
+      moveHistory: [...moveHistory, nextMove],
+      legalMoves: null,
+    );
+  }
+
+  int _nextPly() {
+    final lastPly = moveHistory.isNotEmpty ? moveHistory.last.ply : null;
+    if (lastPly != null) {
+      return lastPly + 1;
+    }
+    return moveHistory.length + 1;
+  }
 }

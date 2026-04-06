@@ -85,13 +85,16 @@ class Game:
             for c in range(self.board.COLS):
                 if self.board.get(r, c) != ".":
                     piece_count += 1
-                    
+
+        # Keep "normal" difficulty responsive for interactive play.
+        # The old 5s/3s/1.5s search windows made the UI feel laggy,
+        # especially on Flutter web while polling the backend.
         if piece_count >= 24:
-            return 5.0
-        elif piece_count >= 12:
-            return 3.0
-        else:
             return 1.5
+        elif piece_count >= 12:
+            return 1.0
+        else:
+            return 0.6
 
     def ai_move_time(self, time_limit_sec: Optional[float] = None, max_depth: int = 6) -> bool:
         from engine.ai.time_search import best_move_with_time_limit

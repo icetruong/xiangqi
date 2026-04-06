@@ -3,28 +3,25 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../data/models/game_state_model.dart';
 import '../../data/models/move_request_model.dart';
 import '../../data/providers.dart';
 import 'state/game_ui_state.dart';
 
-// ── Backend game state ────────────────────────────────────────────────────────
-
-/// Loads and refreshes the [GameStateModel] from the backend.
-///
-/// This notifier owns only the *persisted* game state; transient UI state
-/// (selection, submission, errors) lives in [GameUiNotifier].
+/// Loads and refreshes the persisted game state from the backend.
 class GameController extends AsyncNotifier<GameStateModel> {
   GameController(this.gameId);
 
   final String gameId;
+  static const Duration _pollInterval = Duration(milliseconds: 650);
+
   Timer? _pollTimer;
+  bool _isPollRequestInFlight = false;
 
   @override
   Future<GameStateModel> build() async {
-    ref.onDispose(() {
-      _stopPolling();
-    });
+    ref.onDispose(_stopPolling);
     return ref.read(gameRepositoryProvider).getGame(gameId);
   }
 
@@ -35,11 +32,30 @@ class GameController extends AsyncNotifier<GameStateModel> {
     );
   }
 
-  /// Applies the updated game state returned by the move endpoint.
-  ///
-  /// Starts polling when it is now the AI's turn (status ongoing and
-  /// currentTurn != playerSide).  This works even if [isAiThinking] is
-  /// momentarily false because the backend hasn't flipped the flag yet.
+  void replaceState(GameStateModel updated) {
+    _stopPolling();
+    state = AsyncValue.data(updated);
+  }
+
+  void applyOptimisticPlayerMove(
+    GameStateModel current, {
+    required int fromRow,
+    required int fromCol,
+    required int toRow,
+    required int toCol,
+  }) {
+    _stopPolling();
+    state = AsyncValue.data(
+      current.optimisticPlayerMove(
+        fromRow: fromRow,
+        fromCol: fromCol,
+        toRow: toRow,
+        toCol: toCol,
+      ),
+    );
+  }
+
+  /// Applies the authoritative state returned by the move endpoint.
   void applyMoveResponse(GameStateModel updated) {
     state = AsyncValue.data(updated);
 
@@ -47,70 +63,84 @@ class GameController extends AsyncNotifier<GameStateModel> {
         updated.playerSide != null &&
         updated.currentTurn != updated.playerSide;
 
-    debugPrint('[Poll] applyMoveResponse — '
-        'currentTurn=${updated.currentTurn} '
-        'playerSide=${updated.playerSide} '
-        'status=${updated.status} '
-        'isAiThinking=${updated.isAiThinking} '
-        'willPoll=$aiTurn');
+    debugPrint(
+      '[Poll] applyMoveResponse '
+      'currentTurn=${updated.currentTurn} '
+      'playerSide=${updated.playerSide} '
+      'status=${updated.status} '
+      'isAiThinking=${updated.isAiThinking} '
+      'willPoll=$aiTurn',
+    );
 
     if (aiTurn) {
       _startPolling();
+    } else {
+      _stopPolling();
     }
   }
 
   void _startPolling() {
     if (_pollTimer != null && _pollTimer!.isActive) {
-      debugPrint('[Poll] Already polling — skipped duplicate start');
+      debugPrint('[Poll] Already polling, skipped duplicate start');
       return;
     }
 
-    debugPrint('[Poll] ▶ START polling game $gameId every 1 s');
+    debugPrint(
+      '[Poll] START polling game $gameId every '
+      '${_pollInterval.inMilliseconds} ms',
+    );
 
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      debugPrint('[Poll] ↻ Tick #${timer.tick} — calling getGame($gameId)');
-      try {
-        final newState = await ref.read(gameRepositoryProvider).getGame(gameId);
-        state = AsyncValue.data(newState);
-
-        debugPrint('[Poll] ↳ currentTurn=${newState.currentTurn} '
-            'playerSide=${newState.playerSide} '
-            'status=${newState.status} '
-            'isAiThinking=${newState.isAiThinking}');
-
-        // Stop when the game is over OR it is the player's turn again.
-        final shouldStop = newState.status != 'ongoing' ||
-            (newState.playerSide != null &&
-                newState.currentTurn == newState.playerSide);
-
-        if (shouldStop) {
-          _stopPolling();
-        }
-      } catch (e) {
-        debugPrint('[Poll] ⚠ Error during poll: $e');
-        // Keep polling — transient network errors should not abort the loop.
-      }
+    unawaited(_pollOnce());
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      unawaited(_pollOnce());
     });
   }
 
+  Future<void> _pollOnce() async {
+    if (_isPollRequestInFlight) {
+      return;
+    }
+
+    _isPollRequestInFlight = true;
+    try {
+      final newState = await ref.read(gameRepositoryProvider).getGame(gameId);
+      state = AsyncValue.data(newState);
+
+      debugPrint(
+        '[Poll] currentTurn=${newState.currentTurn} '
+        'playerSide=${newState.playerSide} '
+        'status=${newState.status} '
+        'isAiThinking=${newState.isAiThinking}',
+      );
+
+      final shouldStop = newState.status != 'ongoing' ||
+          (newState.playerSide != null &&
+              newState.currentTurn == newState.playerSide);
+
+      if (shouldStop) {
+        _stopPolling();
+      }
+    } catch (e) {
+      debugPrint('[Poll] Error during poll: $e');
+    } finally {
+      _isPollRequestInFlight = false;
+    }
+  }
+
   void _stopPolling() {
-    debugPrint('[Poll] ■ STOP polling game $gameId');
+    debugPrint('[Poll] STOP polling game $gameId');
     _pollTimer?.cancel();
     _pollTimer = null;
+    _isPollRequestInFlight = false;
   }
 }
 
-final gameControllerProvider =
-    AsyncNotifierProvider.autoDispose.family<GameController, GameStateModel, String>(
-  GameController.new,
-);
+final gameControllerProvider = AsyncNotifierProvider.autoDispose.family<
+    GameController,
+    GameStateModel,
+    String>(GameController.new);
 
-// ── UI interaction state ──────────────────────────────────────────────────────
-
-/// Manages piece selection, move submission, and transient error messages.
-///
-/// Separated from [GameController] so that UI interactions do not
-/// invalidate the async game-state stream unnecessarily.
+/// Manages selection, move submission, and transient UI errors.
 class GameUiNotifier extends Notifier<GameUiState> {
   GameUiNotifier(this.gameId);
 
@@ -119,16 +149,6 @@ class GameUiNotifier extends Notifier<GameUiState> {
   @override
   GameUiState build() => GameUiState.empty;
 
-  // ── Public API used by GameScreen ─────────────────────────────────────────
-
-  /// Selects the piece at [row],[col] and pre-filters its legal destinations.
-  ///
-  /// Ownership check is done in [tapIntersection]; this method is called
-  /// only when the caller has already confirmed the piece belongs to the
-  /// current player.
-  ///
-  /// [game] is needed to access backend-provided [GameStateModel.legalMoves]
-  /// for the legal-moves overlay.  Gracefully handles null / missing data.
   void selectPiece(int row, int col, GameStateModel game) {
     final filtered = _filterLegalMovesFor(row, col, game.legalMoves);
     state = GameUiState(
@@ -139,8 +159,6 @@ class GameUiNotifier extends Notifier<GameUiState> {
     );
   }
 
-  /// Extracts the [toRow, toCol] destinations from [legalMoves] that start
-  /// from ([fromRow], [fromCol]).  Returns null when data is unavailable.
   static List<List<int>>? _filterLegalMovesFor(
     int fromRow,
     int fromCol,
@@ -159,63 +177,66 @@ class GameUiNotifier extends Notifier<GameUiState> {
       }
       return result.isEmpty ? null : result;
     } catch (_) {
-      // Unexpected format — degrade gracefully.
       return null;
     }
   }
 
-  /// Clears any active selection.
   void clearSelection() {
     state = GameUiState.empty;
   }
 
-  /// Main tap handler called by [XiangqiBoard] for every board intersection.
-  ///
-  /// Decision logic:
-  ///   1. Ignore taps while a move is being submitted.
-  ///   2. If tapping the already-selected piece → deselect.
-  ///   3. If tapping another own piece → reselect.
-  ///   4. If a piece is selected and the tap is elsewhere → submit move.
-  ///   5. If nothing is selected and tap is on an empty square → no-op.
   Future<void> tapIntersection(int row, int col, GameStateModel game) async {
-    // 1. Ignore during in-flight request.
-    if (state.isSubmitting) return;
-
-    // 2. Ignore while AI is computing its reply.
-    if (game.isAiThinking) return;
+    if (state.isSubmitting || game.isAiThinking) {
+      return;
+    }
 
     final piece = game.boardState[row][col];
     final isOwnPiece = !piece.isEmpty && piece.color == game.currentTurn;
 
     if (!state.hasSelection) {
-      // No active selection: only selecting own pieces makes sense.
       if (isOwnPiece) {
         selectPiece(row, col, game);
       }
       return;
     }
 
-    // A piece is already selected:
     if (row == state.selectedRow && col == state.selectedCol) {
-      // 2. Tap same square → deselect.
       clearSelection();
       return;
     }
 
     if (isOwnPiece) {
-      // 3. Tap another own piece → reselect.
       selectPiece(row, col, game);
       return;
     }
 
-    // 4. Tap elsewhere → attempt move submission.
-    await _submitMove(state.selectedRow!, state.selectedCol!, row, col);
+    await _submitMove(game, state.selectedRow!, state.selectedCol!, row, col);
   }
 
-  // ── Private ───────────────────────────────────────────────────────────────
+  Future<void> _submitMove(
+    GameStateModel currentGame,
+    int fromRow,
+    int fromCol,
+    int toRow,
+    int toCol,
+  ) async {
+    final previousUiState = state;
+    final controller = ref.read(gameControllerProvider(gameId).notifier);
 
-  Future<void> _submitMove(int fromRow, int fromCol, int toRow, int toCol) async {
-    state = state.copyWith(isSubmitting: true, clearError: true);
+    state = state.copyWith(
+      isSubmitting: true,
+      clearError: true,
+      clearSelection: true,
+      clearLegal: true,
+    );
+
+    controller.applyOptimisticPlayerMove(
+      currentGame,
+      fromRow: fromRow,
+      fromCol: fromCol,
+      toRow: toRow,
+      toCol: toCol,
+    );
 
     final request = MoveRequestModel(
       from: [fromRow, fromCol],
@@ -225,29 +246,31 @@ class GameUiNotifier extends Notifier<GameUiState> {
     try {
       final repo = ref.read(gameRepositoryProvider);
       final response = await repo.makeMove(gameId, request);
-
-      // Assumption: on success, MoveResponseModel.gameState contains the
-      // full updated board. GameController is updated directly.
-      ref
-          .read(gameControllerProvider(gameId).notifier)
-          .applyMoveResponse(response.gameState);
-
-      // Clear selection on success.
+      controller.applyMoveResponse(response.gameState);
       state = GameUiState.empty;
     } on DioException catch (e) {
+      controller.replaceState(currentGame);
       final message = _extractErrorMessage(e);
-      state = GameUiState(moveError: message);
+      state = previousUiState.copyWith(
+        isSubmitting: false,
+        moveError: message,
+      );
     } catch (e) {
-      state = GameUiState(moveError: 'Unexpected error: $e');
+      controller.replaceState(currentGame);
+      state = previousUiState.copyWith(
+        isSubmitting: false,
+        moveError: 'Unexpected error: $e',
+      );
     }
   }
 
   static String _extractErrorMessage(DioException e) {
-    // Try to parse the backend's {"ok": false, "message": "..."} payload.
     final data = e.response?.data;
     if (data is Map<String, dynamic>) {
       final msg = data['message'] as String?;
-      if (msg != null && msg.isNotEmpty) return msg;
+      if (msg != null && msg.isNotEmpty) {
+        return msg;
+      }
     }
     return e.message ?? 'Network error';
   }
@@ -255,5 +278,5 @@ class GameUiNotifier extends Notifier<GameUiState> {
 
 final gameUiProvider =
     NotifierProvider.autoDispose.family<GameUiNotifier, GameUiState, String>(
-  GameUiNotifier.new,
-);
+      GameUiNotifier.new,
+    );

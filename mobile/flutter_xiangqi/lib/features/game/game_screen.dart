@@ -9,22 +9,12 @@ import '../../core/utils/board_visual_config.dart';
 import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
-import 'widgets/ai_thinking_indicator.dart';
 import 'widgets/captured_pieces_panel.dart';
 import 'widgets/move_history_panel.dart';
 import 'widgets/side_to_move_banner.dart';
 import 'widgets/xiangqi_board.dart';
 
 /// Game screen: composes all game UI pieces.
-///
-/// Responsibilities:
-///   • Watch the game state provider and the UI state provider.
-///   • Forward board taps to [GameUiNotifier.tapIntersection].
-///   • Show a loading overlay during move submission.
-///   • Show a SnackBar when a move is rejected or a network error occurs.
-///   • Hand display data down to child widgets (keeps this class thin).
-///
-/// Does NOT contain board rendering, game-rule logic, or overlay painting.
 class GameScreen extends ConsumerWidget {
   final String gameId;
 
@@ -34,7 +24,6 @@ class GameScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncGame = ref.watch(gameControllerProvider(gameId));
 
-    // Show SnackBar whenever a move error appears.
     ref.listen(gameUiProvider(gameId), (prev, next) {
       if (next.moveError != null && next.moveError != prev?.moveError) {
         ScaffoldMessenger.of(context)
@@ -94,8 +83,6 @@ class GameScreen extends ConsumerWidget {
   }
 }
 
-// ── Game body ────────────────────────────────────────────────────────────────
-
 class _GameBody extends ConsumerWidget {
   final GameStateModel game;
   final String gameId;
@@ -106,12 +93,11 @@ class _GameBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uiState = ref.watch(gameUiProvider(gameId));
     final uiNotifier = ref.read(gameUiProvider(gameId).notifier);
-
+    final isBoardInteractionLocked = uiState.isSubmitting || game.isAiThinking;
     final captured = CapturedPiecesHelper.fromHistory(game.moveHistory);
 
     return Stack(
       children: [
-        // ── Dark background behind the board area ──────────────────────────
         Positioned.fill(
           child: IgnorePointer(
             child: ImageFiltered(
@@ -176,20 +162,13 @@ class _GameBody extends ConsumerWidget {
             ),
           ),
         ),
-
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Status banner ────────────────────────────────────────────────
-            SideToMoveBanner(game: game),
-
-            // ── AI thinking slim indicator ───────────────────────────────────
-            AiThinkingIndicator(visible: game.isAiThinking),
-
-            // ── Captured pieces ──────────────────────────────────────────────
+            SideToMoveBanner(
+              game: game,
+            ),
             CapturedPiecesPanel(captured: captured),
-
-            // ── Board ─────────────────────────────────────────────────────────
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
@@ -198,8 +177,8 @@ class _GameBody extends ConsumerWidget {
                     final widthFactor = constraints.maxWidth < 480
                         ? 0.96
                         : constraints.maxWidth < 900
-                        ? 0.84
-                        : 0.72;
+                            ? 0.84
+                            : 0.72;
                     final widthFromHeight =
                         constraints.maxHeight *
                         BoardVisualConfig.wrapperAspectRatio;
@@ -214,12 +193,15 @@ class _GameBody extends ConsumerWidget {
                         child: AspectRatio(
                           aspectRatio: BoardVisualConfig.wrapperAspectRatio,
                           child: _BoardFrame(
-                            child: XiangqiBoard(
-                              game: game,
-                              uiState: uiState,
-                              onIntersectionTap: (row, col) {
-                                uiNotifier.tapIntersection(row, col, game);
-                              },
+                            child: IgnorePointer(
+                              ignoring: isBoardInteractionLocked,
+                              child: XiangqiBoard(
+                                game: game,
+                                uiState: uiState,
+                                onIntersectionTap: (row, col) {
+                                  uiNotifier.tapIntersection(row, col, game);
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -229,23 +211,13 @@ class _GameBody extends ConsumerWidget {
                 ),
               ),
             ),
-
-            // ── Move history panel (collapsible) ─────────────────────────────
             MoveHistoryPanel(moveHistory: game.moveHistory),
           ],
         ),
-
-        // ── Blocking overlays ────────────────────────────────────────────────
-        if (uiState.isSubmitting)
-          const AbsorbPointer(child: _SubmittingOverlay())
-        else if (game.isAiThinking)
-          const AbsorbPointer(child: _AiThinkingOverlay()),
       ],
     );
   }
 }
-
-// ── Submitting overlay ────────────────────────────────────────────────────────
 
 class _BoardFrame extends StatelessWidget {
   final Widget child;
@@ -461,7 +433,7 @@ class _BoardKnob extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0x66000000),
+            color: const Color(0x66000000),
             blurRadius: 5 * scale,
             offset: Offset(0, 2 * scale),
           ),
@@ -488,69 +460,6 @@ class _BoardCorner extends StatelessWidget {
     );
   }
 }
-
-class _SubmittingOverlay extends StatelessWidget {
-  const _SubmittingOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: ColoredBox(
-        color: Colors.black.withAlpha(100),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: XiangqiColors.parchment,
-              border: Border.all(color: XiangqiColors.gold, width: 1.5),
-              boxShadow: const [
-                BoxShadow(color: Color(0x88000000), blurRadius: 20),
-              ],
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      XiangqiColors.crimson,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 14),
-                Text(
-                  'Sending move…',
-                  style: TextStyle(
-                    color: XiangqiColors.darkBrown,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── AI Thinking overlay ───────────────────────────────────────────────────────
-
-class _AiThinkingOverlay extends StatelessWidget {
-  const _AiThinkingOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    // Transparent overlay: absorbs pointer events but does NOT dim the board.
-    // The slim [AiThinkingIndicator] banner above the board is the visual cue.
-    return const Positioned.fill(child: SizedBox.shrink());
-  }
-}
-
-// ── Error body ────────────────────────────────────────────────────────────────
 
 class _ErrorBody extends StatelessWidget {
   final Object error;
