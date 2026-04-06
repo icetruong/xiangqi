@@ -1,3 +1,5 @@
+import '../models/game_action_type.dart';
+
 /// Immutable UI state for the game screen.
 ///
 /// Tracks transient interaction data that is NOT part of the persisted
@@ -13,9 +15,12 @@ class GameUiState {
   /// True while a POST /move request is in-flight.
   final bool isSubmitting;
 
-  /// Non-null when the last move was rejected or a network error occurred.
-  /// Cleared on the next successful interaction.
+  /// Non-null when the last move or action was rejected or a network error
+  /// occurred. Cleared on the next successful interaction.
   final String? moveError;
+
+  /// The currently-running top-level action, if any.
+  final GameActionType? activeAction;
 
   /// Legal move destinations (each entry is `[row, col]`) for the selected
   /// piece, pre-filtered from the backend's `legal_moves` list.
@@ -31,12 +36,14 @@ class GameUiState {
     this.isSubmitting = false,
     this.moveError,
     this.legalMovesForSelected,
+    this.activeAction,
   });
 
   /// No piece is selected.
   static const empty = GameUiState();
 
   bool get hasSelection => selectedRow != null && selectedCol != null;
+  bool get isPerformingAction => activeAction != null;
 
   /// Returns a copy with changed fields.
   GameUiState copyWith({
@@ -48,14 +55,18 @@ class GameUiState {
     bool clearError = false,
     List<List<int>>? legalMovesForSelected,
     bool clearLegal = false,
+    GameActionType? activeAction,
+    bool clearAction = false,
   }) {
     return GameUiState(
       selectedRow: clearSelection ? null : (selectedRow ?? this.selectedRow),
       selectedCol: clearSelection ? null : (selectedCol ?? this.selectedCol),
       isSubmitting: isSubmitting ?? this.isSubmitting,
       moveError: clearError ? null : (moveError ?? this.moveError),
-      legalMovesForSelected:
-          clearSelection || clearLegal ? null : (legalMovesForSelected ?? this.legalMovesForSelected),
+      legalMovesForSelected: clearSelection || clearLegal
+          ? null
+          : (legalMovesForSelected ?? this.legalMovesForSelected),
+      activeAction: clearAction ? null : (activeAction ?? this.activeAction),
     );
   }
 }

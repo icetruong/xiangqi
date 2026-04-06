@@ -3,16 +3,21 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
 import '../../core/utils/board_visual_config.dart';
 import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
+import 'models/game_action_type.dart';
 import 'widgets/captured_pieces_panel.dart';
+import 'widgets/game_action_panel.dart';
+import 'widgets/game_result_dialog.dart';
 import 'widgets/move_history_strip.dart';
 import 'widgets/versus_header.dart';
 import 'widgets/xiangqi_board.dart';
+import '../../shared/widgets/themed_confirm_dialog.dart';
 
 /// Game screen: composes all game UI pieces.
 class GameScreen extends ConsumerWidget {
@@ -93,8 +98,39 @@ class _GameBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uiState = ref.watch(gameUiProvider(gameId));
     final uiNotifier = ref.read(gameUiProvider(gameId).notifier);
-    final isBoardInteractionLocked = uiState.isSubmitting || game.isAiThinking;
+    final isBoardInteractionLocked =
+        uiState.isSubmitting || uiState.isPerformingAction || game.isAiThinking;
     final captured = CapturedPiecesHelper.fromHistory(game.moveHistory);
+
+    Future<void> handleAction(GameActionType action) async {
+      final confirmed = await ThemedConfirmDialog.show(context, action: action);
+      if (!confirmed || !context.mounted) {
+        return;
+      }
+
+      if (action == GameActionType.exit) {
+        context.go('/');
+        return;
+      }
+
+      final updatedGame = await uiNotifier.submitGameAction(action, game);
+      if (!context.mounted || updatedGame == null) {
+        return;
+      }
+
+      if (updatedGame.status == 'finished') {
+        await GameResultDialog.show(
+          context,
+          game: updatedGame,
+          onLeave: () {
+            if (context.mounted) {
+              context.go('/');
+            }
+          },
+        );
+      }
+    }
+
     double contentWidthFactor(double maxWidth) {
       if (maxWidth < 480) {
         return 0.98;
@@ -171,110 +207,128 @@ class _GameBody extends ConsumerWidget {
             ),
           ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    const versusGap = 8.0;
-                    const versusHeight = VersusHeader.compactHeight;
-                    const historyGap = 10.0;
-                    const historyHeight = 56.0;
-                    final widthFactor = contentWidthFactor(
-                      constraints.maxWidth,
-                    );
-                    final availableBoardHeight = math.max(
-                      0.0,
-                      constraints.maxHeight -
-                          versusHeight -
-                          versusGap -
-                          historyHeight -
-                          historyGap,
-                    );
-                    final widthFromHeight =
-                        availableBoardHeight *
-                        BoardVisualConfig.wrapperAspectRatio;
-                    final boardWidth = math.min(
-                      math.min(constraints.maxWidth * widthFactor, 612.0),
-                      widthFromHeight,
-                    );
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const versusGap = 8.0;
+              const versusHeight = VersusHeader.compactHeight;
+              const historyGap = 10.0;
+              const historyHeight = 56.0;
+              const actionGap = 6.0;
+              final widthFactor = contentWidthFactor(constraints.maxWidth);
+              final maxBoardWidth = math.min(
+                constraints.maxWidth * widthFactor,
+                612.0,
+              );
+              final minComfortBoardWidth = math.min(maxBoardWidth, 260.0);
+              final heightBudgetWidth =
+                  math.max(
+                    0.0,
+                    constraints.maxHeight -
+                        versusHeight -
+                        versusGap -
+                        historyHeight -
+                        historyGap -
+                        GameActionPanel.compactHeight -
+                        actionGap,
+                  ) *
+                  BoardVisualConfig.wrapperAspectRatio;
+              final boardWidth = math.min(
+                maxBoardWidth,
+                math.max(heightBudgetWidth, minComfortBoardWidth),
+              );
 
-                    if (boardWidth <= 0) {
-                      return const SizedBox.shrink();
-                    }
+              if (boardWidth <= 0) {
+                return const SizedBox.shrink();
+              }
 
-                    return Align(
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(
-                        width: boardWidth,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            AspectRatio(
-                              aspectRatio: BoardVisualConfig.wrapperAspectRatio,
-                              child: _BoardFrame(
-                                child: IgnorePointer(
-                                  ignoring: isBoardInteractionLocked,
-                                  child: XiangqiBoard(
-                                    game: game,
-                                    uiState: uiState,
-                                    onIntersectionTap: (row, col) {
-                                      uiNotifier.tapIntersection(
-                                        row,
-                                        col,
-                                        game,
-                                      );
-                                    },
+              return ScrollConfiguration(
+                behavior: const _GameScreenScrollBehavior(),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            width: boardWidth,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                AspectRatio(
+                                  aspectRatio:
+                                      BoardVisualConfig.wrapperAspectRatio,
+                                  child: _BoardFrame(
+                                    child: IgnorePointer(
+                                      ignoring: isBoardInteractionLocked,
+                                      child: XiangqiBoard(
+                                        game: game,
+                                        uiState: uiState,
+                                        onIntersectionTap: (row, col) {
+                                          uiNotifier.tapIntersection(
+                                            row,
+                                            col,
+                                            game,
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(height: versusGap),
+                                SizedBox(
+                                  height: versusHeight,
+                                  child: VersusHeader(game: game),
+                                ),
+                                const SizedBox(height: historyGap),
+                                SizedBox(
+                                  height: historyHeight,
+                                  child: MoveHistoryStrip(
+                                    moveHistory: game.moveHistory,
+                                  ),
+                                ),
+                                const SizedBox(height: actionGap),
+                                GameActionPanel(
+                                  isGameFinished: game.status != 'ongoing',
+                                  isBusy:
+                                      uiState.isSubmitting ||
+                                      uiState.isPerformingAction,
+                                  activeAction: uiState.activeAction,
+                                  onResign: () =>
+                                      handleAction(GameActionType.resign),
+                                  onDraw: () =>
+                                      handleAction(GameActionType.draw),
+                                  onExit: () =>
+                                      handleAction(GameActionType.exit),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: versusGap),
-                            SizedBox(
-                              height: versusHeight,
-                              child: VersusHeader(game: game),
-                            ),
-                            const SizedBox(height: historyGap),
-                            SizedBox(
-                              height: historyHeight,
-                              child: MoveHistoryStrip(
-                                moveHistory: game.moveHistory,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                        if (!captured.isEmpty) ...[
+                          const SizedBox(height: 5),
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: boardWidth,
+                              child: CapturedPiecesPanel(captured: captured),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            if (!captured.isEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final contentWidth = math.min(
-                      constraints.maxWidth *
-                          contentWidthFactor(constraints.maxWidth),
-                      612.0,
-                    );
-
-                    return Align(
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(
-                        width: contentWidth,
-                        child: CapturedPiecesPanel(captured: captured),
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
+              );
+            },
+          ),
         ),
       ],
     );
@@ -559,5 +613,18 @@ class _ErrorBody extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _GameScreenScrollBehavior extends ScrollBehavior {
+  const _GameScreenScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
   }
 }

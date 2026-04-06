@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/game_state_model.dart';
 import '../../data/models/move_request_model.dart';
 import '../../data/providers.dart';
+import 'models/game_action_type.dart';
 import 'state/game_ui_state.dart';
 
 /// Loads and refreshes the persisted game state from the backend.
@@ -59,7 +60,8 @@ class GameController extends AsyncNotifier<GameStateModel> {
   void applyMoveResponse(GameStateModel updated) {
     state = AsyncValue.data(updated);
 
-    final aiTurn = updated.status == 'ongoing' &&
+    final aiTurn =
+        updated.status == 'ongoing' &&
         updated.playerSide != null &&
         updated.currentTurn != updated.playerSide;
 
@@ -113,7 +115,8 @@ class GameController extends AsyncNotifier<GameStateModel> {
         'isAiThinking=${newState.isAiThinking}',
       );
 
-      final shouldStop = newState.status != 'ongoing' ||
+      final shouldStop =
+          newState.status != 'ongoing' ||
           (newState.playerSide != null &&
               newState.currentTurn == newState.playerSide);
 
@@ -135,10 +138,8 @@ class GameController extends AsyncNotifier<GameStateModel> {
   }
 }
 
-final gameControllerProvider = AsyncNotifierProvider.autoDispose.family<
-    GameController,
-    GameStateModel,
-    String>(GameController.new);
+final gameControllerProvider = AsyncNotifierProvider.autoDispose
+    .family<GameController, GameStateModel, String>(GameController.new);
 
 /// Manages selection, move submission, and transient UI errors.
 class GameUiNotifier extends Notifier<GameUiState> {
@@ -186,7 +187,7 @@ class GameUiNotifier extends Notifier<GameUiState> {
   }
 
   Future<void> tapIntersection(int row, int col, GameStateModel game) async {
-    if (state.isSubmitting || game.isAiThinking) {
+    if (state.isSubmitting || state.isPerformingAction || game.isAiThinking) {
       return;
     }
 
@@ -211,6 +212,53 @@ class GameUiNotifier extends Notifier<GameUiState> {
     }
 
     await _submitMove(game, state.selectedRow!, state.selectedCol!, row, col);
+  }
+
+  Future<GameStateModel?> submitGameAction(
+    GameActionType action,
+    GameStateModel currentGame,
+  ) async {
+    if (action == GameActionType.exit ||
+        state.isSubmitting ||
+        state.isPerformingAction ||
+        currentGame.status != 'ongoing') {
+      return null;
+    }
+
+    state = state.copyWith(
+      activeAction: action,
+      clearError: true,
+      clearSelection: true,
+      clearLegal: true,
+    );
+
+    try {
+      final repo = ref.read(gameRepositoryProvider);
+
+      switch (action) {
+        case GameActionType.resign:
+          await repo.resignGame(gameId);
+          break;
+        case GameActionType.draw:
+          await repo.drawGame(gameId);
+          break;
+        case GameActionType.exit:
+          return null;
+      }
+
+      final updatedGame = await repo.getGame(gameId);
+      ref
+          .read(gameControllerProvider(gameId).notifier)
+          .replaceState(updatedGame);
+      state = GameUiState.empty;
+      return updatedGame;
+    } on DioException catch (e) {
+      state = GameUiState.empty.copyWith(moveError: _extractErrorMessage(e));
+    } catch (e) {
+      state = GameUiState.empty.copyWith(moveError: 'Unexpected error: $e');
+    }
+
+    return null;
   }
 
   Future<void> _submitMove(
@@ -251,10 +299,7 @@ class GameUiNotifier extends Notifier<GameUiState> {
     } on DioException catch (e) {
       controller.replaceState(currentGame);
       final message = _extractErrorMessage(e);
-      state = previousUiState.copyWith(
-        isSubmitting: false,
-        moveError: message,
-      );
+      state = previousUiState.copyWith(isSubmitting: false, moveError: message);
     } catch (e) {
       controller.replaceState(currentGame);
       state = previousUiState.copyWith(
@@ -276,7 +321,5 @@ class GameUiNotifier extends Notifier<GameUiState> {
   }
 }
 
-final gameUiProvider =
-    NotifierProvider.autoDispose.family<GameUiNotifier, GameUiState, String>(
-      GameUiNotifier.new,
-    );
+final gameUiProvider = NotifierProvider.autoDispose
+    .family<GameUiNotifier, GameUiState, String>(GameUiNotifier.new);
