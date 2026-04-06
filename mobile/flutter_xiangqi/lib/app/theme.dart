@@ -141,6 +141,18 @@ class XiangqiTextStyles {
     letterSpacing: 1,
     color: XiangqiColors.parchment,
   );
+
+  static TextStyle get gameHeaderTitle => GoogleFonts.cinzel(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 4.4,
+    color: XiangqiColors.goldLight,
+    height: 0.98,
+    shadows: const [
+      Shadow(color: Color(0x88000000), offset: Offset(0, 2), blurRadius: 8),
+      Shadow(color: Color(0x4D7A4B11), offset: Offset(0, 0), blurRadius: 14),
+    ],
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

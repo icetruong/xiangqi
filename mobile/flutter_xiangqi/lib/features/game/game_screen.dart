@@ -14,6 +14,7 @@ import 'models/game_action_type.dart';
 import 'widgets/captured_pieces_panel.dart';
 import 'widgets/game_action_panel.dart';
 import 'widgets/game_result_dialog.dart';
+import 'widgets/game_top_header.dart';
 import 'widgets/move_history_strip.dart';
 import 'widgets/versus_header.dart';
 import 'widgets/xiangqi_board.dart';
@@ -46,26 +47,16 @@ class GameScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: XiangqiColors.darkBrown,
-      appBar: AppBar(
-        backgroundColor: XiangqiColors.darkBrown,
-        foregroundColor: XiangqiColors.goldLight,
-        title: const Text(
-          'XIANGQI',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 4,
-            color: XiangqiColors.goldLight,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: XiangqiColors.goldLight),
-            tooltip: 'Refresh',
-            onPressed: () =>
-                ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
-          ),
-        ],
+      appBar: GameTopHeader(
+        onBack: () {
+          if (GoRouter.of(context).canPop()) {
+            context.pop();
+            return;
+          }
+          context.go('/');
+        },
+        onRefresh: () =>
+            ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
       ),
       body: SafeArea(
         child: asyncGame.when(
