@@ -11,7 +11,6 @@ class PieceWidget extends StatelessWidget {
   final String type;
   final double size;
   final bool isSelected;
-  final bool isLastMoveTarget;
   final bool isCaptureTarget;
   final bool isInCheck;
 
@@ -21,7 +20,6 @@ class PieceWidget extends StatelessWidget {
     required this.type,
     required this.size,
     this.isSelected = false,
-    this.isLastMoveTarget = false,
     this.isCaptureTarget = false,
     this.isInCheck = false,
   });
@@ -64,15 +62,6 @@ class PieceWidget extends StatelessWidget {
               piecePx: _piecePx,
               lifted: isSelected,
             ),
-            if (isLastMoveTarget)
-              _OutlineRing(
-                size: size,
-                insetPx: BoardVisualConfig.pieceLastMoveInsetPx,
-                strokePx: BoardVisualConfig.pieceLastMoveStrokePx,
-                color: XiangqiColors.hintOrange,
-                glowPx: BoardVisualConfig.pieceLastMoveGlowPx,
-                glowColor: XiangqiColors.hintOrange.withAlpha(153),
-              ),
             if (isCaptureTarget)
               _OutlineRing(
                 size: size,

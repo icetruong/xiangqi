@@ -12,9 +12,10 @@ import 'piece_widget.dart';
 ///
 /// Stack layers (bottom to top):
 ///   1. [BoardBackground] — warm-wood background with grid lines
-///   2. [LastMoveOverlay] — amber rings on from/to squares of the last move
+///   2. [LastMoveOverlay] — amber source marker for the last move
 ///   3. [LegalMovesOverlay] — green dots on valid destinations for selected piece
 ///   4. Piece [Positioned] widgets — pieces with selection ring inside [PieceWidget]
+///   5. [LastMoveOverlay] — amber target ring above the moved piece
 ///
 /// Layout strategy:
 ///   • Parent constrains via [AspectRatio] + [Expanded]; we always get finite bounds.
@@ -53,11 +54,13 @@ class XiangqiBoard extends StatelessWidget {
             // Layer 1: board background
             const BoardBackground(),
 
-            // Layer 2: last-move amber rings
+            // Layer 2: last-move source marker
             LastMoveOverlay(
               lastMove: game.lastMove,
               boardW: boardW,
               boardH: boardH,
+              showSourceMarker: true,
+              showTargetRing: false,
             ),
 
             // Layer 3: legal-move destination dots (only when a piece is selected)
@@ -69,6 +72,15 @@ class XiangqiBoard extends StatelessWidget {
 
             // Layer 4: pieces (selection ring rendered inside PieceWidget)
             ..._buildPieces(boardW, boardH),
+
+            // Layer 5: ring around the destination piece, matching the web board.
+            LastMoveOverlay(
+              lastMove: game.lastMove,
+              boardW: boardW,
+              boardH: boardH,
+              showSourceMarker: false,
+              showTargetRing: true,
+            ),
           ],
         );
 
@@ -100,7 +112,6 @@ class XiangqiBoard extends StatelessWidget {
     final size = BoardLayout.pieceSize(boardW, boardH);
     final half = size / 2;
     final captureTargets = _captureTargets();
-    final lastMove = game.lastMove;
 
     for (int row = 0; row < game.boardState.length; row++) {
       final rowList = game.boardState[row];
@@ -116,10 +127,6 @@ class XiangqiBoard extends StatelessWidget {
           size,
           half,
           isCaptureTarget: captureTargets.contains('$row,$col'),
-          isLastMoveTarget:
-              lastMove != null &&
-              lastMove.to[0] == row &&
-              lastMove.to[1] == col,
           isInCheck:
               piece.type?.toUpperCase() == 'K' && game.inCheck == piece.color,
         );
@@ -144,7 +151,6 @@ class XiangqiBoard extends StatelessWidget {
     double size,
     double half, {
     required bool isCaptureTarget,
-    required bool isLastMoveTarget,
     required bool isInCheck,
   }) {
     final isSelected =
@@ -161,7 +167,6 @@ class XiangqiBoard extends StatelessWidget {
       size: size,
       isSelected: isSelected,
       isCaptureTarget: isCaptureTarget,
-      isLastMoveTarget: isLastMoveTarget,
       isInCheck: isInCheck,
     );
 
