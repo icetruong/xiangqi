@@ -43,6 +43,14 @@ class XiangqiColors {
   static const Color gold = Color(0xFFCAA76A); // main gold
   static const Color goldLight = Color(0xFFD4AF37); // bright accent
   static const Color goldDark = Color(0xFF8B692A); // deep border gold
+  static const Color lacquerPanelTop = Color(0xFF3A1C0E);
+  static const Color lacquerPanelMid = Color(0xFF2B1308);
+  static const Color lacquerPanelBottom = Color(0xFF1E0D06);
+  static const Color lacquerPanelBorder = Color(0xFF7A5A28);
+  static const Color lacquerPanelOutline = Color(0xFFC9944A);
+  static const Color lacquerPanelText = Color(0xFFF3E4C3);
+  static const Color lacquerPanelMutedText = Color(0xFFD4B87A);
+  static const Color lacquerPanelGlow = Color(0x55E0AF4D);
 
   // ── Scroll rod gradient stops (top bar) ──────────────────────────────────
   static const List<Color> scrollRodColors = [

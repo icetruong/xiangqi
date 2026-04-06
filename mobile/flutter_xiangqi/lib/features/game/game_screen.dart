@@ -11,7 +11,7 @@ import '../../data/models/game_state_model.dart';
 import 'game_controller.dart';
 import 'widgets/captured_pieces_panel.dart';
 import 'widgets/move_history_strip.dart';
-import 'widgets/side_to_move_banner.dart';
+import 'widgets/versus_header.dart';
 import 'widgets/xiangqi_board.dart';
 
 /// Game screen: composes all game UI pieces.
@@ -95,6 +95,15 @@ class _GameBody extends ConsumerWidget {
     final uiNotifier = ref.read(gameUiProvider(gameId).notifier);
     final isBoardInteractionLocked = uiState.isSubmitting || game.isAiThinking;
     final captured = CapturedPiecesHelper.fromHistory(game.moveHistory);
+    double contentWidthFactor(double maxWidth) {
+      if (maxWidth < 480) {
+        return 0.98;
+      }
+      if (maxWidth < 900) {
+        return 0.84;
+      }
+      return 0.72;
+    }
 
     return Stack(
       children: [
@@ -165,23 +174,25 @@ class _GameBody extends ConsumerWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SideToMoveBanner(game: game),
-            CapturedPiecesPanel(captured: captured),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    const historyGap = 12.0;
+                    const versusGap = 8.0;
+                    const versusHeight = VersusHeader.compactHeight;
+                    const historyGap = 10.0;
                     const historyHeight = 56.0;
-                    final widthFactor = constraints.maxWidth < 480
-                        ? 0.96
-                        : constraints.maxWidth < 900
-                        ? 0.84
-                        : 0.72;
+                    final widthFactor = contentWidthFactor(
+                      constraints.maxWidth,
+                    );
                     final availableBoardHeight = math.max(
                       0.0,
-                      constraints.maxHeight - historyHeight - historyGap,
+                      constraints.maxHeight -
+                          versusHeight -
+                          versusGap -
+                          historyHeight -
+                          historyGap,
                     );
                     final widthFromHeight =
                         availableBoardHeight *
@@ -222,6 +233,11 @@ class _GameBody extends ConsumerWidget {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: versusGap),
+                            SizedBox(
+                              height: versusHeight,
+                              child: VersusHeader(game: game),
+                            ),
                             const SizedBox(height: historyGap),
                             SizedBox(
                               height: historyHeight,
@@ -237,6 +253,27 @@ class _GameBody extends ConsumerWidget {
                 ),
               ),
             ),
+            if (!captured.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final contentWidth = math.min(
+                      constraints.maxWidth *
+                          contentWidthFactor(constraints.maxWidth),
+                      612.0,
+                    );
+
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: contentWidth,
+                        child: CapturedPiecesPanel(captured: captured),
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ],
