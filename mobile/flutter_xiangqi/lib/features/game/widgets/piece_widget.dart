@@ -100,10 +100,10 @@ class _TextPiece extends StatelessWidget {
     final isRed = color == 'r';
     final label = PieceMapper.chineseLabel(color, type);
 
-    // Classic Xiangqi board piece palette
-    final bgColor = isRed ? const Color(0xFFC62828) : const Color(0xFF212121);
-    final textColor = isRed ? const Color(0xFFFFEE58) : const Color(0xFFFFF9C4);
-    final borderColor = isRed ? const Color(0xFFB71C1C) : Colors.grey.shade700;
+    final bgColor = isRed ? const Color(0xFFC0392B) : const Color(0xFF2F2F2F);
+    final textColor = isRed ? Colors.white : const Color(0xFFDDDDDD);
+    final borderColor =
+        isRed ? const Color(0xFF6B1010) : const Color(0xFF111111);
 
     return Container(
       width: size,
@@ -152,11 +152,8 @@ class _ImagePiece extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = PieceMapper.chineseLabel(color, type);
-    // Darker red for red pieces so it contrasts with the reddish SVG background? 
-    // Wait, the web SVG text was fill="#fff" for red and maybe black for black?
-    // Let's use white for everything, or "#fff" for red and "#fff" for black depending on the SVG.
-    // The SVGs generally use white text or dark text. In web: red pieces have white text, black pieces also have white text (black pieces use dark radial gradient background).
-    final textColor = Colors.white;
+    final textColor =
+        color == 'r' ? Colors.white : const Color(0xFFDDDDDD);
 
     return SizedBox(
       width: size,

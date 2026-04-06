@@ -1,68 +1,55 @@
 /// Maps backend piece codes to display information.
 ///
-/// Backend format: two-character string, e.g. "rK", "bR", "rP".
-///   • First character: 'r' = red, 'b' = black
-///   • Second character: piece type
+/// Backend format: two-character string, e.g. `rK`, `bR`, `rP`.
+///   - First character: `r` = red, `b` = black
+///   - Second character: piece type
 ///
 /// Piece type codes (from backend engine):
-///   K = King (將/帥)   A = Advisor (士/仕)   E = Elephant (象/相)
-///   H = Horse (馬)     R = Rook (車)          C = Cannon (炮)
-///   P = Pawn (卒/兵)
+///   - `K` = king/general
+///   - `A` = advisor/guard
+///   - `E` = elephant/minister
+///   - `H`/`N` = horse
+///   - `R` = rook
+///   - `C` = cannon
+///   - `P` = pawn
 class PieceMapper {
-  PieceMapper._(); // non-instantiable utility class
+  PieceMapper._();
 
-  // ── Chinese labels ────────────────────────────────────────────────────────
+  static const Map<String, String> _redLabels = {
+    'K': '\u5E25', // shuai
+    'A': '\u4ED5', // shi
+    'E': '\u76F8', // xiang
+    'H': '\u508C', // ma
+    'N': '\u508C', // ma
+    'R': '\u4FE5', // ju
+    'C': '\u70AE', // pao
+    'P': '\u5175', // bing
+  };
 
-  /// Returns the Chinese character label for a piece.
-  ///
-  /// Red pieces use traditional general-side characters (帥, 仕, 相, 馬, 車, 炮, 兵).
-  /// Black pieces use counsellor-side characters (將, 士, 象, 馬, 車, 炮, 卒).
+  static const Map<String, String> _blackLabels = {
+    'K': '\u5C07', // jiang
+    'A': '\u58EB', // shi
+    'E': '\u8C61', // xiang
+    'H': '\u99AC', // ma
+    'N': '\u99AC', // ma
+    'R': '\u8ECA', // ju
+    'C': '\u7832', // pao
+    'P': '\u5352', // zu
+  };
+
+  /// Returns the display label for a Xiangqi piece.
   static String chineseLabel(String color, String type) {
-    if (color == 'r') {
-      return _redLabels[type] ?? type;
-    } else {
-      return _blackLabels[type] ?? type;
-    }
+    final normalizedType = type.toUpperCase();
+    final labels = color == 'r' ? _redLabels : _blackLabels;
+    return labels[normalizedType] ?? normalizedType;
   }
 
-  static const _redLabels = {
-    'K': '帥',
-    'A': '仕',
-    'E': '相',
-    'H': '馬',
-    'N': '馬',
-    'R': '車',
-    'C': '炮',
-    'P': '兵',
-  };
-
-  static const _blackLabels = {
-    'K': '將',
-    'A': '士',
-    'E': '象',
-    'H': '馬',
-    'N': '馬',
-    'R': '車',
-    'C': '炮',
-    'P': '卒',
-  };
-
-  // ── Asset paths ───────────────────────────────────────────────────────────
-
-  /// Returns the asset image path for a piece, or null if assets are not
-  /// available.
-  ///
-  /// Expected asset location: assets/images/pieces/{color}{type}.svg
-  /// e.g. assets/images/pieces/bK.svg for black king.
+  /// Returns the SVG asset path for a piece.
   static String? assetPath(String color, String type) {
-    return 'assets/images/pieces/$color$type.svg';
+    final normalizedType = type.toUpperCase();
+    return 'assets/images/pieces/$color$normalizedType.svg';
   }
-
-
-  // ── Convenience helpers ───────────────────────────────────────────────────
 
   /// Whether image assets are expected to be present.
-  ///
-  /// Set to false during early development to always show the text fallback.
   static const bool assetsAvailable = true;
 }
