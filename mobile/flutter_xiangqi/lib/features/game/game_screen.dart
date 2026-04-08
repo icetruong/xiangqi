@@ -9,11 +9,13 @@ import '../../app/theme.dart';
 import '../../core/utils/board_visual_config.dart';
 import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
+import '../../data/providers.dart';
 import 'game_controller.dart';
 import 'models/game_action_type.dart';
+import 'models/game_result_view_model.dart';
 import 'widgets/captured_pieces_panel.dart';
 import 'widgets/game_action_panel.dart';
-import 'widgets/game_result_dialog.dart';
+import 'widgets/game_result_modal.dart';
 import 'widgets/game_top_header.dart';
 import 'widgets/move_history_strip.dart';
 import 'widgets/versus_header.dart';
@@ -21,16 +23,25 @@ import 'widgets/xiangqi_board.dart';
 import '../../shared/widgets/themed_confirm_dialog.dart';
 
 /// Game screen: composes all game UI pieces.
-class GameScreen extends ConsumerWidget {
+class GameScreen extends ConsumerStatefulWidget {
   final String gameId;
 
   const GameScreen({super.key, required this.gameId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncGame = ref.watch(gameControllerProvider(gameId));
+  ConsumerState<GameScreen> createState() => _GameScreenState();
+}
 
-    ref.listen(gameUiProvider(gameId), (prev, next) {
+class _GameScreenState extends ConsumerState<GameScreen> {
+  String? _lastPresentedResultSignature;
+  bool _resultPresentationQueued = false;
+  bool _isPresentingResult = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncGame = ref.watch(gameControllerProvider(widget.gameId));
+
+    ref.listen(gameUiProvider(widget.gameId), (prev, next) {
       if (next.moveError != null && next.moveError != prev?.moveError) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -45,6 +56,8 @@ class GameScreen extends ConsumerWidget {
       }
     });
 
+    _queueResultPresentation(asyncGame.asData?.value);
+
     return Scaffold(
       backgroundColor: XiangqiColors.darkBrown,
       appBar: GameTopHeader(
@@ -55,8 +68,9 @@ class GameScreen extends ConsumerWidget {
           }
           context.go('/');
         },
-        onRefresh: () =>
-            ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
+        onRefresh: () => ref
+            .read(gameControllerProvider(widget.gameId).notifier)
+            .refreshGame(),
       ),
       body: SafeArea(
         child: asyncGame.when(
@@ -69,13 +83,106 @@ class GameScreen extends ConsumerWidget {
           ),
           error: (error, _) => _ErrorBody(
             error: error,
-            onRetry: () =>
-                ref.read(gameControllerProvider(gameId).notifier).refreshGame(),
+            onRetry: () => ref
+                .read(gameControllerProvider(widget.gameId).notifier)
+                .refreshGame(),
           ),
-          data: (game) => _GameBody(game: game, gameId: gameId),
+          data: (game) => _GameBody(game: game, gameId: widget.gameId),
         ),
       ),
     );
+  }
+
+  void _queueResultPresentation(GameStateModel? game) {
+    if (game == null) {
+      return;
+    }
+
+    if (game.status != 'finished') {
+      _lastPresentedResultSignature = null;
+      return;
+    }
+
+    final signature = _resultSignature(game);
+    if (_lastPresentedResultSignature == signature ||
+        _resultPresentationQueued ||
+        _isPresentingResult) {
+      return;
+    }
+
+    _lastPresentedResultSignature = signature;
+    _resultPresentationQueued = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _resultPresentationQueued = false;
+      if (!mounted) {
+        return;
+      }
+      _presentResult(game);
+    });
+  }
+
+  Future<void> _presentResult(GameStateModel game) async {
+    if (_isPresentingResult) {
+      return;
+    }
+
+    _isPresentingResult = true;
+    try {
+      final result = await GameResultModal.show(
+        context,
+        viewModel: GameResultViewModel.fromGame(game),
+        onPlayAgain: () => _createReplayGame(game),
+      );
+
+      if (!mounted || result == null) {
+        return;
+      }
+
+      switch (result.action) {
+        case GameResultModalAction.stay:
+          return;
+        case GameResultModalAction.goHome:
+          context.go('/');
+          return;
+        case GameResultModalAction.playAgain:
+          final nextGameId = result.nextGameId;
+          if (nextGameId != null && nextGameId.isNotEmpty) {
+            context.go('/game/$nextGameId');
+          }
+          return;
+      }
+    } finally {
+      _isPresentingResult = false;
+    }
+  }
+
+  Future<String> _createReplayGame(GameStateModel game) async {
+    final difficulty = (game.difficulty?.isNotEmpty ?? false)
+        ? game.difficulty!
+        : 'normal';
+    final playerSide = game.playerSide == 'b' || game.playerSide == 'r'
+        ? game.playerSide!
+        : 'r';
+
+    final nextGame = await ref
+        .read(gameRepositoryProvider)
+        .createGame(difficulty, playerSide);
+    final gameId = nextGame.gameId;
+    if (gameId == null || gameId.isEmpty) {
+      throw StateError('Replay game id is missing.');
+    }
+    return gameId;
+  }
+
+  String _resultSignature(GameStateModel game) {
+    return [
+      game.gameId ?? widget.gameId,
+      game.status,
+      game.winner ?? '-',
+      game.endReason ?? '-',
+      '${game.moveHistory.length}',
+    ].join('|');
   }
 }
 
@@ -104,22 +211,11 @@ class _GameBody extends ConsumerWidget {
         return;
       }
 
-      final updatedGame = await uiNotifier.submitGameAction(action, game);
-      if (!context.mounted || updatedGame == null) {
+      if (!context.mounted) {
         return;
       }
 
-      if (updatedGame.status == 'finished') {
-        await GameResultDialog.show(
-          context,
-          game: updatedGame,
-          onLeave: () {
-            if (context.mounted) {
-              context.go('/');
-            }
-          },
-        );
-      }
+      await uiNotifier.submitGameAction(action, game);
     }
 
     double contentWidthFactor(double maxWidth) {

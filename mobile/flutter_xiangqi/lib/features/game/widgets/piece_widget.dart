@@ -12,7 +12,6 @@ class PieceWidget extends StatelessWidget {
   final double size;
   final bool isSelected;
   final bool isCaptureTarget;
-  final bool isInCheck;
 
   const PieceWidget({
     super.key,
@@ -21,7 +20,6 @@ class PieceWidget extends StatelessWidget {
     required this.size,
     this.isSelected = false,
     this.isCaptureTarget = false,
-    this.isInCheck = false,
   });
 
   @override
@@ -39,15 +37,7 @@ class PieceWidget extends StatelessWidget {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            if (isInCheck)
-              _StatusRing(
-                size: size,
-                spreadPx: BoardVisualConfig.kingCheckRingPx,
-                glowPx: BoardVisualConfig.kingCheckGlowPx,
-                color: const Color(0xFFDC2626),
-                glowColor: const Color(0x99DC2626),
-              )
-            else if (isSelected)
+            if (isSelected)
               _StatusRing(
                 size: size,
                 spreadPx: BoardVisualConfig.pieceSelectedRingPx,

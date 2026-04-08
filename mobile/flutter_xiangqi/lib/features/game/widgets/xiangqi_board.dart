@@ -7,7 +7,10 @@ import '../../../data/models/game_state_model.dart';
 import '../../../data/models/move_model.dart';
 import '../../../data/models/piece_model.dart';
 import '../state/game_ui_state.dart';
+import '../utils/board_piece_locator.dart';
 import 'board_background_painter.dart';
+import 'check_effect_overlay.dart';
+import 'check_warning_banner.dart';
 import 'last_move_overlay.dart';
 import 'legal_moves_overlay.dart';
 import 'piece_widget.dart';
@@ -160,6 +163,10 @@ class _XiangqiBoardState extends State<XiangqiBoard>
       builder: (context, constraints) {
         final boardW = constraints.maxWidth;
         final boardH = constraints.maxHeight;
+        final checkedGeneral = BoardPieceLocator.findCheckedGeneral(
+          widget.game.boardState,
+          widget.game.inCheck,
+        );
 
         Widget board = AnimatedBuilder(
           animation: _moveAnimation,
@@ -194,8 +201,20 @@ class _XiangqiBoardState extends State<XiangqiBoard>
                   showSourceMarker: false,
                   showTargetRing: animatedMove == null,
                 ),
+                CheckEffectOverlay(
+                  checkedGeneral: checkedGeneral,
+                  boardW: boardW,
+                  boardH: boardH,
+                ),
                 if (animatedMove != null)
                   _buildAnimatedPiece(animatedMove, boardW, boardH),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: CheckWarningBanner(
+                    checkedSide: widget.game.inCheck,
+                    playerSide: widget.game.playerSide,
+                  ),
+                ),
               ],
             );
           },
@@ -249,9 +268,6 @@ class _XiangqiBoardState extends State<XiangqiBoard>
           size,
           half,
           isCaptureTarget: captureTargets.contains('$row,$col'),
-          isInCheck:
-              piece.type?.toUpperCase() == 'K' &&
-              widget.game.inCheck == piece.color,
         );
 
         final isSelected =
@@ -287,7 +303,6 @@ class _XiangqiBoardState extends State<XiangqiBoard>
     double size,
     double half, {
     required bool isCaptureTarget,
-    required bool isInCheck,
   }) {
     final isSelected =
         widget.uiState != null &&
@@ -303,7 +318,6 @@ class _XiangqiBoardState extends State<XiangqiBoard>
       size: size,
       isSelected: isSelected,
       isCaptureTarget: isCaptureTarget,
-      isInCheck: isInCheck,
     );
 
     if (widget.onIntersectionTap != null) {
@@ -332,9 +346,6 @@ class _XiangqiBoardState extends State<XiangqiBoard>
     final progress = _moveAnimation.value;
     final left = lerpDouble(startX, endX, progress) ?? endX;
     final top = lerpDouble(startY, endY, progress) ?? endY;
-    final isInCheck =
-        move.piece.type?.toUpperCase() == 'K' &&
-        widget.game.inCheck == move.piece.color;
 
     return Positioned(
       key: ValueKey(
@@ -349,7 +360,6 @@ class _XiangqiBoardState extends State<XiangqiBoard>
           size: size,
           isSelected: false,
           isCaptureTarget: false,
-          isInCheck: isInCheck,
         ),
       ),
     );
