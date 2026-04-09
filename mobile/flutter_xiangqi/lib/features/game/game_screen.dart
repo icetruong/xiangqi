@@ -196,7 +196,7 @@ class _GameBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uiState = ref.watch(gameUiProvider(gameId));
     final uiNotifier = ref.read(gameUiProvider(gameId).notifier);
-    final isBoardInteractionLocked =
+    final isInteractionLocked =
         uiState.isSubmitting || uiState.isPerformingAction || game.isAiThinking;
     final captured = CapturedPiecesHelper.fromHistory(game.moveHistory);
 
@@ -354,7 +354,7 @@ class _GameBody extends ConsumerWidget {
                                       BoardVisualConfig.wrapperAspectRatio,
                                   child: _BoardFrame(
                                     child: IgnorePointer(
-                                      ignoring: isBoardInteractionLocked,
+                                      ignoring: isInteractionLocked,
                                       child: XiangqiBoard(
                                         game: game,
                                         uiState: uiState,
@@ -384,9 +384,7 @@ class _GameBody extends ConsumerWidget {
                                 const SizedBox(height: actionGap),
                                 GameActionPanel(
                                   isGameFinished: game.status != 'ongoing',
-                                  isBusy:
-                                      uiState.isSubmitting ||
-                                      uiState.isPerformingAction,
+                                  isBusy: isInteractionLocked,
                                   activeAction: uiState.activeAction,
                                   onResign: () =>
                                       handleAction(GameActionType.resign),

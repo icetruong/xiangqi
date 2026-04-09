@@ -19,23 +19,29 @@ class GameController extends AsyncNotifier<GameStateModel> {
 
   Timer? _pollTimer;
   bool _isPollRequestInFlight = false;
+  int _pollGeneration = 0;
 
   @override
   Future<GameStateModel> build() async {
     ref.onDispose(_stopPolling);
-    return ref.read(gameRepositoryProvider).getGame(gameId);
+    final game = await ref.read(gameRepositoryProvider).getGame(gameId);
+    _syncPollingFor(game, source: 'build');
+    return game;
   }
 
   Future<void> refreshGame() async {
+    _stopPolling();
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-      () => ref.read(gameRepositoryProvider).getGame(gameId),
-    );
+    try {
+      final refreshed = await ref.read(gameRepositoryProvider).getGame(gameId);
+      _setStateWithPolling(refreshed, source: 'refreshGame');
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+    }
   }
 
   void replaceState(GameStateModel updated) {
-    _stopPolling();
-    state = AsyncValue.data(updated);
+    _setStateWithPolling(updated, source: 'replaceState');
   }
 
   void applyOptimisticPlayerMove(
@@ -58,27 +64,7 @@ class GameController extends AsyncNotifier<GameStateModel> {
 
   /// Applies the authoritative state returned by the move endpoint.
   void applyMoveResponse(GameStateModel updated) {
-    state = AsyncValue.data(updated);
-
-    final aiTurn =
-        updated.status == 'ongoing' &&
-        updated.playerSide != null &&
-        updated.currentTurn != updated.playerSide;
-
-    debugPrint(
-      '[Poll] applyMoveResponse '
-      'currentTurn=${updated.currentTurn} '
-      'playerSide=${updated.playerSide} '
-      'status=${updated.status} '
-      'isAiThinking=${updated.isAiThinking} '
-      'willPoll=$aiTurn',
-    );
-
-    if (aiTurn) {
-      _startPolling();
-    } else {
-      _stopPolling();
-    }
+    _setStateWithPolling(updated, source: 'applyMoveResponse');
   }
 
   void _startPolling() {
@@ -87,18 +73,19 @@ class GameController extends AsyncNotifier<GameStateModel> {
       return;
     }
 
+    final generation = ++_pollGeneration;
     debugPrint(
       '[Poll] START polling game $gameId every '
       '${_pollInterval.inMilliseconds} ms',
     );
 
-    unawaited(_pollOnce());
+    unawaited(_pollOnce(generation));
     _pollTimer = Timer.periodic(_pollInterval, (_) {
-      unawaited(_pollOnce());
+      unawaited(_pollOnce(generation));
     });
   }
 
-  Future<void> _pollOnce() async {
+  Future<void> _pollOnce(int generation) async {
     if (_isPollRequestInFlight) {
       return;
     }
@@ -106,6 +93,9 @@ class GameController extends AsyncNotifier<GameStateModel> {
     _isPollRequestInFlight = true;
     try {
       final newState = await ref.read(gameRepositoryProvider).getGame(gameId);
+      if (generation != _pollGeneration) {
+        return;
+      }
       state = AsyncValue.data(newState);
 
       debugPrint(
@@ -115,26 +105,66 @@ class GameController extends AsyncNotifier<GameStateModel> {
         'isAiThinking=${newState.isAiThinking}',
       );
 
-      final shouldStop =
-          newState.status != 'ongoing' ||
-          (newState.playerSide != null &&
-              newState.currentTurn == newState.playerSide);
-
-      if (shouldStop) {
+      if (!_shouldPoll(newState)) {
         _stopPolling();
       }
     } catch (e) {
-      debugPrint('[Poll] Error during poll: $e');
+      if (generation == _pollGeneration) {
+        debugPrint('[Poll] Error during poll: $e');
+      }
     } finally {
-      _isPollRequestInFlight = false;
+      if (generation == _pollGeneration) {
+        _isPollRequestInFlight = false;
+      }
     }
   }
 
   void _stopPolling() {
-    debugPrint('[Poll] STOP polling game $gameId');
+    final wasPolling = _pollTimer != null || _isPollRequestInFlight;
+    _pollGeneration++;
     _pollTimer?.cancel();
     _pollTimer = null;
     _isPollRequestInFlight = false;
+    if (wasPolling) {
+      debugPrint('[Poll] STOP polling game $gameId');
+    }
+  }
+
+  void _setStateWithPolling(GameStateModel updated, {required String source}) {
+    state = AsyncValue.data(updated);
+    _syncPollingFor(updated, source: source);
+  }
+
+  void _syncPollingFor(GameStateModel updated, {required String source}) {
+    final shouldPoll = _shouldPoll(updated);
+    debugPrint(
+      '[Poll] $source '
+      'currentTurn=${updated.currentTurn} '
+      'playerSide=${updated.playerSide} '
+      'status=${updated.status} '
+      'isAiThinking=${updated.isAiThinking} '
+      'willPoll=$shouldPoll',
+    );
+
+    if (shouldPoll) {
+      _startPolling();
+    } else {
+      _stopPolling();
+    }
+  }
+
+  bool _shouldPoll(GameStateModel game) {
+    final playerSide = _normalizedSide(game.playerSide);
+    return game.status == 'ongoing' &&
+        playerSide != null &&
+        game.currentTurn != playerSide;
+  }
+
+  String? _normalizedSide(String? side) {
+    if (side == 'r' || side == 'b') {
+      return side;
+    }
+    return null;
   }
 }
 
@@ -221,6 +251,7 @@ class GameUiNotifier extends Notifier<GameUiState> {
     if (action == GameActionType.exit ||
         state.isSubmitting ||
         state.isPerformingAction ||
+        currentGame.isAiThinking ||
         currentGame.status != 'ongoing') {
       return null;
     }
