@@ -27,6 +27,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.4.0
   json_serializable: ^6.8.0
+  flutter_launcher_icons: ^0.14.0
 
 flutter:
   uses-material-design: true
@@ -36,3 +37,13 @@ flutter:
     - assets/images/pieces/
     - assets/images/bg/
     - assets/audio/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/app_icon.png"
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    background_color: "#3B2A1E"
+    theme_color: "#3B2A1E"
