@@ -817,3 +817,458 @@ AI IDE phải làm đúng thứ tự sau:
 14. Implement AI polling
 15. Add result dialog / resign / draw
 16. Refactor UI và polish
+
+## PHASE 8
+You are extending an existing Flutter Xiangqi mobile app.
+
+Current goal: PHASE 8 ONLY — Resume Game / Local Persistence.
+
+Context:
+- The app is already playable end-to-end
+- It supports:
+  - create game
+  - board rendering
+  - move submission
+  - AI polling
+  - premium web-inspired UI
+- There is currently no login/account system
+- If the user closes the app, the current game may be lost from the app flow
+- The backend remains the source of truth
+- We want to store the most recent ongoing game locally and restore it on app relaunch
+
+Main objective:
+Implement local resume-game persistence so the user can continue the last ongoing match.
+
+Requirements:
+
+1. Use shared_preferences
+- Add a clean local persistence layer
+- Do NOT call SharedPreferences directly from widgets everywhere
+
+2. Save minimal local game session info
+At minimum persist:
+- lastGameId
+- playerSide
+- difficulty
+- timestamp if useful
+
+3. Save state during gameplay
+- After creating a new game, store the current game info locally
+- After successful move / polling updates, keep the saved game entry current
+- If the game ends, clear the saved active-game entry
+
+4. Restore on app launch
+- On app startup or home screen init:
+  - check if a saved game exists
+  - call the backend game detail endpoint
+  - if the game is still ongoing:
+    - show a clear "Continue Game" action on the home screen
+    - or auto-resume if the architecture already supports it cleanly
+  - if the game is finished or not found:
+    - clear the saved local state
+
+5. Home screen UX
+- Add a "Continue Game" button/card if a resumable game exists
+- Keep it visually consistent with the current premium Xiangqi theme
+- Do not clutter the start screen
+- If no resumable game exists, do not show it
+
+6. Navigation behavior
+- Tapping "Continue Game" should navigate back into the correct GameScreen using the saved gameId
+- Keep current routing architecture intact
+
+7. Architecture requirements
+Use a clean modular structure, for example:
+lib/
+  core/
+    persistence/
+      game_persistence_service.dart
+  features/
+    home/
+      home_controller.dart or equivalent provider logic
+- Keep storage logic separate from UI
+- Do not overengineer
+- Reuse existing controller/provider patterns
+
+8. Data safety
+- Handle cases where:
+  - saved gameId is invalid
+  - backend returns 404
+  - backend says the game is finished
+- In those cases, clear local saved state gracefully
+
+9. Keep scope limited
+- Do NOT redesign the home screen
+- Do NOT change backend contract
+- Do NOT add user accounts/login
+- Do NOT break current move flow or polling
+- Focus only on resume-game persistence and continue-game UX
+
+Files likely to inspect/update:
+- pubspec.yaml
+- lib/features/home/*
+- lib/features/game/*
+- lib/core/*
+- routing/navigation files
+
+Expected output:
+1. Explain the persistence architecture
+2. Show which files are created/updated
+3. Generate all Flutter code for resume-game support
+4. Explain how saved game state is created, restored, and cleared
+5. Stop after Phase 8 only
+
+## PHASE 9
+You are extending an existing Flutter Xiangqi mobile app.
+
+Current goal: PHASE 8 ONLY — Resume Game / Local Persistence.
+
+Context:
+- The app is already playable end-to-end
+- It supports:
+  - create game
+  - board rendering
+  - move submission
+  - AI polling
+  - premium web-inspired UI
+- There is currently no login/account system
+- If the user closes the app, the current game may be lost from the app flow
+- The backend remains the source of truth
+- We want to store the most recent ongoing game locally and restore it on app relaunch
+
+Main objective:
+Implement local resume-game persistence so the user can continue the last ongoing match.
+
+Requirements:
+
+1. Use shared_preferences
+- Add a clean local persistence layer
+- Do NOT call SharedPreferences directly from widgets everywhere
+
+2. Save minimal local game session info
+At minimum persist:
+- lastGameId
+- playerSide
+- difficulty
+- timestamp if useful
+
+3. Save state during gameplay
+- After creating a new game, store the current game info locally
+- After successful move / polling updates, keep the saved game entry current
+- If the game ends, clear the saved active-game entry
+
+4. Restore on app launch
+- On app startup or home screen init:
+  - check if a saved game exists
+  - call the backend game detail endpoint
+  - if the game is still ongoing:
+    - show a clear "Continue Game" action on the home screen
+    - or auto-resume if the architecture already supports it cleanly
+  - if the game is finished or not found:
+    - clear the saved local state
+
+5. Home screen UX
+- Add a "Continue Game" button/card if a resumable game exists
+- Keep it visually consistent with the current premium Xiangqi theme
+- Do not clutter the start screen
+- If no resumable game exists, do not show it
+
+6. Navigation behavior
+- Tapping "Continue Game" should navigate back into the correct GameScreen using the saved gameId
+- Keep current routing architecture intact
+
+7. Architecture requirements
+Use a clean modular structure, for example:
+lib/
+  core/
+    persistence/
+      game_persistence_service.dart
+  features/
+    home/
+      home_controller.dart or equivalent provider logic
+- Keep storage logic separate from UI
+- Do not overengineer
+- Reuse existing controller/provider patterns
+
+8. Data safety
+- Handle cases where:
+  - saved gameId is invalid
+  - backend returns 404
+  - backend says the game is finished
+- In those cases, clear local saved state gracefully
+
+9. Keep scope limited
+- Do NOT redesign the home screen
+- Do NOT change backend contract
+- Do NOT add user accounts/login
+- Do NOT break current move flow or polling
+- Focus only on resume-game persistence and continue-game UX
+
+Files likely to inspect/update:
+- pubspec.yaml
+- lib/features/home/*
+- lib/features/game/*
+- lib/core/*
+- routing/navigation files
+
+Expected output:
+1. Explain the persistence architecture
+2. Show which files are created/updated
+3. Generate all Flutter code for resume-game support
+4. Explain how saved game state is created, restored, and cleared
+5. Stop after Phase 8 only
+
+## PHASE 10
+You are extending an existing Flutter Xiangqi mobile app.
+
+Current goal: PHASE 9 ONLY — Audio / Music / Sound Effects.
+
+Context:
+- The app is already playable
+- There is already a music toggle concept in the UI
+- The project already uses or plans to use audioplayers
+- We want working sound/music, not just placeholders
+- The app has a premium Xiangqi theme, so the audio should enhance atmosphere
+- The backend remains unchanged; this is purely client-side UX/audio behavior
+
+Main objective:
+Implement background music and sound effects cleanly and reliably.
+
+Requirements:
+
+1. Use a dedicated AudioService
+- Do NOT call audioplayers directly from many widgets
+- Create a clean service layer for:
+  - background music
+  - sound effects
+  - mute/unmute state
+  - optional volume controls if needed later
+
+2. Reuse local assets if available
+- Inspect project/repo assets for available music/sfx files
+- Prefer reusing existing assets already in the repo
+- If exact assets are missing, use clean placeholders but document them
+
+3. Support background music
+- Home/start screen music should play or be prepared
+- Game screen can continue the same music or use the same background track
+- Music should loop
+- Music should obey mute/unmute toggle
+
+4. Support sound effects for key events
+At minimum:
+- piece select
+- successful move
+- capture
+- check
+- game over / victory / defeat
+Only trigger sounds from real events, not randomly
+
+5. Integrate with existing game flow
+- piece select sound on selecting a valid piece
+- move sound on successful move
+- capture sound if last move indicates captured piece
+- check sound when backend state indicates in_check
+- result sound when the game ends
+- Do not break current move logic or polling
+
+6. Persist audio preference
+- Save mute/music enabled state locally using shared_preferences
+- On app launch, restore the previous preference
+
+7. Tie into existing UI controls
+- The music/settings control in the start screen should actually toggle music state if reasonable
+- If it is currently placeholder-only, wire it up cleanly
+- Keep the existing premium UI intact
+
+8. Architecture suggestions
+Use something like:
+lib/
+  core/
+    audio/
+      audio_service.dart
+      audio_state.dart
+      game_sfx_mapper.dart
+- Keep widgets dumb
+- Let controller/service handle audio triggering where appropriate
+
+9. Keep scope limited
+- Do NOT redesign the whole app
+- Do NOT refactor unrelated UI
+- Do NOT break current navigation, polling, or board logic
+- Focus only on production-worthy music/SFX integration
+
+10. Reliability
+- Avoid overlapping chaotic sound playback
+- Keep music and SFX channels separated if helpful
+- Ensure repeated polling does not spam check/game-over sounds repeatedly
+- Only trigger one-time sounds when state changes
+
+Files likely to inspect/update:
+- pubspec.yaml
+- any existing audio/music widgets
+- game controller
+- home screen / settings toggle
+- core/audio/*
+
+Expected output:
+1. Explain the audio architecture
+2. List assets reused or assumed
+3. Show which files are created/updated
+4. Generate all Flutter code for audio/music support
+5. Explain the event-to-sound mapping
+6. Stop after Phase 9 only
+
+
+## PHASE 11
+You are extending an existing Flutter Xiangqi mobile app.
+
+Current goal: PHASE 12 ONLY — Check Effect and Endgame Result Modal.
+
+Context:
+- The app is already playable
+- It already supports:
+  - move submission
+  - AI polling
+  - premium web-inspired UI
+- The backend already exposes relevant state fields such as:
+  - status
+  - winner
+  - end_reason
+  - in_check
+  - current_turn
+- We want the mobile experience to feel more polished and dramatic, similar in spirit to the web version
+
+Main objectives:
+1. Add a polished “chiếu tướng / check” effect
+2. Add a premium result modal/screen for:
+   - chiến thắng
+   - thất bại
+   - hòa
+
+PART A — CHECK EFFECT
+
+Requirements:
+
+1. Trigger condition
+- Use backend-provided `in_check` as the source of truth
+- When `in_check` is not null:
+  - determine which side is currently in check
+  - locate that side’s general/king piece on the board
+  - render the effect there
+
+2. Visual style
+- Match the premium Xiangqi theme
+- Avoid generic error banners
+- Preferred effect:
+  - animated red/orange glow or ring around the checked general
+  - subtle pulse animation
+  - optional compact warning text such as:
+    - "Chiếu tướng!"
+    - "Tướng đang bị chiếu!"
+- Keep it dramatic but elegant
+
+3. Placement
+- Main visual effect should be attached to the checked general on the board
+- Optional text warning can appear inline near the top or near the board, but must not be blocking
+
+4. Animation behavior
+- Start when a checked state appears
+- Continue while the state remains checked
+- Stop cleanly when `in_check` becomes null
+
+PART B — RESULT MODAL / SCREEN
+
+Requirements:
+
+1. Trigger condition
+- When backend state indicates the game is finished
+- Use:
+  - status
+  - winner
+  - end_reason
+- Do not guess outcome outside backend truth
+
+2. Outcome mapping
+Derive player-facing result:
+- if winner == player_side -> victory
+- if winner == ai_side -> defeat
+- if draw / draw_agreement / equivalent -> draw
+Map end_reason into clean Vietnamese copy
+
+3. Visual style
+- Must feel premium and web-inspired
+- Do NOT use a default Material AlertDialog
+- Use a custom styled modal/panel with:
+  - dark dimmed background
+  - centered premium panel
+  - elegant serif typography
+  - gold / ivory / red / dark-brown palette
+  - optional decorative elements matching current app style
+
+4. Result content
+Show:
+- main title:
+  - "Chiến thắng"
+  - "Thất bại"
+  - "Hòa"
+- short subtitle or reason
+- optional explanation from end_reason
+- action buttons:
+  - Chơi lại
+  - Về trang chính
+Optional:
+- Xem lại ván / Đóng if architecture already supports it cleanly
+
+5. Behavior
+- Show result modal only once per finished game state
+- Do not reopen repeatedly on rebuild
+- Keep navigation clean
+- Chơi lại:
+  - start a new game with same side/difficulty if available
+  - or navigate cleanly into the new-game flow
+- Về trang chính:
+  - return to home screen
+
+PART C — ARCHITECTURE REQUIREMENTS
+
+1. Keep logic clean
+- Backend state remains source of truth
+- Do not place all logic inside GameScreen build
+- Use helpers/widgets/view-models where appropriate
+
+2. Suggested structure
+lib/
+  features/
+    game/
+      widgets/
+        check_effect_overlay.dart
+        check_warning_banner.dart
+        game_result_modal.dart
+        result_action_button.dart
+      models/
+        game_result_view_model.dart
+      utils/
+        board_piece_locator.dart
+
+3. Avoid regressions
+- Do NOT break polling
+- Do NOT break move animation
+- Do NOT break board rendering
+- Keep styling consistent with the rest of the app
+
+Files likely to inspect/update:
+- game controller
+- game screen
+- board widget
+- result modal widgets
+- state/view models
+- theme/shared styled components
+
+Expected output:
+1. Explain how `in_check` is detected and rendered
+2. Explain how endgame result is mapped from backend fields
+3. Show which files are created/updated
+4. Generate all Flutter code for the check effect and result modal
+5. Mention assumptions about possible end_reason values
+6. Stop after Phase 10 only
