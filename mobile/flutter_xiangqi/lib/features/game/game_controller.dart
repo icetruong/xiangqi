@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/persistence/persistence_providers.dart';
 import '../../data/models/game_state_model.dart';
 import '../../data/models/move_request_model.dart';
 import '../../data/providers.dart';
@@ -133,6 +134,20 @@ class GameController extends AsyncNotifier<GameStateModel> {
   void _setStateWithPolling(GameStateModel updated, {required String source}) {
     state = AsyncValue.data(updated);
     _syncPollingFor(updated, source: source);
+    // Clear persisted session as soon as the game leaves 'ongoing'
+    if (updated.status != 'ongoing') {
+      _clearPersistedSession();
+    }
+  }
+
+  void _clearPersistedSession() {
+    try {
+      final service = ref.read(gamePersistenceServiceProvider);
+      service.clearSession();
+      debugPrint('[GameController] Cleared saved session for game $gameId');
+    } catch (e) {
+      debugPrint('[GameController] Failed to clear saved session: $e');
+    }
   }
 
   void _syncPollingFor(GameStateModel updated, {required String source}) {

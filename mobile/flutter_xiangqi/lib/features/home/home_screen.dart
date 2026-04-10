@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../new_game/new_game_controller.dart';
+import 'home_controller.dart';
+import 'widgets/continue_game_card.dart';
 import 'widgets/game_selectors.dart';
 import 'widgets/home_background.dart';
 import 'widgets/start_button.dart';
@@ -21,13 +23,15 @@ import '../../app/theme.dart';
 ///   → 将 emblem → XIANGQI title → dropdowns → START GAME button
 ///
 /// Uses [NewGameController] for game creation so no logic is duplicated.
+/// Uses [HomeController] to detect and display a resumable session.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(newGameControllerProvider);
-    final controller = ref.read(newGameControllerProvider.notifier);
+    final newGameState  = ref.watch(newGameControllerProvider);
+    final newGameCtrl   = ref.read(newGameControllerProvider.notifier);
+    final homeState     = ref.watch(homeControllerProvider);
 
     // Navigate to game when creation succeeds.
     ref.listen(newGameControllerProvider.select((s) => s.creationState), (
@@ -48,6 +52,9 @@ class HomeScreen extends ConsumerWidget {
         loading: () {},
       );
     });
+
+    // Derive resumable session from homeController state (null while loading)
+    final resumable = homeState.value?.resumableSession;
 
     return Scaffold(
       backgroundColor: XiangqiColors.darkBrown,
@@ -102,27 +109,40 @@ class HomeScreen extends ConsumerWidget {
 
                             // ── Difficulty ───────────────────────────────
                             DifficultySelector(
-                              value: state.difficulty,
-                              onChanged: controller.setDifficulty,
+                              value: newGameState.difficulty,
+                              onChanged: newGameCtrl.setDifficulty,
                             ),
 
                             const SizedBox(height: 20),
 
                             // ── Side ─────────────────────────────────────
                             SideSelector(
-                              value: state.playerSide,
-                              onChanged: controller.setPlayerSide,
+                              value: newGameState.playerSide,
+                              onChanged: newGameCtrl.setPlayerSide,
                             ),
 
                             const SizedBox(height: 28),
 
                             // ── START GAME button ─────────────────────────
                             StartButton(
-                              isLoading: state.creationState.isLoading,
-                              onPressed: state.creationState.isLoading
+                              isLoading: newGameState.creationState.isLoading,
+                              onPressed: newGameState.creationState.isLoading
                                   ? null
-                                  : controller.createGame,
+                                  : newGameCtrl.createGame,
                             ),
+
+                            // ── Continue Game card (shown only when valid) ─
+                            if (resumable != null) ...[
+                              const SizedBox(height: 16),
+                              OrnamentDivider(verticalPadding: 8),
+                              const SizedBox(height: 8),
+                              ContinueGameCard(
+                                session: resumable,
+                                onContinue: () {
+                                  context.go('/game/${resumable.gameId}');
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       ),

@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/persistence/game_persistence_service.dart';
+import '../../core/persistence/persistence_providers.dart';
 import '../../data/models/game_state_model.dart';
 import '../../data/providers.dart';
 
@@ -43,8 +45,22 @@ class NewGameController extends Notifier<NewGameState> {
   Future<GameStateModel?> createGame() async {
     state = state.copyWith(creationState: const AsyncValue.loading());
     try {
-      final repo = ref.read(gameRepositoryProvider);
+      final repo   = ref.read(gameRepositoryProvider);
       final result = await repo.createGame(state.difficulty, state.playerSide);
+
+      // ── Persist session so resumption works after app restart ──
+      if (result.gameId != null) {
+        final service = ref.read(gamePersistenceServiceProvider);
+        await service.saveSession(
+          SavedGameSession(
+            gameId:     result.gameId!,
+            playerSide: result.playerSide ?? state.playerSide,
+            difficulty: result.difficulty ?? state.difficulty,
+            savedAt:    DateTime.now(),
+          ),
+        );
+      }
+
       state = state.copyWith(creationState: AsyncValue.data(result));
       return result;
     } catch (e, st) {
@@ -58,3 +74,4 @@ final newGameControllerProvider =
     NotifierProvider.autoDispose<NewGameController, NewGameState>(
   NewGameController.new,
 );
+
