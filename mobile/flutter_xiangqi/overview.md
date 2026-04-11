@@ -921,7 +921,7 @@ Expected output:
 ## PHASE 9
 You are extending an existing Flutter Xiangqi mobile app.
 
-Current goal: PHASE 8 ONLY — Resume Game / Local Persistence.
+Current goal: PHASE 9 ONLY — Resume Game / Local Persistence.
 
 Context:
 - The app is already playable end-to-end
@@ -1016,12 +1016,12 @@ Expected output:
 2. Show which files are created/updated
 3. Generate all Flutter code for resume-game support
 4. Explain how saved game state is created, restored, and cleared
-5. Stop after Phase 8 only
+5. Stop after Phase 9 only
 
 ## PHASE 10
 You are extending an existing Flutter Xiangqi mobile app.
 
-Current goal: PHASE 9 ONLY — Audio / Music / Sound Effects.
+Current goal: PHASE 10 ONLY — Audio / Music / Sound Effects.
 
 Context:
 - The app is already playable
@@ -1117,13 +1117,13 @@ Expected output:
 3. Show which files are created/updated
 4. Generate all Flutter code for audio/music support
 5. Explain the event-to-sound mapping
-6. Stop after Phase 9 only
+6. Stop after Phase 10 only
 
 
 ## PHASE 11
 You are extending an existing Flutter Xiangqi mobile app.
 
-Current goal: PHASE 12 ONLY — Check Effect and Endgame Result Modal.
+Current goal: PHASE 11 ONLY — Check Effect and Endgame Result Modal.
 
 Context:
 - The app is already playable
@@ -1271,4 +1271,4 @@ Expected output:
 3. Show which files are created/updated
 4. Generate all Flutter code for the check effect and result modal
 5. Mention assumptions about possible end_reason values
-6. Stop after Phase 10 only
+6. Stop after Phase 11 only
