@@ -1,7 +1,7 @@
 class ApiConstants {
   // Development (Local Emulator): 'http://10.0.2.2:8001'
   // Development (Local Web): 'http://127.0.0.1:8001'
-  static const String baseUrl = 'https://xiangqi-production.up.railway.app';
+  static const String baseUrl = 'http://127.0.0.1:8001';
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);
 
