@@ -90,7 +90,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Bạn cầm:</span>
-                        <span class="info-val">{% if game.player_side == 'r' %}Đỏ{% else %}Đen{% endif %}</span>
+                        <span class="info-val" id="playerSideValue">Dang xac dinh</span>
                     </div>
                 </div>
 
@@ -118,7 +118,7 @@
     </div>
 
     <!-- game.js MUST come before the inline script so initGame() is defined -->
-    <script src="{% static 'games/js/game.js' %}?v=2"></script>
+    <script src="{% static 'games/js/game.js' %}?v=3"></script>
     <script>
         // ── Game Timer Logic ──
         window.gameTimer = {
@@ -132,10 +132,24 @@
 
             init: function (initialStatus) {
                 this.el = document.getElementById("gameTimerValue");
-                if (initialStatus === 'ongoing' || !initialStatus) {
+                if (initialStatus === 'ongoing' || initialStatus === 'playing' || !initialStatus) {
                     this.start();
                 } else {
-                    this.stop(true);
+                    this.resetToIdle();
+                }
+            },
+            resetToIdle: function () {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+                this.startTimestamp = 0;
+                this.pausedDurationTotal = 0;
+                this.pausedAt = 0;
+                this.isRunning = false;
+                this.isEnded = false;
+                if (this.el) {
+                    this.el.textContent = "00:00";
+                    this.el.classList.remove("ended");
+                    this.el.classList.add("paused");
                 }
             },
             start: function () {
@@ -164,11 +178,16 @@
                 this.update();
             },
             stop: function (isOver) {
-                this.pause();
-                this.isEnded = true;
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+                this.isRunning = false;
+                this.isEnded = !!isOver;
                 if (isOver && this.el) {
                     this.el.classList.remove("paused");
                     this.el.classList.add("ended");
+                } else if (this.el) {
+                    this.el.classList.add("paused");
+                    this.el.classList.remove("ended");
                 }
             },
             update: function () {
@@ -196,23 +215,34 @@
         };
 
         window.ROOM_CODE = "{{ room.room_code }}";
+        window.ROOM_PLAYERS = {
+            red: {{ room_player_red|safe }},
+            black: {{ room_player_black|safe }}
+        };
+        window.INITIAL_BOARD_STATE = {{ initial_board_state|safe }};
+        window.INITIAL_CURRENT_TURN = {{ initial_current_turn|safe }};
         
         // Ensure client identifier is present
         if (!localStorage.getItem('user_identifier')) {
             localStorage.setItem('user_identifier', 'player_' + Math.random().toString(36).substr(2, 9));
         }
         const myPlayerId = localStorage.getItem('user_identifier');
+        let initialPlayerSide = 'spectator';
+        if (window.ROOM_PLAYERS.red === myPlayerId) {
+            initialPlayerSide = 'r';
+        } else if (window.ROOM_PLAYERS.black === myPlayerId) {
+            initialPlayerSide = 'b';
+        }
 
         initGame({
             isMultiplayer: true,
             roomCode: "{{ room.room_code }}",
             playerId: myPlayerId,
             gameId: "{{ game.id }}",
-            // State will be synced via WS connection success event
-            boardState: [],
-            currentTurn: '',
+            boardState: window.INITIAL_BOARD_STATE,
+            currentTurn: window.INITIAL_CURRENT_TURN,
             status: "{{ room.status }}",
-            playerSide: '', 
+            playerSide: initialPlayerSide,
             legalMoves: [],
             lastMove: null,
             inCheck: null,

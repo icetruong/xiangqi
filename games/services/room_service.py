@@ -2,7 +2,7 @@ import random
 import string
 from django.db import transaction
 from games.models import Room
-from games.services import game_service
+from games.services import engine_adapter, game_service
 
 def generate_room_code(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
@@ -46,6 +46,32 @@ def join_room(room_code, identifier):
             # Room is full, client becomes spectator
             return room, 'spectator'
 
+
+def _serialize_last_move(game):
+    last_move = game.moves.last()
+    if not last_move:
+        return None
+    return {
+        "from": [last_move.from_row, last_move.from_col],
+        "to": [last_move.to_row, last_move.to_col],
+        "piece": last_move.piece,
+        "captured": last_move.captured,
+    }
+
+
+def _serialize_move_history(game):
+    return [
+        {
+            "ply": move.ply,
+            "side": move.side,
+            "from": [move.from_row, move.from_col],
+            "to": [move.to_row, move.to_col],
+            "piece": move.piece,
+            "captured": move.captured,
+        }
+        for move in game.moves.all()
+    ]
+
 def get_sync_data(room_code, identifier):
     try:
         room = Room.objects.get(room_code=room_code)
@@ -59,6 +85,10 @@ def get_sync_data(room_code, identifier):
         side = 'b'
         
     game = room.game
+    legal_moves = []
+    if side in ('r', 'b') and room.status == 'playing' and game.status == 'ongoing' and game.current_turn == side:
+        legal_moves = engine_adapter.list_legal_moves(game.board_state, side)
+
     return {
         "room_id": room_code,
         "status": room.status, 
@@ -66,7 +96,10 @@ def get_sync_data(room_code, identifier):
         "board_state": game.board_state,
         "side": side,
         "winner": game.winner,
-        "end_reason": game.end_reason
+        "reason": game.end_reason,
+        "last_move": _serialize_last_move(game),
+        "move_history": _serialize_move_history(game),
+        "legal_moves": legal_moves,
     }
 
 def handle_surrender(room_code, identifier):
@@ -96,7 +129,11 @@ def handle_surrender(room_code, identifier):
         
         return {
             "type": "game_over",
-            "winner": "red" if game.winner == "r" else "black",
+            "status": "finished",
+            "winner": game.winner,
             "reason": "resign",
-            "surrenderer": identifier
+            "surrenderer": identifier,
+            "board_state": game.board_state,
+            "current_turn": game.current_turn,
+            "last_move": _serialize_last_move(game),
         }

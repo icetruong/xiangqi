@@ -43,6 +43,39 @@ let isMultiplayer = false;
 let roomCode = null;
 let playerId = null;
 let wsClient = null;
+let multiplayerSyncInterval = null;
+
+function isWaitingStatus(value) {
+    return value === 'waiting';
+}
+
+function isFinishedStatus(value) {
+    return value === 'finished';
+}
+
+function isPlayableStatus(value) {
+    return value === 'ongoing' || value === 'playing';
+}
+
+function derivePlayerSideFromRoom(roomData) {
+    if (!roomData) return playerSide;
+    if (roomData.player_red === playerId) return 'r';
+    if (roomData.player_black === playerId) return 'b';
+    return 'spectator';
+}
+
+function updatePlayerSideLabel() {
+    var playerSideEl = document.getElementById('playerSideValue');
+    if (!playerSideEl) return;
+
+    if (playerSide === 'r') {
+        playerSideEl.textContent = 'Đỏ';
+    } else if (playerSide === 'b') {
+        playerSideEl.textContent = 'Đen';
+    } else {
+        playerSideEl.textContent = 'Khán giả';
+    }
+}
 
 // ── DOM (assigned in initGame after DOMContentLoaded) ──
 var boardEl = null;
@@ -722,7 +755,7 @@ function renderHints(px, py) {
 function getCaptureTargets() {
     var targets = new Set();
     if (!selectedCell) return targets;
-    if (currentTurn !== playerSide || status !== 'ongoing') return targets;
+    if (currentTurn !== playerSide || !isPlayableStatus(status)) return targets;
     var sr = selectedCell[0];
     var sc = selectedCell[1];
     var enemySide = (playerSide === 'r') ? 'b' : 'r';
@@ -863,7 +896,7 @@ function initGame(config) {
     boardState = config.boardState || [];
     currentTurn = config.currentTurn;
     status = config.status;
-    playerSide = config.playerSide || 'r';
+    playerSide = config.playerSide || 'spectator';
     legalMoves = config.legalMoves || [];
     lastMove = config.lastMove || null;
     inCheck = config.inCheck || null;
@@ -889,9 +922,11 @@ function initGame(config) {
     updateStatusUI();
     initTurnIndicator();
     renderMoveHistory();
+    updatePlayerSideLabel();
 
     if (isMultiplayer) {
         initWebSocket();
+        startMultiplayerSyncPolling();
     } else {
         // Nếu người chơi chọn Đen, AI Đỏ đang đi trước — tự poll để cập nhật bàn cờ
         if (status === 'ongoing' && currentTurn !== playerSide) {
@@ -912,6 +947,7 @@ function initWebSocket() {
     wsClient.onopen = function () {
         console.log("WebSocket connected.");
         showGameToast("Đã kết nối máy chủ", "info");
+        wsClient.send(JSON.stringify({ type: 'sync', player: playerId }));
     };
 
     wsClient.onmessage = function (e) {
@@ -937,20 +973,13 @@ function handleSocketMessage(data) {
     }
 
     if (data.type === 'connection_success' || data.type === 'sync_state') {
-        // Đồng bộ toàn bộ state
-        status = data.status || status;
-        if (data.side) playerSide = data.side;
-        boardFlipped = (playerSide === 'b');
-
-        checkWaitingState();
         updateGameState(data);
         return;
     }
 
     if (data.type === 'player_joined') {
         showGameToast(`Người chơi đã tham gia`, 'info');
-        // Gửi lệnh sync state nếu phòng chuyển từ waiting -> playing (Backend sẽ tự trigger move_data state)
-        if (status === 'waiting') {
+        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
             wsClient.send(JSON.stringify({ type: 'sync' }));
         }
         return;
@@ -969,9 +998,10 @@ function handleSocketMessage(data) {
     if (data.type === 'game_over') {
         updateGameState({
             ...data,
-            status: 'finished',
-            board_state: boardState, // Keep current board
-            current_turn: currentTurn
+            status: data.status || 'finished',
+            board_state: data.board_state || boardState,
+            current_turn: data.current_turn || currentTurn,
+            last_move: data.last_move || lastMove
         });
         return;
     }
@@ -985,10 +1015,57 @@ function checkWaitingState() {
     }
 }
 
+function startMultiplayerSyncPolling() {
+    if (multiplayerSyncInterval) clearInterval(multiplayerSyncInterval);
+    syncMultiplayerState(true);
+    multiplayerSyncInterval = setInterval(function () {
+        syncMultiplayerState(false);
+    }, 1500);
+}
+
+function syncMultiplayerState(forceSync) {
+    if (!isMultiplayer || !roomCode || !gameId) return;
+
+    var shouldSync = forceSync || isWaitingStatus(status) || !wsClient || wsClient.readyState !== WebSocket.OPEN;
+    if (!shouldSync) return;
+
+    fetch('/api/rooms/' + roomCode + '/')
+        .then(function (res) { return res.json(); })
+        .then(function (roomData) {
+            if (!roomData.ok) return;
+
+            gameId = roomData.game_id || gameId;
+            playerSide = derivePlayerSideFromRoom(roomData);
+            updatePlayerSideLabel();
+
+            if (roomData.status === 'waiting') {
+                status = 'waiting';
+                checkWaitingState();
+                updateStatusUI();
+                return;
+            }
+
+            return fetch('/api/games/' + gameId + '/')
+                .then(function (res) { return res.json(); })
+                .then(function (gameData) {
+                    if (!gameData.ok) return;
+                    updateGameState({
+                        ...gameData,
+                        status: roomData.status
+                    });
+                });
+        })
+        .catch(function (err) {
+            console.warn("Room sync failed", err);
+        });
+}
+
 function handleCellClick(r, c) {
     if (isAnimating) return;
     if (window.gameLocked) return;
-    if (status !== 'ongoing') return;
+    if (!isPlayableStatus(status) || isWaitingStatus(status)) return;
+    if (playerSide !== 'r' && playerSide !== 'b') return;
+    if (!boardState[r]) return;
 
     var pieceCode = boardState[r][c];
     var isMyPiece = pieceCode && pieceCode.startsWith(playerSide);
@@ -1024,13 +1101,41 @@ function handleCellClick(r, c) {
 }
 
 function sendMove(move) {
-    if (isMultiplayer && wsClient && wsClient.readyState === WebSocket.OPEN) {
-        wsClient.send(JSON.stringify({
-            type: 'move',
-            from: move.from,
-            to: move.to,
-            player: playerId
-        }));
+    if (isMultiplayer) {
+        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+            wsClient.send(JSON.stringify({
+                type: 'move',
+                from: move.from,
+                to: move.to,
+                player: playerId
+            }));
+            return;
+        }
+
+        fetch('/api/rooms/' + roomCode + '/move/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                identifier: playerId,
+                from: move.from,
+                to: move.to
+            })
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    updateGameState(data);
+                } else {
+                    showGameToast(data.message, 'warning');
+                }
+            })
+            .catch(function (err) {
+                console.error(err);
+                showGameToast("Khong gui duoc nuoc di", 'warning');
+            });
     } else {
         fetch('/api/games/' + gameId + '/move', {
             method: 'POST',
@@ -1063,20 +1168,47 @@ function sendMove(move) {
 function updateGameState(data) {
     var prevLastMove = lastMove;
     var prevInCheck = inCheck;
-    boardState = data.board_state;
-    currentTurn = data.current_turn;
-    status = data.status;
-    lastMove = data.last_move;
+    var hasFullMoveHistory = Array.isArray(data.move_history);
+
+    if (Array.isArray(data.board_state) && data.board_state.length) {
+        boardState = data.board_state;
+    }
+    if (typeof data.current_turn === 'string' && data.current_turn) {
+        currentTurn = data.current_turn;
+    }
+    if (typeof data.status === 'string' && data.status) {
+        status = data.status;
+    }
+    if (typeof data.side === 'string' && data.side) {
+        playerSide = data.side;
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'last_move')) {
+        lastMove = data.last_move;
+    }
+
     legalMoves = data.legal_moves || [];
     inCheck = data.in_check || null;
+    boardFlipped = (playerSide === 'b');
 
-    if (lastMove && (!prevLastMove || lastMove.from[0] !== prevLastMove.from[0] || lastMove.from[1] !== prevLastMove.from[1] || lastMove.to[0] !== prevLastMove.to[0] || lastMove.to[1] !== prevLastMove.to[1])) {
+    if (hasFullMoveHistory) {
+        moveHistory = data.move_history.map(function (move) {
+            return {
+                side: move.side,
+                from: move.from,
+                to: move.to,
+                piece: move.piece,
+                captured: move.captured
+            };
+        });
+        renderMoveHistory();
+    } else if (lastMove && (!prevLastMove || lastMove.from[0] !== prevLastMove.from[0] || lastMove.from[1] !== prevLastMove.from[1] || lastMove.to[0] !== prevLastMove.to[0] || lastMove.to[1] !== prevLastMove.to[1])) {
         var movedSide = currentTurn === 'r' ? 'b' : 'r';
         moveHistory.push({
             side: movedSide,
             from: lastMove.from,
             to: lastMove.to,
-            piece: lastMove.piece || (movedSide + '?')
+            piece: lastMove.piece || (movedSide + '?'),
+            captured: lastMove.captured || null
         });
         renderMoveHistory();
     }
@@ -1102,6 +1234,8 @@ function updateGameState(data) {
         }
     }
 
+    checkWaitingState();
+    updatePlayerSideLabel();
     updateStatusUI();
     renderBoard(shouldAnimate);
 
@@ -1109,11 +1243,17 @@ function updateGameState(data) {
         logMove({ from: lastMove.from, to: lastMove.to }, "AI");
     }
 
-    if (status !== 'ongoing') {
-        if (window.gameTimer) window.gameTimer.stop(true);
+    if (window.gameTimer) {
+        if (isFinishedStatus(status)) {
+            window.gameTimer.stop(true);
+        } else if (isWaitingStatus(status)) {
+            window.gameTimer.resetToIdle();
+        } else if (isPlayableStatus(status)) {
+            window.gameTimer.start();
+        }
     }
 
-    if (status === 'finished') {
+    if (isFinishedStatus(status)) {
         // Determine whether user won, lost, or drew
         var gameStatus = "draw";
         if (data.winner) {
@@ -1144,12 +1284,15 @@ function updateGameState(data) {
 
 function updateStatusUI() {
     if (statusDisplay) {
-        var text = status === 'ongoing' ? "Playing" : "Finished";
-        if (status === 'ongoing') {
-            text += currentTurn === playerSide ? " (Your Turn)" : " (Thinking...)";
+        var text = "Finished";
+        if (isWaitingStatus(status)) {
+            text = "Waiting for opponent";
+        } else if (isPlayableStatus(status)) {
+            text = currentTurn === playerSide ? "Playing (Your Turn)" : "Playing (Opponent Turn)";
         }
         statusDisplay.innerText = text;
     }
+    updatePlayerSideLabel();
     updateTurnIndicator();
 }
 
@@ -1167,12 +1310,15 @@ function initTurnIndicator() {
     if (playerSide === 'r') {
         leftAvatar.textContent = '帥';   // Red general
         rightAvatar.textContent = '將';   // Black general
-    } else {
+    } else if (playerSide === 'b') {
         leftAvatar.textContent = '將';   // Black general
         rightAvatar.textContent = '帥';   // Red general
+    } else {
+        leftAvatar.textContent = '觀';
+        rightAvatar.textContent = '局';
     }
-    if (leftName) leftName.textContent = 'Bạn';
-    if (rightName) rightName.textContent = 'Đối thủ';
+    if (leftName) leftName.textContent = playerSide === 'spectator' ? 'Khán giả' : 'Bạn';
+    if (rightName) rightName.textContent = playerSide === 'spectator' ? 'Ván cờ' : 'Đối thủ';
 
     updateTurnIndicator();
 }
@@ -1182,8 +1328,8 @@ function updateTurnIndicator() {
     var rightPanel = document.getElementById('playerPanelRight');
     if (!leftPanel || !rightPanel) return;
 
-    var isMyTurn = (status === 'ongoing' && currentTurn === playerSide);
-    var isAITurn = (status === 'ongoing' && currentTurn !== playerSide);
+    var isMyTurn = (isPlayableStatus(status) && !isWaitingStatus(status) && currentTurn === playerSide);
+    var isAITurn = (isPlayableStatus(status) && !isWaitingStatus(status) && currentTurn !== playerSide);
 
     leftPanel.classList.toggle('player-panel--active', isMyTurn);
     rightPanel.classList.toggle('player-panel--active', isAITurn);
@@ -1465,6 +1611,9 @@ window.getToastDisplayMsg = function (message) {
     var msg = message.toLowerCase();
     if (msg.includes("invalid move")) return "Nước đi không hợp lệ.";
     if (msg.includes("not your turn")) return "Chưa tới lượt xuất chiêu.";
+    if (msg.includes("chua den luot")) return "Chua toi luot xuat chieu.";
+    if (msg.includes("tran dau chua bat dau")) return "Phong dang cho du nguoi.";
+    if (msg.includes("phong khong ton tai")) return "Phong khong ton tai.";
     if (msg.includes("piece from")) return "Không thể điều binh tướng này.";
     if (msg.includes("check")) return "Tướng đang bị chiếu!";
     return message;

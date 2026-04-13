@@ -77,6 +77,10 @@ def room_board(request, room_code):
     game = room.game
     context = {
         'room': room,
-        'game': game
+        'game': game,
+        'initial_board_state': json.dumps(game.board_state),
+        'initial_current_turn': json.dumps(game.current_turn),
+        'room_player_red': json.dumps(room.player_red),
+        'room_player_black': json.dumps(room.player_black),
     }
     return render(request, 'games/room.html', context)

@@ -6,7 +6,7 @@ from engine.board import Board
 from engine.rules.check_rules import is_in_check
 from engine.utils.position import EMPTY as ENGINE_EMPTY
 from games.models import Game, Room
-from games.services import engine_adapter, game_service, room_service
+from games.services import engine_adapter, game_service, move_service, room_service
 
 
 def _get_in_check(board_state):
@@ -263,4 +263,43 @@ def room_detail(request, room_code):
         })
     except Room.DoesNotExist:
         return Response({"ok": False, "error_code": "ROOM_NOT_FOUND", "message": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+def room_move(request, room_code):
+    identifier = request.data.get('identifier')
+    move_data = request.data
+
+    if not identifier:
+        return Response({
+            "ok": False,
+            "error_code": "BAD_REQUEST",
+            "message": "Missing 'identifier' in request body"
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if 'from' not in move_data or 'to' not in move_data:
+        return Response({
+            "ok": False,
+            "error_code": "BAD_REQUEST",
+            "message": "Missing 'from' or 'to' in request body"
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        result = move_service.handle_socket_move(room_code, identifier, move_data)
+        return Response({
+            "ok": True,
+            **result
+        })
+    except ValueError as e:
+        return Response({
+            "ok": False,
+            "error_code": "INVALID_MOVE",
+            "message": str(e),
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            "ok": False,
+            "error_code": "SERVER_ERROR",
+            "message": str(e),
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
