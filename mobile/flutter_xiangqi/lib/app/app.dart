@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/audio/audio_service.dart';
 import 'router.dart';
 import 'theme.dart';
 
@@ -9,6 +10,9 @@ class XiangqiApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    
+    // Eagerly initialize AudioService so BGM starts looping if unmuted
+    ref.watch(audioServiceProvider);
 
     return MaterialApp.router(
       title: 'Xiangqi',

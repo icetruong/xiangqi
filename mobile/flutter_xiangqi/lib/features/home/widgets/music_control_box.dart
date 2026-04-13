@@ -1,54 +1,25 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import '../../../app/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../app/theme.dart';
+import '../../../../core/audio/audio_service.dart';
 
 /// A faithful adaptation of the web's horizontal framed music control box.
 /// Features a dark gradient, thin gold border, tiny corner markers, 
 /// a left icon zone, and a visual right horizontal slider.
-class MusicControlBox extends StatefulWidget {
+class MusicControlBox extends ConsumerWidget {
   const MusicControlBox({super.key});
 
   @override
-  State<MusicControlBox> createState() => _MusicControlBoxState();
-}
-
-class _MusicControlBoxState extends State<MusicControlBox> {
-  final _player = AudioPlayer();
-  bool _isPlaying = false;
-  bool _audioAvailable = true;
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
-
-  Future<void> _toggle() async {
-    if (!_audioAvailable) return;
-    try {
-      if (_isPlaying) {
-        await _player.pause();
-      } else {
-        await _player.setReleaseMode(ReleaseMode.loop);
-        await _player.play(AssetSource('audio/bgm.mp3'));
-      }
-      if (mounted) setState(() => _isPlaying = !_isPlaying);
-    } catch (_) {
-      // Platform error — degrade silently.
-      if (mounted) setState(() => _audioAvailable = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioState = ref.watch(audioServiceProvider);
+    final isPlaying = !audioState.isMuted;
     return Tooltip(
-      message: !_audioAvailable
-          ? 'Music unavailable'
-          : _isPlaying
-              ? 'Mute music'
-              : 'Play music',
+      message: isPlaying ? 'Mute music' : 'Play music',
       child: GestureDetector(
-        onTap: _toggle,
+        onTap: () {
+          ref.read(audioServiceProvider.notifier).toggleMute();
+        },
         behavior: HitTestBehavior.opaque,
         child: Container(
           height: 26,
@@ -91,12 +62,8 @@ class _MusicControlBoxState extends State<MusicControlBox> {
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    _audioAvailable
-                        ? (_isPlaying ? Icons.music_note : Icons.music_off)
-                        : Icons.volume_off,
-                    color: _audioAvailable
-                        ? XiangqiColors.goldLight
-                        : XiangqiColors.gold.withAlpha(80),
+                    isPlaying ? Icons.music_note : Icons.music_off,
+                    color: XiangqiColors.goldLight,
                     size: 14,
                   ),
                 ),
@@ -126,7 +93,7 @@ class _MusicControlBoxState extends State<MusicControlBox> {
                             AnimatedPositioned(
                               duration: const Duration(milliseconds: 250),
                               curve: Curves.easeInOutBack,
-                              left: _isPlaying ? maxLeft : 0.0,
+                              left: isPlaying ? maxLeft : 0.0,
                               child: Container(
                                 width: 4,
                                 height: 10,

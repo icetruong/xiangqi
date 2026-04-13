@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme.dart';
+import '../../core/audio/audio_service.dart';
+import '../../core/audio/game_sfx_mapper.dart';
 import '../../core/utils/board_visual_config.dart';
 import '../../core/utils/captured_pieces_helper.dart';
 import '../../data/models/game_state_model.dart';
@@ -53,6 +55,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               duration: const Duration(seconds: 3),
             ),
           );
+      }
+      
+      // Play 'select' sound when a piece is newly selected
+      if (next.hasSelection && (prev?.selectedRow != next.selectedRow || prev?.selectedCol != next.selectedCol)) {
+        ref.read(audioServiceProvider.notifier).playSfx(GameSfxMapper.select);
+      }
+    });
+
+    ref.listen(gameControllerProvider(widget.gameId), (prev, next) {
+      final prevGame = prev?.value;
+      final nextGame = next.value;
+      if (prevGame == null || nextGame == null) return;
+
+      final prevPly = prevGame.lastMove?.ply;
+      final nextPly = nextGame.lastMove?.ply;
+
+      // Only play sound if a new move is actually registered
+      if (nextGame.lastMove != null && nextPly != prevPly) {
+        if (nextGame.status != 'ongoing') {
+          ref.read(audioServiceProvider.notifier).playSfx(GameSfxMapper.gameOver);
+        } else if (nextGame.inCheck != null) {
+          ref.read(audioServiceProvider.notifier).playSfx(GameSfxMapper.check);
+        } else if (nextGame.lastMove!.captured != null) {
+          ref.read(audioServiceProvider.notifier).playSfx(GameSfxMapper.capture);
+        } else {
+          ref.read(audioServiceProvider.notifier).playSfx(GameSfxMapper.move);
+        }
       }
     });
 
