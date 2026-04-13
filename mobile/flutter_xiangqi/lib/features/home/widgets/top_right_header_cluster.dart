@@ -26,7 +26,12 @@ class TopRightHeaderCluster extends StatelessWidget {
         HeaderTextLink(
           text: 'ABOUT',
           onTap: () {
-            // TODO: Hook up to About panel/dialog if it exists
+            showAboutDialog(
+              context: context,
+              applicationName: 'Xiangqi Mobile',
+              applicationVersion: '1.0.0',
+              applicationLegalese: '© 2026 Xiangqi Project',
+            );
           },
         ),
       ],

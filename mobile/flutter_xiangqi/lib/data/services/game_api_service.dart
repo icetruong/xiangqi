@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/constants/api_constants.dart';
 import '../models/game_state_model.dart';
 import '../models/move_request_model.dart';
@@ -12,7 +13,7 @@ class GameApiService {
   Future<GameStateModel> createGame(String difficulty, String playerSide) async {
     try {
       final requestUrl = '${_dio.options.baseUrl}${ApiConstants.games}';
-      print('DEBUG [GameApiService]: POST createGame at $requestUrl');
+      debugPrint('DEBUG [GameApiService]: POST createGame at $requestUrl');
       final response = await _dio.post(
         ApiConstants.games,
         data: {
@@ -22,9 +23,9 @@ class GameApiService {
       );
       return GameStateModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      print('DEBUG [GameApiService]: DioException in createGame! Type: ${e.type}, Message: ${e.message}');
+      debugPrint('DEBUG [GameApiService]: DioException in createGame! Type: ${e.type}, Message: ${e.message}');
       if (e.response != null) {
-        print('DEBUG [GameApiService]: Error Response Data: ${e.response?.data}');
+        debugPrint('DEBUG [GameApiService]: Error Response Data: ${e.response?.data}');
       }
       rethrow;
     }
@@ -37,8 +38,8 @@ class GameApiService {
 
   Future<MoveResponseModel> makeMove(String gameId, MoveRequestModel request) async {
     final requestUrl = '${_dio.options.baseUrl}${ApiConstants.gameMove(gameId)}';
-    print('DEBUG [GameApiService]: POST makeMove for gameId $gameId at $requestUrl');
-    print('DEBUG [GameApiService]: Request payload: ${request.toJson()}');
+    debugPrint('DEBUG [GameApiService]: POST makeMove for gameId $gameId at $requestUrl');
+    debugPrint('DEBUG [GameApiService]: Request payload: ${request.toJson()}');
     
     try {
       final response = await _dio.post(
@@ -47,9 +48,9 @@ class GameApiService {
       );
       return MoveResponseModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      print('DEBUG [GameApiService]: DioException in makeMove! StatusCode: ${e.response?.statusCode}');
+      debugPrint('DEBUG [GameApiService]: DioException in makeMove! StatusCode: ${e.response?.statusCode}');
       if (e.response != null) {
-        print('DEBUG [GameApiService]: Error Response Data: ${e.response?.data}');
+        debugPrint('DEBUG [GameApiService]: Error Response Data: ${e.response?.data}');
       }
       rethrow;
     }
