@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from engine.board import Board
 from engine.rules.check_rules import is_in_check
 from engine.utils.position import EMPTY as ENGINE_EMPTY
-from games.models import Game
-from games.services import engine_adapter, game_service
+from games.models import Game, Room
+from games.services import engine_adapter, game_service, room_service
 
 
 def _get_in_check(board_state):
@@ -208,3 +208,59 @@ def draw_game(request, game_id):
         "winner": game.winner,
         "end_reason": game.end_reason,
     })
+
+@api_view(['POST'])
+def create_room(request):
+    identifier = request.data.get('identifier')
+    if not identifier:
+        return Response({"ok": False, "error_code": "BAD_REQUEST", "message": "Missing 'identifier'."}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        room = room_service.create_room(identifier)
+        return Response({
+            "ok": True,
+            "room_code": room.room_code,
+            "game_id": room.game.id,
+            "status": room.status
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({"ok": False, "error_code": "SERVER_ERROR", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def join_room(request, room_code):
+    identifier = request.data.get('identifier')
+    if not identifier:
+        return Response({
+            "ok": False,
+            "error_code": "BAD_REQUEST",
+            "message": "Missing 'identifier' in request body"
+        }, status=status.HTTP_400_BAD_REQUEST)
+        
+    try:
+        room, role = room_service.join_room(room_code, identifier)
+        return Response({
+            "ok": True,
+            "room_code": room.room_code,
+            "role": role,
+            "status": room.status,
+            "game_id": room.game.id if room.game else None
+        })
+    except Room.DoesNotExist:
+        return Response({"ok": False, "error_code": "ROOM_NOT_FOUND", "message": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"ok": False, "error_code": "SERVER_ERROR", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def room_detail(request, room_code):
+    try:
+        room = Room.objects.get(room_code=room_code)
+        return Response({
+            "ok": True,
+            "room_code": room.room_code,
+            "player_red": room.player_red,
+            "player_black": room.player_black,
+            "status": room.status,
+            "game_id": room.game.id if room.game else None
+        })
+    except Room.DoesNotExist:
+        return Response({"ok": False, "error_code": "ROOM_NOT_FOUND", "message": "Room not found"}, status=status.HTTP_404_NOT_FOUND)
+

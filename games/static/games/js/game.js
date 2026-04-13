@@ -38,6 +38,12 @@ let moveHistory = [];
 let boardFlipped = false; // true khi người chơi cầm quân Đen
 window.gameLocked = false;
 
+// Multiplayer extensions
+let isMultiplayer = false;
+let roomCode = null;
+let playerId = null;
+let wsClient = null;
+
 // ── DOM (assigned in initGame after DOMContentLoaded) ──
 var boardEl = null;
 var statusDisplay = null;
@@ -854,10 +860,10 @@ function initGame(config) {
     });
 
     gameId = config.gameId;
-    boardState = config.boardState;
+    boardState = config.boardState || [];
     currentTurn = config.currentTurn;
     status = config.status;
-    playerSide = config.playerSide;
+    playerSide = config.playerSide || 'r';
     legalMoves = config.legalMoves || [];
     lastMove = config.lastMove || null;
     inCheck = config.inCheck || null;
@@ -865,6 +871,11 @@ function initGame(config) {
 
     // Lật bàn cờ nếu người chơi cầm quân Đen
     boardFlipped = (playerSide === 'b');
+
+    // Config WebSocket check
+    isMultiplayer = config.isMultiplayer || false;
+    roomCode = config.roomCode;
+    playerId = config.playerId;
 
     // Un-suspend AudioContext on first user interaction (browser autoplay policy)
     document.addEventListener('click', function resumeAudio() {
@@ -879,9 +890,98 @@ function initGame(config) {
     initTurnIndicator();
     renderMoveHistory();
 
-    // Nếu người chơi chọn Đen, AI Đỏ đang đi trước — tự poll để cập nhật bàn cờ
-    if (status === 'ongoing' && currentTurn !== playerSide) {
-        startPolling();
+    if (isMultiplayer) {
+        initWebSocket();
+    } else {
+        // Nếu người chơi chọn Đen, AI Đỏ đang đi trước — tự poll để cập nhật bàn cờ
+        if (status === 'ongoing' && currentTurn !== playerSide) {
+            startPolling();
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  WebSocket Integration Phase 4 & 5
+// ═══════════════════════════════════════════════
+function initWebSocket() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws/game/${roomCode}/?player=${playerId}`;
+
+    wsClient = new WebSocket(wsUrl);
+
+    wsClient.onopen = function () {
+        console.log("WebSocket connected.");
+        showGameToast("Đã kết nối máy chủ", "info");
+    };
+
+    wsClient.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        handleSocketMessage(data);
+    };
+
+    wsClient.onclose = function (e) {
+        console.warn("WebSocket disconnected", e);
+        showGameToast("Mất kết nối máy chủ. Đang thử lại...", "warning");
+        setTimeout(initWebSocket, 3000);
+    };
+
+    wsClient.onerror = function (err) {
+        console.error("WebSocket error", err);
+    };
+}
+
+function handleSocketMessage(data) {
+    if (data.type === 'error') {
+        showGameToast(data.message, 'warning');
+        return;
+    }
+
+    if (data.type === 'connection_success' || data.type === 'sync_state') {
+        // Đồng bộ toàn bộ state
+        status = data.status || status;
+        if (data.side) playerSide = data.side;
+        boardFlipped = (playerSide === 'b');
+
+        checkWaitingState();
+        updateGameState(data);
+        return;
+    }
+
+    if (data.type === 'player_joined') {
+        showGameToast(`Người chơi đã tham gia`, 'info');
+        // Gửi lệnh sync state nếu phòng chuyển từ waiting -> playing (Backend sẽ tự trigger move_data state)
+        if (status === 'waiting') {
+            wsClient.send(JSON.stringify({ type: 'sync' }));
+        }
+        return;
+    }
+
+    if (data.type === 'player_left') {
+        showGameToast(`Người chơi đã rời phòng`, 'warning');
+        return;
+    }
+
+    if (data.type === 'move') {
+        updateGameState(data);
+        return;
+    }
+
+    if (data.type === 'game_over') {
+        updateGameState({
+            ...data,
+            status: 'finished',
+            board_state: boardState, // Keep current board
+            current_turn: currentTurn
+        });
+        return;
+    }
+}
+
+function checkWaitingState() {
+    const overlay = document.getElementById("waitingOverlay");
+    if (overlay) {
+        if (status === 'waiting') overlay.hidden = false;
+        else overlay.hidden = true;
     }
 }
 
@@ -924,31 +1024,40 @@ function handleCellClick(r, c) {
 }
 
 function sendMove(move) {
-    fetch('/api/games/' + gameId + '/move', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify(move)
-    })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-            if (data.ok) {
-                updateGameState(data);
-                logMove(move, "Player");
-
-                if (data.status === 'ongoing' && data.current_turn !== playerSide) {
-                    startPolling();
-                }
-            } else {
-                showGameToast(data.message, 'warning');
-            }
+    if (isMultiplayer && wsClient && wsClient.readyState === WebSocket.OPEN) {
+        wsClient.send(JSON.stringify({
+            type: 'move',
+            from: move.from,
+            to: move.to,
+            player: playerId
+        }));
+    } else {
+        fetch('/api/games/' + gameId + '/move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(move)
         })
-        .catch(function (err) {
-            console.error(err);
-            showGameToast("Mất kết nối với giang hồ", 'warning');
-        });
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    updateGameState(data);
+                    logMove(move, "Player");
+
+                    if (data.status === 'ongoing' && data.current_turn !== playerSide) {
+                        startPolling();
+                    }
+                } else {
+                    showGameToast(data.message, 'warning');
+                }
+            })
+            .catch(function (err) {
+                console.error(err);
+                showGameToast("Mất kết nối với giang hồ", 'warning');
+            });
+    }
 }
 
 function updateGameState(data) {
@@ -1024,7 +1133,7 @@ function updateGameState(data) {
                 winner: data.winner,
                 my_side: playerSide,
                 reason: reason,
-                message: data.message
+                message: data.message || (data.status === 'finished' && data.reason ? data.reason : undefined)
             });
         } else {
             setTimeout(function () { alert('Game Over! Winner: ' + data.winner); }, 100);

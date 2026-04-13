@@ -11,7 +11,7 @@ class Game(models.Model):
     
     # Settings
     player_side = models.CharField(max_length=1, default='r')
-    ai_side = models.CharField(max_length=1, default='b')
+    ai_side = models.CharField(max_length=1, default='b', null=True, blank=True)
     difficulty = models.CharField(max_length=20, default='normal')
     
     # Result
@@ -47,3 +47,14 @@ class Move(models.Model):
 
     def __str__(self):
         return f"Move {self.ply}: {self.piece} {self.from_row},{self.from_col} -> {self.to_row},{self.to_col}"
+
+class Room(models.Model):
+    room_code = models.CharField(max_length=10, unique=True)
+    game = models.OneToOneField(Game, on_delete=models.SET_NULL, null=True, blank=True, related_name='room_session')
+    player_red = models.CharField(max_length=255, null=True, blank=True)
+    player_black = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=20, default='waiting') # 'waiting', 'playing', 'finished'
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Room {self.room_code} - {self.status}"

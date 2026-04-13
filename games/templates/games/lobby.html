@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi vs AI - Start Game</title>
+    <title>Xiangqi - Chơi Online</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/start-screen.css' %}">
     <link
@@ -82,8 +82,7 @@
                         value="0.3" aria-label="Âm lượng nhạc">
                 </div>
                 <nav class="nav-links">
-                    <a href="#rules">Rules</a>
-                    <a href="#about">About</a>
+                    <a href="{% url 'games:index' %}">← Trở về PvE</a>
                 </nav>
             </div>
         </header>
@@ -143,60 +142,28 @@
                     </div>
 
                     <!-- Title -->
-                    <h1 class="game-title">Xiangqi</h1>
-                    <p class="subtitle">Prepare for Battle</p>
+                    <h1 class="game-title" style="font-size:36px; padding-top:20px;">Trực Tuyến</h1>
+                    <p class="subtitle">Chơi online (PvP)</p>
 
                     <div class="ornamental-divider"><span>✦</span></div>
 
                     <!-- Game Setup Form -->
-                    <form method="POST">
-                        {% csrf_token %}
-
+                    <div id="lobbyForm">
                         <div class="settings-group">
-                            <div class="settings-label">SETTINGS</div>
-
-                            <!-- Difficulty Selection -->
                             <div class="form-group">
-                                <label for="difficulty">Difficulty:</label>
-                                <div class="select-wrapper">
-                                    <select name="difficulty" id="difficulty">
-                                        <option value="easy">Easy (max depth 2)</option>
-                                        <option value="normal" selected>Normal (time search)</option>
-                                        <option value="hard">Hard (max depth 4)</option>
-                                    </select>
-                                    <div class="select-arrow"></div>
-                                </div>
+                                <label for="playerName" style="font-family:'Cinzel', serif; font-size:1.1rem; color:#d4b87a; display:block; margin-bottom:8px;">Tên của bạn:</label>
+                                <input type="text" id="playerName" placeholder="Nhập tên người chơi..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #7a6042; font-family: 'Noto Serif', serif; font-size: 1.1rem; color: #fff; text-align: center; border-radius: 4px; box-sizing: border-box; margin-bottom: 24px;">
                             </div>
-
-                            <!-- Player Side Selection -->
+                            <div class="button-area" style="margin-bottom:20px;">
+                                <button type="button" class="start-button pvp-btn" id="btnCreateRoom" style="width:100%;"><span class="btn-text">Tạo Phòng Mới</span></button>
+                            </div>
+                            <div class="ornamental-divider" style="margin: 20px 0; font-size: 0.8em; opacity:0.5;"><span>hoặc</span></div>
                             <div class="form-group">
-                                <label for="player_side">Play as:</label>
-                                <div class="select-wrapper">
-                                    <select name="player_side" id="player_side">
-                                        <option value="r" selected>Red (Goes First)</option>
-                                        <option value="b">Black (Goes Second)</option>
-                                    </select>
-                                    <div class="select-arrow"></div>
-                                </div>
+                                <input type="text" id="joinRoomCode" placeholder="Nhập mã phòng có sẵn..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #7a6042; font-family: 'Cinzel', serif; font-size: 1.1rem; color: #fff; text-align: center; border-radius: 4px; box-sizing: border-box; margin-bottom:8px;">
+                                <button type="button" class="start-button pvp-btn" id="btnJoinRoom" style="width:100%;"><span class="btn-text">Vào Phòng</span></button>
                             </div>
                         </div>
-
-                        <!-- PvE Start Game Button -->
-                        <div class="button-area">
-                            <button type="submit" class="start-button"><span class="btn-text">Start Game (PvE)</span></button>
-                        </div>
-                        
-                        <div class="ornamental-divider" style="margin: 15px 0;"><span>⚔</span></div>
-
-                        <div class="settings-group">
-                            <div class="settings-label">MULTIPLAYER</div>
-                            <div class="button-area">
-                                <a href="{% url 'games:lobby' %}" style="text-decoration: none; display: block; width: 100%;">
-                                    <button type="button" class="start-button pvp-btn" style="width: 100%; pointer-events: none;"><span class="btn-text">Chơi Online (PvP)</span></button>
-                                </a>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
 
                     <!-- Bottom Decoration -->
                     <div class="card-bottom-ornament"></div>
@@ -494,248 +461,104 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.querySelector('form');
-            const startBtn = document.querySelector('.start-button');
+            const btnCreate = document.getElementById('btnCreateRoom');
+            const btnJoin = document.getElementById('btnJoinRoom');
+            const nameInput = document.getElementById('playerName');
+            const codeInput = document.getElementById('joinRoomCode');
 
-            if (form && startBtn) {
-                form.addEventListener('submit', function (e) {
-                    if (startBtn.classList.contains('loading')) {
-                        e.preventDefault();
-                        return;
-                    }
-                    startBtn.classList.add('loading');
-                    startBtn.innerHTML = '<span class="btn-text">Starting...</span>';
-                });
+            let storedName = localStorage.getItem('player_name');
+            if (storedName) {
+                nameInput.value = storedName;
             }
 
-            // Custom Select UI logic to replace native dropdowns
-            document.querySelectorAll('.select-wrapper').forEach(wrapper => {
-                const selectElement = wrapper.querySelector('select');
-                if (!selectElement) return;
+            function getIdentifier() {
+                let name = nameInput.value.trim();
+                if (!name) name = "Khách_" + Math.random().toString(36).substr(2, 4);
+                localStorage.setItem('player_name', name);
+                
+                let pid = localStorage.getItem('user_identifier');
+                if (!pid) {
+                    pid = 'player_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('user_identifier', pid);
+                }
+                return { identifier: pid, name: name };
+            }
 
-                // Hide original select visually but keep it focusable for a11y if needed,
-                // or just hide it and build a custom one
-                selectElement.style.display = 'none';
-
-                // Create custom select container
-                const customSelect = document.createElement('div');
-                customSelect.className = 'custom-select';
-
-                // Create trigger (the visible selected option)
-                const trigger = document.createElement('div');
-                trigger.className = 'custom-select-trigger';
-
-                const selectedText = document.createElement('span');
-                selectedText.textContent = selectElement.options[selectElement.selectedIndex].text;
-                trigger.appendChild(selectedText);
-
-                const arrow = document.createElement('div');
-                arrow.className = 'select-arrow';
-                trigger.appendChild(arrow);
-
-                // Create options dropdown
-                const optionsContainer = document.createElement('div');
-                optionsContainer.className = 'custom-select-options';
-
-                Array.from(selectElement.options).forEach((option, index) => {
-                    const customOption = document.createElement('div');
-                    customOption.className = 'custom-option';
-                    if (option.selected) customOption.classList.add('selected');
-                    customOption.textContent = option.text;
-
-                    customOption.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Update native select
-                        selectElement.selectedIndex = index;
-                        selectElement.dispatchEvent(new Event('change'));
-
-                        // Update UI
-                        selectedText.textContent = option.text;
-                        optionsContainer.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
-                        customOption.classList.add('selected');
-
-                        // Close dropdown
-                        customSelect.classList.remove('open');
-                    });
-                    optionsContainer.appendChild(customOption);
-                });
-
-                customSelect.appendChild(trigger);
-                customSelect.appendChild(optionsContainer);
-
-                // Remove original arrow if exists inside wrapper
-                const oldArrow = wrapper.querySelector('.select-arrow:not(.custom-select .select-arrow)');
-                if (oldArrow) oldArrow.remove();
-
-                wrapper.appendChild(customSelect);
-
-                // Toggle dropdown Open/Close
-                trigger.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isOpen = customSelect.classList.contains('open');
-
-                    // Close all other open selects
-                    document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
-
-                    if (!isOpen) {
-                        customSelect.classList.add('open');
-                    }
-                });
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('open'));
-            });
-
-            // Smooth scroll for nav
-            document.querySelectorAll('.nav-links a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    // Add active class
-                    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-                    this.classList.add('active');
-
-                    const targetId = this.getAttribute('href');
-                    if (targetId === '#rules') {
-                        openRulesModal();
-                        return;
-                    }
-                    if (targetId && targetId !== '#') {
-                        const targetEl = document.querySelector(targetId);
-                        if (targetEl) {
-                            targetEl.scrollIntoView({
-                                behavior: 'smooth'
-                            });
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
                         }
                     }
-                });
-            });
-
-            // Rules Modal Logic
-            const rulesOverlay = document.getElementById('rulesOverlay');
-            const btnCloseRules = document.getElementById('btnCloseRules');
-            const btnCornerPrev = document.getElementById('btnCornerPrev');
-            const btnCornerNext = document.getElementById('btnCornerNext');
-            const pageIndicator = document.getElementById('rulesPageIndicator');
-            const pages = document.querySelectorAll('.book-page');
-            const tocItems = document.querySelectorAll('#bookToc li');
-            const bookRightWrapper = document.getElementById('bookRightWrapper');
-            let currentPage = 0;
-            const totalPages = pages.length;
-
-            function openRulesModal() {
-                rulesOverlay.hidden = false;
-                currentPage = 0;
-                updatePages(false);
-                btnCloseRules.focus();
-
-                // Add keyboard listeners
-                document.addEventListener('keydown', handleRulesKeydown);
-            }
-
-            function closeRulesModal() {
-                rulesOverlay.hidden = true;
-                document.removeEventListener('keydown', handleRulesKeydown);
-            }
-
-            function updatePages(animate = true) {
-                // Update TOC highlights
-                tocItems.forEach((li, index) => {
-                    if (index === currentPage) {
-                        li.classList.add('active');
-                    } else {
-                        li.classList.remove('active');
-                    }
-                });
-
-                // Update right content visibility with flip animation
-                if (animate) {
-                    bookRightWrapper.classList.add('flipping');
-                    setTimeout(() => {
-                        swapPages();
-                    }, 130); // half flip animation duration
-
-                    setTimeout(() => {
-                        bookRightWrapper.classList.remove('flipping');
-                    }, 260); // full flip animation duration
-                } else {
-                    swapPages();
                 }
+                return cookieValue;
+            }
 
-                function swapPages() {
-                    pages.forEach((page, index) => {
-                        page.classList.remove('active');
-                        page.hidden = true;
-                        if (index === currentPage) {
-                            page.hidden = false;
-                            page.classList.add('active');
-                            // scroll back to top of page
-                            page.scrollTop = 0;
+            if (btnCreate) {
+                btnCreate.addEventListener('click', async () => {
+                    const creds = getIdentifier();
+                    btnCreate.classList.add('loading');
+                    btnCreate.querySelector('.btn-text').textContent = 'Đang xếp...';
+                    
+                    try {
+                        const res = await fetch('/api/rooms/create/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ identifier: creds.identifier, name: creds.name })
+                        });
+                        const data = await res.json();
+                        if (res.ok && data.room_code) {
+                            window.location.href = `/room/${data.room_code}/`;
+                        } else {
+                            btnCreate.classList.remove('loading');
+                            btnCreate.querySelector('.btn-text').textContent = 'Tạo Phòng Mới';
+                            alert("Tạo phòng thất bại: " + data.error);
                         }
-                    });
-                    pageIndicator.textContent = `Trang ${currentPage + 1} / ${totalPages}`;
-
-                    if (btnCornerPrev) btnCornerPrev.disabled = currentPage === 0;
-                    if (btnCornerNext) btnCornerNext.disabled = currentPage === totalPages - 1;
-                }
-            }
-
-            function nextPage() {
-                if (currentPage < totalPages - 1) {
-                    currentPage++;
-                    updatePages(true);
-                }
-            }
-
-            function prevPage() {
-                if (currentPage > 0) {
-                    currentPage--;
-                    updatePages(true);
-                }
-            }
-
-            function handleRulesKeydown(e) {
-                if (rulesOverlay.hidden) return;
-                if (e.key === 'Escape') closeRulesModal();
-                if (e.key === 'ArrowRight') { e.preventDefault(); nextPage(); }
-                if (e.key === 'ArrowLeft') { e.preventDefault(); prevPage(); }
-                if (e.key === 'Home') {
-                    e.preventDefault();
-                    if (currentPage !== 0) {
-                        currentPage = 0;
-                        updatePages(true);
-                    }
-                }
-                if (e.key === 'End') {
-                    e.preventDefault();
-                    if (currentPage !== totalPages - 1) {
-                        currentPage = totalPages - 1;
-                        updatePages(true);
-                    }
-                }
-            }
-
-            if (btnCloseRules) btnCloseRules.addEventListener('click', closeRulesModal);
-            if (btnCornerNext) btnCornerNext.addEventListener('click', nextPage);
-            if (btnCornerPrev) btnCornerPrev.addEventListener('click', prevPage);
-
-            // TOC click to navigate
-            tocItems.forEach((li) => {
-                li.addEventListener('click', () => {
-                    const targetIndex = parseInt(li.getAttribute('data-target'));
-                    if (currentPage !== targetIndex) {
-                        currentPage = targetIndex;
-                        updatePages(true);
+                    } catch(e) {
+                        btnCreate.classList.remove('loading');
+                        alert("Lỗi kết nối.");
                     }
                 });
-            });
+            }
 
-            // Close on backdrop click
-            if (rulesOverlay) {
-                rulesOverlay.addEventListener('click', (e) => {
-                    // Only close if clicked outside the book spread container
-                    if (e.target === rulesOverlay) closeRulesModal();
+            if (btnJoin) {
+                btnJoin.addEventListener('click', async () => {
+                    const code = codeInput.value.trim();
+                    if (!code) return alert("Vui lòng nhập mã phòng!");
+                    const creds = getIdentifier();
+                    
+                    btnJoin.classList.add('loading');
+                    btnJoin.querySelector('.btn-text').textContent = 'Đang kết nối...';
+                    
+                    try {
+                        const res = await fetch(`/api/rooms/${code}/join/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ identifier: creds.identifier, name: creds.name })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            window.location.href = `/room/${code}/`;
+                        } else {
+                            btnJoin.classList.remove('loading');
+                            btnJoin.querySelector('.btn-text').textContent = 'Vào Phòng';
+                            alert("Vào phòng thất bại: " + data.error);
+                        }
+                    } catch(e) {
+                        btnJoin.classList.remove('loading');
+                        alert("Lỗi kết nối.");
+                    }
                 });
             }
 

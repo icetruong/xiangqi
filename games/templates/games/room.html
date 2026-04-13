@@ -1,0 +1,772 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xiangqi PvP Room: {{ room.room_code }}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
+    <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Game Toasts Container -->
+        <div id="game-toast-container" class="game-toast-container" aria-live="polite"></div>
+
+        <!-- ── Player Panels moved to left column ── -->
+        <div class="game-layout">
+            <!-- LEFT PANEL -->
+            <div class="layout-side layout-left">
+                <!-- Captured pieces -->
+                <div class="ui-panel">
+                    <div class="panel-header">QUÂN ĐÃ BẮT</div>
+                    <div class="captured-pieces" id="capturedPiecesLeft"></div>
+                </div>
+
+                <!-- Move history -->
+                <div class="ui-panel history-panel">
+                    <div class="panel-header">LỊCH SỬ ĐI</div>
+                    <div class="history-list" id="moveHistoryList">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- ── Player Panels (Turn Indicator) ── -->
+                <div class="player-panel player-panel--left" id="playerPanelLeft" aria-label="Người chơi">
+                    <div class="pp-badge" id="ppBadgeLeft">⚡ ĐẾN LƯỢT</div>
+                    <div class="pp-avatar" id="ppAvatarLeft">帥</div>
+                    <div class="pp-name" id="ppNameLeft">Bạn</div>
+                </div>
+                <div class="player-panel player-panel--right" id="playerPanelRight" aria-label="Đối thủ">
+                    <div class="pp-badge" id="ppBadgeRight">⚡ ĐẾN LƯỢT</div>
+                    <div class="pp-avatar" id="ppAvatarRight">將</div>
+                    <div class="pp-name" id="ppNameRight">Đối thủ</div>
+                </div>
+            </div>
+
+            <!-- CENTER PANEL -->
+            <div class="layout-center">
+                <div class="board-wrapper" id="boardWrapper">
+                    <!-- Scroll rod bars — match start-menu scroll style -->
+                    <div class="board-rod-top" aria-hidden="true"></div>
+                    <div class="board-rod-bottom" aria-hidden="true"></div>
+                    <!-- Corner ornaments — tie into parchment design language -->
+                    <span class="board-corner-ornament tl" aria-hidden="true">◈</span>
+                    <span class="board-corner-ornament tr" aria-hidden="true">◈</span>
+                    <span class="board-corner-ornament bl" aria-hidden="true">◈</span>
+                    <span class="board-corner-ornament br" aria-hidden="true">◈</span>
+                    <div class="board-inner" id="board"></div>
+                    <!-- Check overlay: "將軍" text shown when check occurs -->
+                    <div id="check-overlay" class="check-overlay" aria-live="assertive" aria-atomic="true"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <div class="layout-side layout-right">
+                <!-- Timer -->
+                <div class="ui-panel">
+                    <div class="panel-header">THỜI GIAN</div>
+                    <div class="timer-plaque" id="gameTimerBoard">
+                        <div class="timer-label">Thời gian ván <span class="timer-seal">時</span></div>
+                        <div class="timer-value" id="gameTimerValue">00:00</div>
+                    </div>
+                </div>
+
+                <!-- Game Info -->
+                <div class="ui-panel">
+                    <div class="panel-header">THÔNG TIN VÁN</div>
+                    <div class="info-row">
+                        <span class="info-label">Độ khó:</span>
+                        <span class="info-val">
+                            {% if game.difficulty == 'easy' %} Dễ
+                            {% elif game.difficulty == 'hard' %} Khó
+                            {% else %} Trung bình {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Bạn cầm:</span>
+                        <span class="info-val">{% if game.player_side == 'r' %}Đỏ{% else %}Đen{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="ui-panel settings-panel">
+                    <div class="panel-header">CÀI ĐẶT</div>
+                    <div class="settings-content">
+                        <!-- BGM Control -->
+                        <div class="timer-plaque bgm-control" id="bgmControl">
+                            <button type="button" class="bgm-btn" id="btnBgmToggle" aria-label="Bật/Tắt nhạc"
+                                title="Bật/Tắt nhạc">琴</button>
+                            <input type="range" id="bgmVolume" class="bgm-slider" min="0" max="1" step="0.05"
+                                value="0.3" aria-label="Âm lượng nhạc">
+                        </div>
+
+                        <!-- Game Buttons -->
+                        <button type="button" class="ga-btn ga-btn--resign" id="btnResign" data-seal="印">Nhận
+                            thua</button>
+                        <button type="button" class="ga-btn ga-btn--draw" id="btnDraw" data-seal="和">Cầu hòa</button>
+                        <a class="ga-btn ga-btn--exit" id="btnExit" href="/" data-seal="退">Thoát</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- game.js MUST come before the inline script so initGame() is defined -->
+    <script src="{% static 'games/js/game.js' %}?v=2"></script>
+    <script>
+        // ── Game Timer Logic ──
+        window.gameTimer = {
+            startTimestamp: 0,
+            pausedDurationTotal: 0,
+            pausedAt: 0,
+            intervalId: null,
+            isRunning: false,
+            isEnded: false,
+            el: null,
+
+            init: function (initialStatus) {
+                this.el = document.getElementById("gameTimerValue");
+                if (initialStatus === 'ongoing' || !initialStatus) {
+                    this.start();
+                } else {
+                    this.stop(true);
+                }
+            },
+            start: function () {
+                if (this.isEnded) return;
+                if (!this.startTimestamp) {
+                    this.startTimestamp = Date.now();
+                }
+                this.resume();
+            },
+            pause: function () {
+                if (!this.isRunning || this.isEnded) return;
+                this.isRunning = false;
+                this.pausedAt = Date.now();
+                clearInterval(this.intervalId);
+                if (this.el) this.el.classList.add("paused");
+            },
+            resume: function () {
+                if (this.isRunning || this.isEnded) return;
+                if (this.pausedAt) {
+                    this.pausedDurationTotal += (Date.now() - this.pausedAt);
+                    this.pausedAt = 0;
+                }
+                this.isRunning = true;
+                if (this.el) this.el.classList.remove("paused");
+                this.intervalId = setInterval(() => this.update(), 1000);
+                this.update();
+            },
+            stop: function (isOver) {
+                this.pause();
+                this.isEnded = true;
+                if (isOver && this.el) {
+                    this.el.classList.remove("paused");
+                    this.el.classList.add("ended");
+                }
+            },
+            update: function () {
+                if (!this.el) return;
+                let now = Date.now();
+                let elapsedMs = now - this.startTimestamp - this.pausedDurationTotal;
+                if (elapsedMs < 0) elapsedMs = 0;
+                let totalSecs = Math.floor(elapsedMs / 1000);
+
+                let h = Math.floor(totalSecs / 3600);
+                let m = Math.floor((totalSecs % 3600) / 60);
+                let s = totalSecs % 60;
+
+                let formatted = "";
+                if (h > 0) {
+                    formatted = String(h).padStart(2, '0') + ":" +
+                        String(m).padStart(2, '0') + ":" +
+                        String(s).padStart(2, '0');
+                } else {
+                    formatted = String(m).padStart(2, '0') + ":" +
+                        String(s).padStart(2, '0');
+                }
+                this.el.textContent = formatted;
+            }
+        };
+
+        window.ROOM_CODE = "{{ room.room_code }}";
+        
+        // Ensure client identifier is present
+        if (!localStorage.getItem('user_identifier')) {
+            localStorage.setItem('user_identifier', 'player_' + Math.random().toString(36).substr(2, 9));
+        }
+        const myPlayerId = localStorage.getItem('user_identifier');
+
+        initGame({
+            isMultiplayer: true,
+            roomCode: "{{ room.room_code }}",
+            playerId: myPlayerId,
+            gameId: "{{ game.id }}",
+            // State will be synced via WS connection success event
+            boardState: [],
+            currentTurn: '',
+            status: "{{ room.status }}",
+            playerSide: '', 
+            legalMoves: [],
+            lastMove: null,
+            inCheck: null,
+            moveHistory: []
+        });
+
+        // Initialize Timer when DOM is ready
+        document.addEventListener("DOMContentLoaded", () => {
+            window.gameTimer.init("{{ room.status }}");
+        });
+    </script>
+
+    <audio id="bgmAudio" loop preload="auto">
+        <source src="{% static 'games/audio/bgm.mp3' %}" type="audio/mpeg">
+    </audio>
+
+    <!-- End Layout Replacements -->
+
+    <!-- ══════════════════════════════════════════════
+         Confirm Resign Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmResignOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmTitle" aria-describedby="cfmBody">
+        <div class="cfm-box" id="confirmResignBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon" aria-hidden="true">令</div>
+                <span class="cfm-hanzi">「請三思」</span>
+                <span class="cfm-title" id="cfmTitle">Xác nhận nhận thua?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmBody">
+                Giang hồ hiểm ác — một khi nhận thua, ván cờ sẽ kết thúc.
+            </p>
+            <p class="cfm-result">Kết quả: Bạn thua (敗北).</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmCancel">Hủy</button>
+                <button type="button" class="cfm-btn cfm-btn--confirm" id="cfmConfirm">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Confirm Draw Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmDrawOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmDrawTitle" aria-describedby="cfmDrawBody">
+        <div class="cfm-box" id="confirmDrawBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon cfm-header-icon--draw" aria-hidden="true">和</div>
+                <span class="cfm-hanzi">「請和」</span>
+                <span class="cfm-title" id="cfmDrawTitle">Gửi yêu cầu hòa?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmDrawBody">
+                Giang hồ trọng hòa khí — gửi cầu hòa cho đối thủ.
+            </p>
+            <p class="cfm-result">Nếu đối thủ đồng ý, ván cờ kết thúc hòa (和棋).</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmDrawCancel">Hủy</button>
+                <button type="button" class="cfm-btn cfm-btn--draw-confirm" id="cfmDrawConfirm">Gửi yêu cầu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Confirm Exit Modal — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="confirmExitOverlay" class="cfm-overlay" hidden aria-modal="true" role="alertdialog"
+        aria-labelledby="cfmExitTitle" aria-describedby="cfmExitBody">
+        <div class="cfm-box" id="confirmExitBox">
+
+            <!-- Header -->
+            <div class="cfm-header">
+                <div class="cfm-header-icon cfm-header-icon--exit" aria-hidden="true">退</div>
+                <span class="cfm-hanzi">「請三思」</span>
+                <span class="cfm-title" id="cfmExitTitle">Xác nhận thoát ván?</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-body" id="cfmExitBody">
+                Rút lui khỏi ván và trở về sảnh.
+            </p>
+            <p class="cfm-result">Tiến trình ván cờ sẽ không được lưu.</p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--cancel" id="cfmExitCancel">Ở lại</button>
+                <button type="button" class="cfm-btn cfm-btn--exit-confirm" id="cfmExitConfirm">Thoát</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Waiting Room Overlay
+         ══════════════════════════════════════════ -->
+    <div id="waitingOverlay" class="cfm-overlay" aria-modal="true" role="dialog" {% if room.status != 'waiting' %}hidden{% endif %}>
+        <div class="cfm-box" style="text-align: center; padding: 36px 28px;">
+            <div class="cfm-header-icon" aria-hidden="true">⏳</div>
+            <span class="cfm-title">Phòng Chờ</span>
+            <div class="cfm-divider"></div>
+            <p class="cfm-result" style="color: #d4b87a; font-size: 1.5rem; letter-spacing: 2px;">
+                Mã phòng: <strong>{{ room.room_code }}</strong>
+            </p>
+            <p class="cfm-body" style="margin-top: 15px;">Đang chờ đối thủ tham gia...</p>
+            <p class="cfm-body" style="margin-top: 5px; opacity: 0.7; font-size: 0.9em;">Hãy chia sẻ mã này cho đối thủ của bạn.</p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Lose Screen Overlay — Bảng gỗ cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="loseOverlay" class="cfm-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="loseTitle"
+        aria-describedby="loseBody">
+        <div class="cfm-box" id="loseBox" style="text-align: center; padding: 36px 28px 28px;">
+            <!-- Header: Chữ Hán lớn -->
+            <div class="lose-hanzi" id="loseHanzi">敗北</div>
+            <div class="cfm-title" id="loseTitle" style="font-size: 1.4rem; margin-bottom: 20px;">Bạn thua!</div>
+
+            <!-- Divider -->
+            <div class="cfm-divider"></div>
+
+            <!-- Body -->
+            <p class="cfm-result" id="loseReason" style="font-size: 1.05rem; color: #d4b87a; margin-bottom: 8px;">
+                Bại do nhận thua.
+            </p>
+            <p class="cfm-body" id="loseBody" style="margin-bottom: 32px; font-size: 0.95rem;">
+                Giang hồ hiểm ác — hẹn ngày tái đấu.
+            </p>
+
+            <!-- Buttons -->
+            <div class="cfm-actions">
+                <button type="button" class="cfm-btn cfm-btn--confirm" id="loseRetry">Tái đấu</button>
+                <a href="/" class="cfm-btn cfm-btn--exit-confirm" id="loseHome"
+                    style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Về
+                    sảnh</a>
+            </div>
+
+            <!-- Triện đỏ (đóng dấu) -->
+            <div class="lose-seal" id="loseSeal">敗</div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Win Screen Overlay — Bảng gỗ cổ trang chiến thắng
+         ══════════════════════════════════════════════ -->
+    <div id="winOverlay" class="win-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="winTitle">
+        <!-- Golden particle container (populated by JS) -->
+        <div class="win-particles" id="winParticles"></div>
+
+        <div class="win-panel" id="winPanel">
+            <!-- Decorative separator top -->
+            <div class="win-deco-line"></div>
+
+            <!-- Title: Chữ Hán lớn -->
+            <div class="win-hanzi">大勝</div>
+            <div class="win-title" id="winTitle">CHIẾN THẮNG</div>
+
+            <!-- Decorative separator -->
+            <div class="win-deco-line"></div>
+
+            <!-- Reason + quote -->
+            <p class="win-reason" id="winReason">Bạn đã đánh bại đối thủ</p>
+            <p class="win-quote">「tướng soái quy hàng, thiên hạ thái bình」</p>
+
+            <!-- Action buttons -->
+            <div class="win-actions">
+                <button type="button" class="win-btn win-btn--retry" id="winRetry">⚔ Tái đấu</button>
+                <a class="win-btn win-btn--home" href="/" id="winHome">⛩ Về sảnh</a>
+            </div>
+
+            <!-- Gold seal stamp -->
+            <div class="win-seal" id="winSeal">勝</div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         Endgame Modal — Cuộn thư cổ trang
+         ══════════════════════════════════════════ -->
+    <div id="endgameOverlay" class="egm-overlay" hidden aria-modal="true" role="dialog">
+        <div class="egm-scroll" id="endgameScroll">
+            <!-- Trục cuộn trên -->
+            <div class="egm-rod egm-rod--top"></div>
+
+            <!-- Nội dung cuộn -->
+            <div class="egm-body">
+                <!-- Chữ Hán lớn -->
+                <div class="egm-hanzi" id="egmHanzi">敗北</div>
+
+                <!-- Đường kẻ trang trí -->
+                <div class="egm-divider"></div>
+
+                <!-- Subtitle & lý do -->
+                <div class="egm-subtitle" id="egmSubtitle">Bạn đã nhận thua</div>
+                <div class="egm-reason" id="egmReason">Xin bái phục — hẹn ngày tái đấu.</div>
+
+                <!-- Nút CTA -->
+                <div class="egm-actions">
+                    <button class="egm-btn egm-btn--retry" id="egmRetry">⚔ Tái đấu</button>
+                    <a class="egm-btn egm-btn--home" href="/">⛩ Hồi trang</a>
+                </div>
+
+                <!-- Triện đỏ (đóng dấu) -->
+                <div class="egm-seal" id="egmSeal">敗</div>
+            </div>
+
+            <!-- Trục cuộn dưới -->
+            <div class="egm-rod egm-rod--bottom"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            /* ── CSRF helper ── */
+            function getCsrf() {
+                const m = document.cookie.match("(^|;)\\s*csrftoken\\s*=\\s*([^;]+)");
+                return m ? m.pop() : "";
+            }
+
+            /* ── Fetch helper ── */
+            async function postAction(path) {
+                const res = await fetch(path, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+                    body: JSON.stringify({})
+                });
+                return res.json().catch(() => ({}));
+            }
+
+            /* ── Thud/stamp sound ── */
+            window.playThud = function playThud() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.18, ctx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for (let i = 0; i < d.length; i++) {
+                        const t = i / ctx.sampleRate;
+                        d[i] = Math.sin(2 * Math.PI * 80 * t) * Math.exp(-t * 28)
+                            + (Math.random() * 2 - 1) * Math.exp(-t * 60) * 0.35;
+                    }
+                    const src = ctx.createBufferSource(), g = ctx.createGain();
+                    src.buffer = buf; g.gain.value = 0.55;
+                    src.connect(g); g.connect(ctx.destination); src.start();
+                } catch (e) { /* silent fail */ }
+            };
+
+            function playThud() { window.playThud(); }
+
+            /* ── Show modal ── */
+            function showEndgameModal(type) {
+                if (window.gameTimer) window.gameTimer.stop(true);
+                // For "draw" we still use the old cuộn thư.
+                const overlay = document.getElementById("endgameOverlay");
+                const hanzi = document.getElementById("egmHanzi");
+                const subtitle = document.getElementById("egmSubtitle");
+                const reason = document.getElementById("egmReason");
+                const seal = document.getElementById("egmSeal");
+                const scroll = document.getElementById("endgameScroll");
+
+                hanzi.textContent = "和局";
+                subtitle.textContent = "Ván cờ hòa";
+                reason.textContent = "Cầu hòa thành công — giang hồ rộng mở.";
+                seal.textContent = "和";
+                scroll.dataset.type = "draw";
+
+                overlay.hidden = false;
+                /* stamp animation: delay so scroll unfurls first */
+                seal.classList.remove("egm-seal--stamped");
+                void seal.offsetWidth; /* trigger reflow to restart animation */
+                setTimeout(() => { seal.classList.add("egm-seal--stamped"); playThud(); }, 350);
+            }
+
+            /* ── CTA cho Lose Screen ── */
+            document.getElementById("loseRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── CTA cho Win Screen ── */
+            document.getElementById("winRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── CTA: Tái đấu → về trang chủ để chọn ván mới ── */
+            document.getElementById("egmRetry").addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            /* ── Confirm Resign Modal helpers ── */
+            const cfmOverlay = document.getElementById("confirmResignOverlay");
+            const cfmConfirm = document.getElementById("cfmConfirm");
+            const cfmCancel = document.getElementById("cfmCancel");
+            let cfmToastTimer = null;
+
+            function openConfirmModal() {
+                if (window.gameTimer) window.gameTimer.pause();
+                cfmOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmConfirm.disabled = false;
+                cfmConfirm.textContent = "Xác nhận";
+                /* remove stale toast */
+                const old = cfmOverlay.querySelector(".cfm-toast");
+                if (old) old.remove();
+                /* focus confirm for keyboard nav */
+                cfmConfirm.focus();
+            }
+
+            function closeConfirmModal() {
+                if (window.gameTimer) window.gameTimer.resume();
+                cfmOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            function showCfmToast(msg) {
+                const box = document.getElementById("confirmResignBox");
+                const old = box.querySelector(".cfm-toast");
+                if (old) old.remove();
+                const t = document.createElement("div");
+                t.className = "cfm-toast";
+                t.textContent = msg;
+                box.appendChild(t);
+                clearTimeout(cfmToastTimer);
+                cfmToastTimer = setTimeout(() => t.remove(), 3500);
+            }
+
+            /* Close on backdrop click */
+            cfmOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmOverlay) closeConfirmModal();
+            });
+
+            /* Close on ESC */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmOverlay.hidden) closeConfirmModal();
+            });
+
+            cfmCancel.addEventListener("click", closeConfirmModal);
+
+            /* Confirm → send resign */
+            cfmConfirm.addEventListener("click", async () => {
+                cfmConfirm.disabled = true;
+                cfmConfirm.textContent = "Đang xử lý…";
+                try {
+                    if (typeof isMultiplayer !== 'undefined' && isMultiplayer && typeof wsClient !== 'undefined' && wsClient && wsClient.readyState === WebSocket.OPEN) {
+                        wsClient.send(JSON.stringify({ type: 'surrender', player: window.localStorage.getItem('user_identifier') }));
+                        closeConfirmModal();
+                        cfmConfirm.disabled = false;
+                        return;
+                    }
+
+                    const data = await postAction(`/api/games/${window.GAME_ID}/resign`);
+                    if (data.ok) {
+                        closeConfirmModal();
+                        if (window.showEndgame) {
+                            window.showEndgame({ status: "lose", reason: "resign" });
+                        }
+                    } else {
+                        cfmConfirm.disabled = false;
+                        cfmConfirm.textContent = "Xác nhận";
+                        showCfmToast(data.message || "Gửi thất bại, thử lại.");
+                    }
+                } catch (_) {
+                    cfmConfirm.disabled = false;
+                    cfmConfirm.textContent = "Xác nhận";
+                    showCfmToast("Gửi thất bại, thử lại.");
+                }
+            });
+
+            /* ── Resign button → open confirm modal ── */
+            document.getElementById("btnResign").addEventListener("click", openConfirmModal);
+
+            /* ── Confirm Draw Modal helpers ── */
+            const cfmDrawOverlay = document.getElementById("confirmDrawOverlay");
+            const cfmDrawConfirm = document.getElementById("cfmDrawConfirm");
+            const cfmDrawCancel = document.getElementById("cfmDrawCancel");
+            let cfmDrawToastTimer = null;
+
+            function openDrawModal() {
+                if (window.gameTimer) window.gameTimer.pause();
+                cfmDrawOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmDrawConfirm.disabled = false;
+                cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                const old = cfmDrawOverlay.querySelector(".cfm-toast");
+                if (old) old.remove();
+                cfmDrawConfirm.focus();
+            }
+
+            function closeDrawModal() {
+                if (window.gameTimer) window.gameTimer.resume();
+                cfmDrawOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            function showDrawToast(msg) {
+                const box = document.getElementById("confirmDrawBox");
+                const old = box.querySelector(".cfm-toast");
+                if (old) old.remove();
+                const t = document.createElement("div");
+                t.className = "cfm-toast";
+                t.textContent = msg;
+                box.appendChild(t);
+                clearTimeout(cfmDrawToastTimer);
+                cfmDrawToastTimer = setTimeout(() => t.remove(), 3500);
+            }
+
+            /* Close on backdrop click */
+            cfmDrawOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmDrawOverlay) closeDrawModal();
+            });
+
+            /* Close on ESC (also handles resign ESC via existing listener) */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmDrawOverlay.hidden) closeDrawModal();
+            });
+
+            cfmDrawCancel.addEventListener("click", closeDrawModal);
+
+            /* Confirm → send draw offer */
+            cfmDrawConfirm.addEventListener("click", async () => {
+                cfmDrawConfirm.disabled = true;
+                cfmDrawConfirm.textContent = "Đang gửi\u2026";
+                try {
+                    const data = await postAction(`/api/games/${window.GAME_ID}/draw`);
+                    if (data.ok) {
+                        closeDrawModal();
+                        showEndgameModal("draw");
+                        const btnDraw = document.getElementById("btnDraw");
+                        btnDraw.disabled = true;
+                        btnDraw.textContent = "Đã cầu hòa";
+                    } else {
+                        cfmDrawConfirm.disabled = false;
+                        cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                        showDrawToast(data.message || "Không thể cầu hòa lúc này.");
+                    }
+                } catch (_) {
+                    cfmDrawConfirm.disabled = false;
+                    cfmDrawConfirm.textContent = "Gửi yêu cầu";
+                    showDrawToast("Gửi cầu hòa thất bại, thử lại.");
+                }
+            });
+
+            /* ── Draw button → open confirm modal ── */
+            document.getElementById("btnDraw").addEventListener("click", openDrawModal);
+
+            /* ── Exit Confirm Modal ── */
+            const cfmExitOverlay = document.getElementById("confirmExitOverlay");
+            const cfmExitConfirm = document.getElementById("cfmExitConfirm");
+            const cfmExitCancel = document.getElementById("cfmExitCancel");
+
+            function openExitModal() {
+                if (window.gameTimer) window.gameTimer.pause();
+                cfmExitOverlay.hidden = false;
+                document.body.style.overflow = "hidden";
+                cfmExitConfirm.disabled = false;
+                cfmExitConfirm.textContent = "Thoát";
+                cfmExitConfirm.focus();
+            }
+
+            function closeExitModal() {
+                if (window.gameTimer) window.gameTimer.resume();
+                cfmExitOverlay.hidden = true;
+                document.body.style.overflow = "";
+            }
+
+            /* Close on backdrop click */
+            cfmExitOverlay.addEventListener("click", (e) => {
+                if (e.target === cfmExitOverlay) closeExitModal();
+            });
+
+            /* Close on ESC */
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && !cfmExitOverlay.hidden) closeExitModal();
+            });
+
+            cfmExitCancel.addEventListener("click", closeExitModal);
+
+            /* Confirm → disable button then redirect */
+            cfmExitConfirm.addEventListener("click", () => {
+                cfmExitConfirm.disabled = true;
+                cfmExitConfirm.textContent = "Đang thoát\u2026";
+                setTimeout(() => { window.location.href = "/"; }, 300);
+            });
+
+            /* Intercept <a> default navigation — open modal instead */
+            document.getElementById("btnExit").addEventListener("click", (e) => {
+                e.preventDefault();
+                openExitModal();
+            });
+
+            /* ── Background Music Logic ── */
+            const bgmAudio = document.getElementById("bgmAudio");
+            const btnBgmToggle = document.getElementById("btnBgmToggle");
+            const bgmVolume = document.getElementById("bgmVolume");
+
+            // Cài đặt âm lượng ban đầu
+            bgmAudio.volume = bgmVolume.value;
+
+            // Xử lý bật/tắt nhạc
+            function toggleBgm() {
+                if (bgmAudio.paused) {
+                    bgmAudio.play().then(() => {
+                        btnBgmToggle.classList.remove("muted");
+                    }).catch(err => {
+                        console.log("Trình duyệt chặn autoplay âm thanh:", err);
+                    });
+                } else {
+                    bgmAudio.pause();
+                    btnBgmToggle.classList.add("muted");
+                }
+            }
+
+            btnBgmToggle.addEventListener("click", toggleBgm);
+
+            // Xử lý thanh trượt âm lượng
+            bgmVolume.addEventListener("input", (e) => {
+                const vol = parseFloat(e.target.value);
+                bgmAudio.volume = vol;
+                if (vol === 0) {
+                    bgmAudio.pause();
+                    btnBgmToggle.classList.add("muted");
+                } else if (bgmAudio.paused) {
+                    bgmAudio.play().then(() => {
+                        btnBgmToggle.classList.remove("muted");
+                    }).catch(e => { });
+                }
+            });
+
+            // Tự động phát khi người dùng tương tác với trang (để lách luật autoplay)
+            document.addEventListener("click", function startBgm() {
+                if (bgmAudio.paused && !btnBgmToggle.classList.contains("muted") && document.activeElement !== btnBgmToggle && document.activeElement !== bgmVolume) {
+                    bgmAudio.play().catch(e => console.log("Chưa thể phát nhạc tự động"));
+                }
+                document.removeEventListener("click", startBgm);
+            }, { once: true });
+
+        })();
+    </script>
+</body>
+
+</html>

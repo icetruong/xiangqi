@@ -3,6 +3,8 @@
 # Core Framework
 Django==5.0.2
 djangorestframework==3.14.0
+daphne
+channels
 
 # CORS (if needed for API)
 django-cors-headers==4.3.1

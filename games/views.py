@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import ensure_csrf_cookie
-from games.models import Game
+from games.models import Game, Room
 from games.services import game_service
 from games.api_views import _get_in_check
 import json
@@ -64,3 +64,19 @@ def game_board(request, game_id):
         'in_check': json.dumps(in_check),
         'move_history': json.dumps(history_data)
     })
+
+def lobby(request):
+    return render(request, 'games/lobby.html')
+
+def room_board(request, room_code):
+    try:
+        room = Room.objects.get(room_code=room_code)
+    except Room.DoesNotExist:
+        return redirect('games:index')
+        
+    game = room.game
+    context = {
+        'room': room,
+        'game': game
+    }
+    return render(request, 'games/room.html', context)
