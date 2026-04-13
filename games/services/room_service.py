@@ -31,20 +31,25 @@ def join_room(room_code, identifier):
         if room.player_black == identifier:
             return room, 'b'
             
-        # Try to assign available player slot
-        if not room.player_red:
+        existing_players = [player for player in (room.player_red, room.player_black) if player]
+
+        # First player reaches the room in an unexpected half-empty state.
+        if not existing_players:
             room.player_red = identifier
-            room.save()
+            room.save(update_fields=['player_red'])
             return room, 'r'
-        elif not room.player_black:
-            room.player_black = identifier
-            if room.status == 'waiting':
-                room.status = 'playing'
-            room.save()
-            return room, 'b'
-        else:
-            # Room is full, client becomes spectator
-            return room, 'spectator'
+
+        # Second player joins: randomize who gets red/black so both sides are opposite.
+        if len(existing_players) == 1:
+            participants = [existing_players[0], identifier]
+            random.shuffle(participants)
+            room.player_red, room.player_black = participants
+            room.status = 'playing'
+            room.save(update_fields=['player_red', 'player_black', 'status'])
+            return room, 'r' if room.player_red == identifier else 'b'
+
+        # Room is full, client becomes spectator
+        return room, 'spectator'
 
 
 def _serialize_last_move(game):

@@ -476,10 +476,10 @@
                 if (!name) name = "Khách_" + Math.random().toString(36).substr(2, 4);
                 localStorage.setItem('player_name', name);
                 
-                let pid = localStorage.getItem('user_identifier');
+                let pid = sessionStorage.getItem('user_identifier');
                 if (!pid) {
                     pid = 'player_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('user_identifier', pid);
+                    sessionStorage.setItem('user_identifier', pid);
                 }
                 return { identifier: pid, name: name };
             }

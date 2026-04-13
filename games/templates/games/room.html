@@ -223,10 +223,10 @@
         window.INITIAL_CURRENT_TURN = {{ initial_current_turn|safe }};
         
         // Ensure client identifier is present
-        if (!localStorage.getItem('user_identifier')) {
-            localStorage.setItem('user_identifier', 'player_' + Math.random().toString(36).substr(2, 9));
+        if (!sessionStorage.getItem('user_identifier')) {
+            sessionStorage.setItem('user_identifier', 'player_' + Math.random().toString(36).substr(2, 9));
         }
-        const myPlayerId = localStorage.getItem('user_identifier');
+        const myPlayerId = sessionStorage.getItem('user_identifier');
         let initialPlayerSide = 'spectator';
         if (window.ROOM_PLAYERS.red === myPlayerId) {
             initialPlayerSide = 'r';
@@ -603,7 +603,7 @@
                 cfmConfirm.textContent = "Đang xử lý…";
                 try {
                     if (typeof isMultiplayer !== 'undefined' && isMultiplayer && typeof wsClient !== 'undefined' && wsClient && wsClient.readyState === WebSocket.OPEN) {
-                        wsClient.send(JSON.stringify({ type: 'surrender', player: window.localStorage.getItem('user_identifier') }));
+                        wsClient.send(JSON.stringify({ type: 'surrender', player: window.sessionStorage.getItem('user_identifier') }));
                         closeConfirmModal();
                         cfmConfirm.disabled = false;
                         return;
