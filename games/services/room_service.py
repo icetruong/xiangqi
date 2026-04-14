@@ -31,22 +31,18 @@ def join_room(room_code, identifier):
         if room.player_black == identifier:
             return room, 'b'
             
-        existing_players = [player for player in (room.player_red, room.player_black) if player]
-
-        # First player reaches the room in an unexpected half-empty state.
-        if not existing_players:
+        # Fallback for an unexpected half-empty room with no red player.
+        if not room.player_red:
             room.player_red = identifier
             room.save(update_fields=['player_red'])
             return room, 'r'
 
-        # Second player joins: randomize who gets red/black so both sides are opposite.
-        if len(existing_players) == 1:
-            participants = [existing_players[0], identifier]
-            random.shuffle(participants)
-            room.player_red, room.player_black = participants
+        # The room creator is always red; the joiner is always black.
+        if not room.player_black:
+            room.player_black = identifier
             room.status = 'playing'
             room.save(update_fields=['player_red', 'player_black', 'status'])
-            return room, 'r' if room.player_red == identifier else 'b'
+            return room, 'b'
 
         # Room is full, client becomes spectator
         return room, 'spectator'

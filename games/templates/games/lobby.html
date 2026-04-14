@@ -471,16 +471,20 @@
                 nameInput.value = storedName;
             }
 
-            function getIdentifier() {
+            function createFreshIdentifier() {
+                return 'player_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            function getIdentifier(forceFreshIdentifier = false) {
                 let name = nameInput.value.trim();
                 if (!name) name = "Khách_" + Math.random().toString(36).substr(2, 4);
                 localStorage.setItem('player_name', name);
                 
-                let pid = sessionStorage.getItem('user_identifier');
+                let pid = forceFreshIdentifier ? createFreshIdentifier() : sessionStorage.getItem('user_identifier');
                 if (!pid) {
-                    pid = 'player_' + Math.random().toString(36).substr(2, 9);
-                    sessionStorage.setItem('user_identifier', pid);
+                    pid = createFreshIdentifier();
                 }
+                sessionStorage.setItem('user_identifier', pid);
                 return { identifier: pid, name: name };
             }
 
@@ -501,7 +505,7 @@
 
             if (btnCreate) {
                 btnCreate.addEventListener('click', async () => {
-                    const creds = getIdentifier();
+                    const creds = getIdentifier(true);
                     btnCreate.classList.add('loading');
                     btnCreate.querySelector('.btn-text').textContent = 'Đang xếp...';
                     
@@ -533,7 +537,7 @@
                 btnJoin.addEventListener('click', async () => {
                     const code = codeInput.value.trim();
                     if (!code) return alert("Vui lòng nhập mã phòng!");
-                    const creds = getIdentifier();
+                    const creds = getIdentifier(true);
                     
                     btnJoin.classList.add('loading');
                     btnJoin.querySelector('.btn-text').textContent = 'Đang kết nối...';
