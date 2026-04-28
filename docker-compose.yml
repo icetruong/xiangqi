@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16
+    container_name: xiangqi_db
+    environment:
+      - POSTGRES_DB=xiangqi
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: xiangqi_app
+    ports:
+      - "8000:8000"
+    environment:
+      # Truyền biến môi trường để Django biết cách kết nối tới db
+      - POSTGRES_DB=xiangqi
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
