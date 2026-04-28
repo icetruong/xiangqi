@@ -30,4 +30,10 @@ def best_move_with_time_limit(board: Board, ai_color: str, max_depth: int = 6, t
         except SearchTimeout:
             break
 
+    if best is None:
+        from engine.rules.game_rules import generate_legal_moves
+        moves = generate_legal_moves(board, ai_color)
+        if moves:
+            best = moves[0]
+
     return best
