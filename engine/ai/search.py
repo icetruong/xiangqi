@@ -37,11 +37,11 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
         for src, dst in moves:
             if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
-            undo = board.apply_move(src, dst)
+            undo = board.apply_move_idx(board.index(*src), board.index(*dst))
             try:
                 eval = minimax(board, ai_color, opponent(turn_color), False, depth-1, alpha, beta, deadline)
             finally:  
-                board.undo_move(undo)
+                board.undo_move_idx(undo)
 
             max_eval = max(max_eval, eval)
             alpha = max(alpha, eval)
@@ -55,11 +55,11 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
             if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
             
-            undo = board.apply_move(src, dst)
+            undo = board.apply_move_idx(board.index(*src), board.index(*dst))
             try:
                 eval = minimax(board, ai_color, opponent(turn_color), True, depth-1, alpha, beta, deadline)
             finally:
-                board.undo_move(undo)
+                board.undo_move_idx(undo)
 
             min_eval = min(min_eval, eval)
             beta = min(beta, eval)
@@ -86,11 +86,11 @@ def find_best_move(board: Board, ai_color: str, depth: int, deadline: float | No
     for src, dst in moves:
         if deadline is not None and time.perf_counter() >= deadline:
             raise SearchTimeout()
-        undo = board.apply_move(src, dst)
+        undo = board.apply_move_idx(board.index(*src), board.index(*dst))
         try:
             score = minimax(board, ai_color, opponent(ai_color), False, depth-1, float('-inf'), float('inf'), deadline)
         finally:
-            board.undo_move(undo)
+            board.undo_move_idx(undo)
 
         if score > best_score:
             best_score = score

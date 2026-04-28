@@ -6,21 +6,21 @@ from engine.utils.position import EMPTY
 # map fen char -> board string
 FEN_TO_CELL = {
     # black (lower)
-    "r": "bR",
-    "n": "bN",
-    "e": "bE",
-    "a": "bA",
-    "k": "bK",
-    "c": "bC",
-    "p": "bP",
+    "r": -5,
+    "n": -4,
+    "e": -3,
+    "a": -2,
+    "k": -1,
+    "c": -6,
+    "p": -7,
     # red (upper)
-    "R": "rR",
-    "N": "rN",
-    "E": "rE",
-    "A": "rA",
-    "K": "rK",
-    "C": "rC",
-    "P": "rP",
+    "R": 5,
+    "N": 4,
+    "E": 3,
+    "A": 2,
+    "K": 1,
+    "C": 6,
+    "P": 7,
 }
 
 CELL_TO_FEN = {v: k for k, v in FEN_TO_CELL.items()}
@@ -36,7 +36,7 @@ def board_to_fen(board: Board, turn: Optional[str] = None) -> str:
         empties = 0
         parts = []
         for c in range(board.COLS):
-            cell = board.get(r, c)
+            cell = board.board[r * 9 + c]
             if cell == EMPTY:
                 empties += 1
             else:
@@ -74,7 +74,7 @@ def load_fen(board: Board, fen: str) -> Optional[str]:
     if len(ranks) != board.ROWS:
         raise ValueError(f"Invalid rank count: {len(ranks)} != {board.ROWS}")
 
-    new_board = [[EMPTY for _ in range(board.COLS)] for _ in range(board.ROWS)]
+    new_board = [EMPTY] * board.SIZE
 
     for r in range(board.ROWS):
         col = 0
@@ -88,7 +88,7 @@ def load_fen(board: Board, fen: str) -> Optional[str]:
                 cell = FEN_TO_CELL.get(ch)
                 if cell is None:
                     raise ValueError(f"Unknown FEN char: {ch}")
-                new_board[r][col] = cell
+                new_board[board.index(r, col)] = cell
                 col += 1
 
         if col != board.COLS:

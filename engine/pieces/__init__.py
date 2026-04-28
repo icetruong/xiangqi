@@ -20,7 +20,7 @@ PIECE_CLASS = {
     "P": Pawn,
 }
 
-def piece_from_cell(cell: str):
+def piece_from_cell(cell: int):
     if is_empty(cell):
         return None
     c = color_of(cell)   

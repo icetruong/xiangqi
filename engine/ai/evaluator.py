@@ -16,7 +16,7 @@ def evaluate_board(board: Board, perspective_color: str) -> int:
     score = 0
     for i in range(Board.ROWS):
         for j in range(Board.COLS):
-            piece = board.get(i,j)
+            piece = board.board[i * 9 + j]
             if is_empty(piece):
                 continue
 

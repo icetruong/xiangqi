@@ -47,7 +47,7 @@ class Game:
         if not is_legal_move(self.board, src, dst, turn_color):
             return False
         
-        undo_info = self.board.apply_move(src, dst)
+        undo_info = self.board.apply_move_idx(self.board.index(*src), self.board.index(*dst))
         self.history.append(undo_info)
 
         self.turn = self.turn.opposite()
@@ -60,7 +60,7 @@ class Game:
             return False
         
         undo_info = self.history.pop()
-        self.board.undo_move(undo_info)
+        self.board.undo_move_idx(undo_info)
         self.turn = self.turn.opposite()
         self._update_status()
         return True
@@ -83,7 +83,7 @@ class Game:
         piece_count = 0
         for r in range(self.board.ROWS):
             for c in range(self.board.COLS):
-                if self.board.get(r, c) != ".":
+                if self.board.board[r * 9 + c] != 0:
                     piece_count += 1
 
         # Keep "normal" difficulty responsive for interactive play.

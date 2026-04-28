@@ -12,7 +12,7 @@ class Cannon(Piece):
     
     def moves(self, board:Board, src:Tuple[int, int]) -> List[Tuple[int, int]]:
         sr, sc = src
-        piece = board.get(sr, sc)
+        piece = board.board[sr * 9 + sc]
 
         if is_empty(piece) or type_of(piece) != "C":
             return []
@@ -26,7 +26,7 @@ class Cannon(Piece):
             cannon_c = dc + sc
             jump = False
             while board.in_bounds(cannon_r, cannon_c):
-                target = board.get(cannon_r, cannon_c)
+                target = board.board[cannon_r * 9 + cannon_c]
                 if not jump:
                     if is_empty(target):
                         moves.append((cannon_r, cannon_c))

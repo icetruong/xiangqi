@@ -1,6 +1,6 @@
 from typing import Optional, Tuple
 
-EMPTY = "."
+EMPTY = 0
 
 def in_bounds(row: int, col: int) -> bool:
     return 0 <= row < 10 and 0 <= col < 9
@@ -11,16 +11,26 @@ def in_palace(row: int, col: int, color: str) -> bool:
     else:
         return (3 <= col <= 5) and (7 <= row <= 9) 
 
-def is_empty(cell: str) -> bool:
+def is_empty(cell: int) -> bool:
     return cell == EMPTY
 
-def color_of(cell: str) -> Optional[str]:
-    return None if cell == EMPTY else cell[0]
+def color_of(cell: int) -> Optional[str]:
+    if cell > 0:
+        return "r"
+    elif cell < 0:
+        return "b"
+    return None
 
-def type_of(cell: str) -> Optional[str]:
-    return None if cell == EMPTY else cell[1]
+PIECE_TYPE_MAP = {
+    1: "K", 2: "A", 3: "E", 4: "N", 5: "R", 6: "C", 7: "P"
+}
 
-def same_color(a: str, b: str) -> bool:
+def type_of(cell: int) -> Optional[str]:
+    if cell == EMPTY:
+        return None
+    return PIECE_TYPE_MAP.get(abs(cell))
+
+def same_color(a: int, b: int) -> bool:
     ca = color_of(a)
     cb = color_of(b)
     return ca is not None and ca == cb

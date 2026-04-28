@@ -20,7 +20,7 @@ def is_legal_move(board: Board, src: Tuple[int, int], dst: Tuple[int, int], turn
     5) apply thử -> không được tự đưa tướng vào chiếu
     6) undo
     """
-    piece = board.get(*src)
+    piece = board.board[src[0] * 9 + src[1]]
     if is_empty(piece):
         return False
     
@@ -30,23 +30,24 @@ def is_legal_move(board: Board, src: Tuple[int, int], dst: Tuple[int, int], turn
     if not is_legal_basic_move(board, src, dst):
         return False
     
-    undo_info = board.apply_move(src, dst)
+    undo_info = board.apply_move_idx(board.index(*src), board.index(*dst))
 
     if kings_face_each_other(board):
-        board.undo_move(undo_info)
+        board.undo_move_idx(undo_info)
         return False
     
     if is_in_check(board, turn_color):
-        board.undo_move(undo_info)
+        board.undo_move_idx(undo_info)
         return False
     
-    board.undo_move(undo_info)
+    board.undo_move_idx(undo_info)
     return True
 
 #    Quân src có thể đi tới đâu
 def pseudo_moves_of_piece(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
-    piece = board.get(*src)
-    t = piece[1]  # "R N C E A K P"
+    piece = board.board[src[0] * 9 + src[1]]
+    from engine.utils.position import type_of
+    t = type_of(piece)  # "R N C E A K P"
     if t == "R": 
         return rook_moves(board, src)
     if t == "N": 
@@ -69,7 +70,7 @@ def generate_legal_moves(board: Board, color: str) -> List[Tuple[Tuple[int, int]
 
     for i in range(Board.ROWS):
         for j in range(Board.COLS):
-            piece = board.get(i, j)
+            piece = board.board[i * 9 + j]
             if is_empty(piece) or color_of(piece) != color:
                 continue
 

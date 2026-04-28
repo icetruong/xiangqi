@@ -15,8 +15,8 @@ def generate_capture_moves(board: Board, color: str) -> List[Tuple[Tuple[int, in
     capture:  List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
 
     for src, dst in moves:
-        if not is_empty(board.get(*dst)):
-            capture.append((src, dst))
+        if not is_empty(board.board[*dst)):
+            capture.append((src * 9 + dst])
     
     return capture
 
@@ -49,11 +49,11 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
         for src, dst in capture_moves:
             if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
-            undo = board.apply_move(src, dst)
+            undo = board.apply_move_idx(board.index(*src), board.index(*dst))
             try:
                 score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, not maximizing, deadline, q_depth - 1)
             finally:
-                board.undo_move(undo)
+                board.undo_move_idx(undo)
 
             best = max(best, score)
             alpha = max(alpha, score)
@@ -65,11 +65,11 @@ def quiescence(board, turn_color: str, ai_color: str, alpha: int, beta: int, max
         for src, dst in capture_moves:
             if deadline is not None and time.perf_counter() >= deadline:
                 raise SearchTimeout()
-            undo = board.apply_move(src, dst)
+            undo = board.apply_move_idx(board.index(*src), board.index(*dst))
             try:
                 score = quiescence(board, _opp(turn_color), ai_color, alpha, beta, not maximizing, deadline, q_depth - 1)
             finally:
-                board.undo_move(undo)
+                board.undo_move_idx(undo)
 
             best = min(best, score)
             beta = min(beta, score)
