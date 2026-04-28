@@ -24,13 +24,11 @@ def minimax(board: Board, ai_color: str, turn_color: str, maximizing: bool, dept
     
     moves = generate_legal_moves(board, turn_color)
     if not moves:
-        if is_in_check(board, turn_color):
-            if turn_color == ai_color:
-                return float('-inf')
-            else:
-                return float('inf')
+        # Trong cờ tướng, hết nước đi (dù bị chiếu hay không) đều là thua.
+        if turn_color == ai_color:
+            return -MATE_SCORE - depth
         else:
-            return 0
+            return MATE_SCORE + depth
     moves = order_moves(board, moves, turn_color)
     if maximizing:
         max_eval = float('-inf')
