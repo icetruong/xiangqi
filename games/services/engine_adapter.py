@@ -4,15 +4,28 @@ from engine.board import Board
 from engine.enums import Color, GameStatus
 from engine.utils.position import EMPTY as ENGINE_EMPTY
 
-CONTRACT_EMPTY = ""
+BOARD_MAP = {
+    "rK": 1, "rA": 2, "rE": 3, "rN": 4, "rR": 5, "rC": 6, "rP": 7,
+    "bK": -1, "bA": -2, "bE": -3, "bN": -4, "bR": -5, "bC": -6, "bP": -7,
+    "": 0
+}
+REV_BOARD_MAP = {v: k for k, v in BOARD_MAP.items()}
 
-def _to_engine_board(board_state: List[List[str]]) -> List[List[str]]:
-    """Convert contract board (empty="") to engine board (empty=".")."""
-    return [[ENGINE_EMPTY if cell == CONTRACT_EMPTY else cell for cell in row] for row in board_state]
+def _to_engine_board(board_state: List[List[str]]) -> List[int]:
+    """Convert contract board (empty="") 2D to engine board (empty=0) 1D."""
+    engine_board = [0] * 90
+    for r in range(10):
+        for c in range(9):
+            engine_board[r * 9 + c] = BOARD_MAP.get(board_state[r][c], 0)
+    return engine_board
 
-def _to_contract_board(engine_board: List[List[str]]) -> List[List[str]]:
-    """Convert engine board (empty=".") to contract board (empty="")."""
-    return [[CONTRACT_EMPTY if cell == ENGINE_EMPTY else cell for cell in row] for row in engine_board]
+def _to_contract_board(engine_board: List[int]) -> List[List[str]]:
+    """Convert engine board (empty=0) 1D to contract board (empty="") 2D."""
+    board_state = [["" for _ in range(9)] for _ in range(10)]
+    for r in range(10):
+        for c in range(9):
+            board_state[r][c] = REV_BOARD_MAP.get(engine_board[r * 9 + c], "")
+    return board_state
 
 def init_game_state() -> List[List[str]]:
     """
@@ -65,8 +78,8 @@ def apply_move(
     last_move_info = game.history[-1] if game.history else None
     
     meta = {
-        "piece": last_move_info.moved if last_move_info else None,
-        "captured": last_move_info.captured if last_move_info and last_move_info.captured != ENGINE_EMPTY else None,
+        "piece": REV_BOARD_MAP.get(last_move_info.moved, "") if last_move_info else None,
+        "captured": REV_BOARD_MAP.get(last_move_info.captured, "") if last_move_info and last_move_info.captured != ENGINE_EMPTY else None,
         "check": game.status == GameStatus.CHECK,
         "checkmate": game.status == GameStatus.CHECKMATE
     }
@@ -137,8 +150,8 @@ def pick_ai_move(
     last_move = game.history[-1]
     
     return {
-        "from": [last_move.src[0], last_move.src[1]],
-        "to": [last_move.dst[0], last_move.dst[1]]
+        "from": list(game.board.row_col(last_move.src)),
+        "to": list(game.board.row_col(last_move.dst))
     }
 
 def list_legal_moves(

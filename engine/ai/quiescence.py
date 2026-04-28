@@ -15,8 +15,8 @@ def generate_capture_moves(board: Board, color: str) -> List[Tuple[Tuple[int, in
     capture:  List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
 
     for src, dst in moves:
-        if not is_empty(board.board[*dst)):
-            capture.append((src * 9 + dst])
+        if not is_empty(board.board[dst[0] * 9 + dst[1]]):
+            capture.append((src, dst))
     
     return capture
 
