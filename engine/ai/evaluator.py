@@ -30,17 +30,17 @@ def evaluate_board(board: Board, perspective_color: str) -> int:
             value = PIECE_VALUE.get(t, 0) + bonus
             
             # Thêm điểm phụ: Khuyến khích Xe, Pháo, Mã, Tốt tiến gần về Tướng địch
-            if t in ("R", "C", "N", "P"):
-                if c == "r":
-                    dist = abs(i - black_kr) + abs(j - black_kc)
-                    value += (17 - dist)
-                else:
-                    dist = abs(i - red_kr) + abs(j - red_kc)
-                    value += (17 - dist)
+            # if t in ("R", "C", "N", "P"):
+            #     if c == "r":
+            #         dist = abs(i - black_kr) + abs(j - black_kc)
+            #         value += (17 - dist)
+            #     else:
+            #         dist = abs(i - red_kr) + abs(j - red_kc)
+            #         value += (17 - dist)
 
-            if c == perspective_color:
-                score += value
-            else:
-                score -= value
+            # if c == perspective_color:
+            #     score += value
+            # else:
+            #     score -= value
 
     return score
