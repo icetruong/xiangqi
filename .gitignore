@@ -155,3 +155,9 @@ venv/
 ENV/
 env.bak
 venv.bak
+
+# Mobile app
+mobile/
+
+# Django static files
+staticfiles/
