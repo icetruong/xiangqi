@@ -22,6 +22,12 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         if self.player_id:
+            # Try to auto-join the player to the room if there is an empty slot
+            try:
+                await sync_to_async(room_service.join_room)(self.room_id, self.player_id)
+            except Exception:
+                pass
+
             # Báo cho phòng biết có người vào
             await self.channel_layer.group_send(
                 self.room_group_name,
