@@ -16,6 +16,8 @@ services:
     container_name: xiangqi_app
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     environment:
       # Truyền biến môi trường để Django biết cách kết nối tới db
       - POSTGRES_DB=xiangqi
