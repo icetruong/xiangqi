@@ -211,9 +211,12 @@ def draw_game(request, game_id):
 
 @api_view(['POST'])
 def create_room(request):
-    identifier = request.data.get('identifier')
-    if not identifier:
-        return Response({"ok": False, "error_code": "BAD_REQUEST", "message": "Missing 'identifier'."}, status=status.HTTP_400_BAD_REQUEST)
+    # Use Django session as stable identifier — create session if needed
+    if not request.session.session_key:
+        request.session.create()
+    identifier = request.session.session_key
+    # Also accept an explicit name for display purposes (optional)
+    name = request.data.get('name', 'Anonymous')
     try:
         room = room_service.create_room(identifier)
         return Response({
@@ -227,13 +230,10 @@ def create_room(request):
 
 @api_view(['POST'])
 def join_room(request, room_code):
-    identifier = request.data.get('identifier')
-    if not identifier:
-        return Response({
-            "ok": False,
-            "error_code": "BAD_REQUEST",
-            "message": "Missing 'identifier' in request body"
-        }, status=status.HTTP_400_BAD_REQUEST)
+    # Use Django session as stable identifier
+    if not request.session.session_key:
+        request.session.create()
+    identifier = request.session.session_key
         
     try:
         room, role = room_service.join_room(room_code, identifier)
@@ -267,15 +267,11 @@ def room_detail(request, room_code):
 
 @api_view(['POST'])
 def room_move(request, room_code):
-    identifier = request.data.get('identifier')
+    # Use Django session as stable identifier
+    if not request.session.session_key:
+        request.session.create()
+    identifier = request.session.session_key
     move_data = request.data
-
-    if not identifier:
-        return Response({
-            "ok": False,
-            "error_code": "BAD_REQUEST",
-            "message": "Missing 'identifier' in request body"
-        }, status=status.HTTP_400_BAD_REQUEST)
 
     if 'from' not in move_data or 'to' not in move_data:
         return Response({

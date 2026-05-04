@@ -73,11 +73,31 @@ def room_board(request, room_code):
         room = Room.objects.get(room_code=room_code)
     except Room.DoesNotExist:
         return redirect('games:index')
-        
+    
+    # Use Django session key as the stable player identifier.
+    # This is server-generated and unique per browser session.
+    if not request.session.session_key:
+        request.session.create()
+    identifier = request.session.session_key
+
+    # Auto-join: register this player in the room if there is an empty slot.
+    from games.services import room_service
+    try:
+        room, player_side = room_service.join_room(room_code, identifier)
+    except Exception:
+        # If room is full or any error, derive side from existing data.
+        player_side = 'spectator'
+        if room.player_red == identifier:
+            player_side = 'r'
+        elif room.player_black == identifier:
+            player_side = 'b'
+
     game = room.game
     context = {
         'room': room,
         'game': game,
+        'player_id': identifier,
+        'player_side': player_side,
         'initial_board_state': json.dumps(game.board_state),
         'initial_current_turn': json.dumps(game.current_turn),
         'room_player_red': json.dumps(room.player_red),

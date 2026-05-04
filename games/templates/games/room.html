@@ -222,17 +222,10 @@
         window.INITIAL_BOARD_STATE = {{ initial_board_state|safe }};
         window.INITIAL_CURRENT_TURN = {{ initial_current_turn|safe }};
         
-        // Ensure client identifier is present
-        if (!sessionStorage.getItem('user_identifier')) {
-            sessionStorage.setItem('user_identifier', 'player_' + Math.random().toString(36).substr(2, 9));
-        }
-        const myPlayerId = sessionStorage.getItem('user_identifier');
-        let initialPlayerSide = 'spectator';
-        if (window.ROOM_PLAYERS.red === myPlayerId) {
-            initialPlayerSide = 'r';
-        } else if (window.ROOM_PLAYERS.black === myPlayerId) {
-            initialPlayerSide = 'b';
-        }
+        // Player identity is determined SERVER-SIDE (Django session key).
+        // This guarantees the ID always matches what is stored in the DB.
+        const myPlayerId = "{{ player_id }}";
+        const initialPlayerSide = "{{ player_side }}";
 
         initGame({
             isMultiplayer: true,
