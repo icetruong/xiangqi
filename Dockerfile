@@ -30,4 +30,4 @@ EXPOSE 8000
 # RUN python manage.py collectstatic --noinput
 
 # Khởi chạy server Daphne phục vụ cả HTTP lẫn Websocket (Django Channels)
-CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "xiangqi_project.asgi:application"]
+CMD sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 xiangqi_project.asgi:application"

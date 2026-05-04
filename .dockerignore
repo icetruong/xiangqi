@@ -1,0 +1,32 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+Pipfile.lock
+
+# db
+db.sqlite3
+
+# Git
+.git/
+.gitignore
+
+# VS Code
+.vscode/
+
+# Flutter Mobile app (we don't need this in the python backend container)
+mobile/
+
+# logs
+logs/
+*.log
+
+# pytest
+.pytest_cache/
+
+# mac
+.DS_Store
