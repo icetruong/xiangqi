@@ -10,11 +10,11 @@ def opponent(color: str) -> str:
 def move_score(board: Board, move: Tuple[Tuple[int, int], Tuple[int, int]], turn_color: str) -> int:
     (sr, sc), (dr, dc) = move
 
-    capture = board.get(dr, dc)
+    capture = board.board[dr * 9 + dc]
     score = 0
     if not is_empty(capture):
         # score += 10000 + PIECE_VALUE.get(type_of(capture), 0)
-        moved_piece = board.get(sr, sc)
+        moved_piece = board.board[sr * 9 + sc]
         victim_val = PIECE_VALUE.get(type_of(capture), 0)
         attacker_val = PIECE_VALUE.get(type_of(moved_piece), 0)
         score += 1000000 + 100 * victim_val - attacker_val

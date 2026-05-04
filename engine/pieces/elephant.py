@@ -12,7 +12,7 @@ class Elephant(Piece):
     
     def moves(self, board:Board, src:Tuple[int, int]) -> List[Tuple[int, int]]:
         sr, sc = src
-        piece = board.get(sr, sc)
+        piece = board.board[sr * 9 + sc]
 
         if is_empty(piece) or type_of(piece) != "E":
             return []
@@ -29,10 +29,10 @@ class Elephant(Piece):
             if my_color == "r" and elephant_r < 5:
                 continue
             if board.in_bounds(elephant_r, elephant_c):
-                target = board.get(elephant_r, elephant_c)
+                target = board.board[elephant_r * 9 + elephant_c]
                 obstacle_r = sr + dr//2
                 obstacle_c = sc + dc//2
-                obstacle = board.get(obstacle_r, obstacle_c)
+                obstacle = board.board[obstacle_r * 9 + obstacle_c]
                 if is_empty(obstacle):
                     if is_empty(target) or not same_color(piece, target):
                         moves.append((elephant_r, elephant_c))

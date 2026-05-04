@@ -12,7 +12,7 @@ class Rook(Piece):
     
     def moves(self, board:Board, src:Tuple[int, int]) -> List[Tuple[int, int]]:
         sr, sc = src
-        piece = board.get(sr, sc)
+        piece = board.board[sr * 9 + sc]
 
         if is_empty(piece) or type_of(piece) != "R":
             return []
@@ -25,7 +25,7 @@ class Rook(Piece):
             rook_r = dr+sr
             rook_c = dc+sc
             while board.in_bounds(rook_r, rook_c):
-                target = board.get(rook_r, rook_c)
+                target = board.board[rook_r * 9 + rook_c]
                 if is_empty(target):
                     moves.append((rook_r, rook_c))
                 else:

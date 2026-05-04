@@ -11,7 +11,7 @@ class Advisor(Piece):
     
     def moves(self, board:Board, src:Tuple[int, int]) -> List[Tuple[int, int]]:
         sr, sc = src
-        piece = board.get(sr, sc)
+        piece = board.board[sr * 9 + sc]
 
         if is_empty(piece) or type_of(piece) != "A":
             return []
@@ -25,7 +25,7 @@ class Advisor(Piece):
             advisor_r = dr+sr
             advisor_c = dc+sc
             if board.in_palace(advisor_r, advisor_c, my_color):
-                target = board.get(advisor_r, advisor_c)
+                target = board.board[advisor_r * 9 + advisor_c]
                 if is_empty(target) or not same_color(piece, target):
                     moves.append((advisor_r, advisor_c))
 

@@ -1,12 +1,12 @@
 # Luật đi cơ bản của quân
 from typing import List, Tuple
 from engine.board import Board
-from engine.utils.position import EMPTY, color_of, same_color, is_empty, type_of
+from engine.utils.position import EMPTY, color_of, same_color, is_empty, type_of, in_bounds, in_palace
 from engine.pieces import piece_from_cell
 
 def rook_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "R":
         return []
@@ -18,8 +18,8 @@ def rook_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     for dr, dc in directions:
         rook_r = dr+sr
         rook_c = dc+sc
-        while board.in_bounds(rook_r, rook_c):
-            target = board.get(rook_r, rook_c)
+        while in_bounds(rook_r, rook_c):
+            target = board.board[rook_r * 9 + rook_c]
             if is_empty(target):
                 moves.append((rook_r, rook_c))
             else:
@@ -34,7 +34,7 @@ def rook_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def knight_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "N":
         return []
@@ -46,15 +46,15 @@ def knight_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     for dr, dc in offsets:
         knight_r = dr+sr
         knight_c = dc+sc
-        if board.in_bounds(knight_r, knight_c):
-            target = board.get(knight_r, knight_c)
+        if in_bounds(knight_r, knight_c):
+            target = board.board[knight_r * 9 + knight_c]
             obstacle_r: int = 0
             obstacle_c: int = 0
             if abs(dr) == 2:
                 obstacle_r, obstacle_c = sr + dr//2, sc
             else:
                 obstacle_r, obstacle_c = sr , sc + dc//2
-            obstacle = board.get(obstacle_r, obstacle_c)
+            obstacle = board.board[obstacle_r * 9 + obstacle_c]
             if is_empty(obstacle):
                 if is_empty(target) or not same_color(piece, target):
                     moves.append((knight_r, knight_c))
@@ -63,7 +63,7 @@ def knight_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def cannon_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "C":
         return []
@@ -76,8 +76,8 @@ def cannon_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
         cannon_r = dr + sr
         cannon_c = dc + sc
         jump = False
-        while board.in_bounds(cannon_r, cannon_c):
-            target = board.get(cannon_r, cannon_c)
+        while in_bounds(cannon_r, cannon_c):
+            target = board.board[cannon_r * 9 + cannon_c]
             if not jump:
                 if is_empty(target):
                     moves.append((cannon_r, cannon_c))
@@ -95,7 +95,7 @@ def cannon_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def elephant_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "E":
         return []
@@ -111,11 +111,11 @@ def elephant_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
             continue
         if my_color == "r" and elephant_r < 5:
             continue
-        if board.in_bounds(elephant_r, elephant_c):
-            target = board.get(elephant_r, elephant_c)
+        if in_bounds(elephant_r, elephant_c):
+            target = board.board[elephant_r * 9 + elephant_c]
             obstacle_r = sr + dr//2
             obstacle_c = sc + dc//2
-            obstacle = board.get(obstacle_r, obstacle_c)
+            obstacle = board.board[obstacle_r * 9 + obstacle_c]
             if is_empty(obstacle):
                 if is_empty(target) or not same_color(piece, target):
                     moves.append((elephant_r, elephant_c))
@@ -124,7 +124,7 @@ def elephant_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def pawn_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "P":
         return []
@@ -138,8 +138,8 @@ def pawn_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     for dr, dc in offsets:
         pawn_r = dr+sr
         pawn_c = dc+sc
-        if board.in_bounds(pawn_r, pawn_c):
-            target = board.get(pawn_r, pawn_c)
+        if in_bounds(pawn_r, pawn_c):
+            target = board.board[pawn_r * 9 + pawn_c]
             if is_empty(target) or not same_color(piece, target):
                 moves.append((pawn_r, pawn_c))
 
@@ -147,7 +147,7 @@ def pawn_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def advisor_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "A":
         return []
@@ -160,8 +160,8 @@ def advisor_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     for dr, dc in offsets:
         advisor_r = dr+sr
         advisor_c = dc+sc
-        if board.in_palace(advisor_r, advisor_c, my_color):
-            target = board.get(advisor_r, advisor_c)
+        if in_palace(advisor_r, advisor_c, my_color):
+            target = board.board[advisor_r * 9 + advisor_c]
             if is_empty(target) or not same_color(piece, target):
                 moves.append((advisor_r, advisor_c))
 
@@ -169,7 +169,7 @@ def advisor_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def king_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece) or type_of(piece) != "K":
         return []
@@ -182,8 +182,8 @@ def king_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
     for dr, dc in offsets:
         king_r = dr+sr
         king_c = dc+sc
-        if board.in_palace(king_r, king_c, my_color):
-            target = board.get(king_r, king_c)
+        if in_palace(king_r, king_c, my_color):
+            target = board.board[king_r * 9 + king_c]
             if is_empty(target) or not same_color(piece, target):
                 moves.append((king_r, king_c))
 
@@ -191,7 +191,7 @@ def king_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 # moves tổng quát
 def pseudo_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
-    piece = board.get(*src)
+    piece = board.board[src[0] * 9 + src[1]]
     obj = piece_from_cell(piece)
     if obj is None:
         return []
@@ -199,7 +199,7 @@ def pseudo_moves(board: Board, src: Tuple[int, int]) -> List[Tuple[int, int]]:
 
 def is_legal_basic_move(board: Board, src: Tuple[int, int], dst: Tuple[int, int]) -> bool:
     sr, sc = src
-    piece = board.get(sr, sc)
+    piece = board.board[sr * 9 + sc]
 
     if is_empty(piece):
         return False

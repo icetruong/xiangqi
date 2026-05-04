@@ -12,7 +12,7 @@ class Pawn(Piece):
     
     def moves(self, board:Board, src:Tuple[int, int]) -> List[Tuple[int, int]]:
         sr, sc = src
-        piece = board.get(sr, sc)
+        piece = board.board[sr * 9 + sc]
 
         if is_empty(piece) or type_of(piece) != "P":
             return []
@@ -27,7 +27,7 @@ class Pawn(Piece):
             pawn_r = dr+sr
             pawn_c = dc+sc
             if board.in_bounds(pawn_r, pawn_c):
-                target = board.get(pawn_r, pawn_c)
+                target = board.board[pawn_r * 9 + pawn_c]
                 if is_empty(target) or not same_color(piece, target):
                     moves.append((pawn_r, pawn_c))
 

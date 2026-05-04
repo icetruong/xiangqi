@@ -11,7 +11,7 @@ from games.services import engine_adapter, game_service, move_service, room_serv
 
 def _get_in_check(board_state):
     """Return the side currently in check ('r', 'b'), or None."""
-    engine_board = [[ENGINE_EMPTY if cell == '' else cell for cell in row] for row in board_state]
+    engine_board = engine_adapter._to_engine_board(board_state)
     board = Board(state=engine_board)
     if is_in_check(board, 'r'):
         return 'r'
