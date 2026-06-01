@@ -25,6 +25,9 @@ function computeBoardMetrics() {
         // 2 side panels × 200px (narrowed at ≤1100) + 2 gaps × 14px + 2 × padding 10px
         var sideW = availW <= 1100 ? 200 : 260;
         availW = availW - sideW * 2 - 48; // 48px for gaps + breathing room
+    } else {
+        // On mobile, subtract the height of the bottom tab bar so the board doesn't get covered
+        availH = availH - 70; 
     }
 
     // Board must fit within available space with padding
