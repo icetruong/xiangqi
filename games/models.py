@@ -2,6 +2,7 @@ from django.db import models
 import uuid
 
 class Game(models.Model):
+    objects = models.Manager()
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # State
     board_state = models.JSONField()  # 10x9 array
@@ -26,6 +27,7 @@ class Game(models.Model):
         return f"Game {self.id} ({self.status})"
 
 class Move(models.Model):
+    objects = models.Manager()
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='moves')
     ply = models.IntegerField(help_text="Move number (half-move)")
     side = models.CharField(max_length=1)  # 'r' | 'b'
@@ -49,6 +51,7 @@ class Move(models.Model):
         return f"Move {self.ply}: {self.piece} {self.from_row},{self.from_col} -> {self.to_row},{self.to_col}"
 
 class Room(models.Model):
+    objects = models.Manager()
     room_code = models.CharField(max_length=10, unique=True)
     game = models.OneToOneField(Game, on_delete=models.SET_NULL, null=True, blank=True, related_name='room_session')
     player_red = models.CharField(max_length=255, null=True, blank=True)
