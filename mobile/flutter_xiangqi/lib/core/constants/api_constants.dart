@@ -1,9 +1,15 @@
 class ApiConstants {
-  // Development (Local Emulator): 'http://10.0.2.2:8001'
-  // Development (Local Web): 'http://127.0.0.1:8001'
-  static const String baseUrl = 'http://127.0.0.1:8001';
-  static const Duration connectTimeout = Duration(seconds: 10);
-  static const Duration receiveTimeout = Duration(seconds: 10);
+  // ── Chọn 1 trong các URL bên dưới ──────────────────────────────────────
+  // Production (Railway):
+  static const String baseUrl = 'https://xiangqi-production-9993.up.railway.app';
+  // Development (Android Emulator → localhost): 'http://10.0.2.2:8001'
+  // Development (Chrome / Windows desktop):    'http://127.0.0.1:8001'
+  // Cloudflare Tunnel:                         'https://xiangqi-app.xxx.trycloudflare.com'
+  // ────────────────────────────────────────────────────────────────────────
+
+  static const Duration connectTimeout = Duration(seconds: 30); // Railway cold start
+  static const Duration receiveTimeout = Duration(seconds: 30);
+
 
   // Endpoints
   static const String games = '/api/games/';

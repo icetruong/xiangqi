@@ -231,15 +231,121 @@ flutter run -d windows
 >
 > Android Emulator dùng `10.0.2.2` thay cho `localhost` vì emulator chạy trong máy ảo riêng. Nếu backend đang tunnel qua Cloudflare hoặc đã host trên Railway, dùng URL đó luôn và không cần đổi.
 
-### Build và cài app
+### Phân phối app mobile — Deploy lên đâu?
+
+> **App Flutter mobile (Android/iOS) KHÔNG deploy lên Railway.**
+> Railway chỉ host backend Django. Flutter mobile là file APK/AAB cài thẳng lên điện thoại.
+
+Có 3 hướng phân phối, tùy mục đích:
+
+---
+
+**Cách 1 — APK trực tiếp (nhanh nhất, dùng để test)**
+
+Build file APK rồi gửi/cài thẳng:
 
 ```bash
-# Build APK (Android)
 cd mobile/flutter_xiangqi
 flutter build apk --release
+```
 
-# Cài lên thiết bị đang kết nối
+File APK xuất ra tại: `build/app/outputs/flutter-apk/app-release.apk`
+
+Gửi file này qua Zalo / Drive / cáp USB rồi cài lên điện thoại Android (cần bật "Cài từ nguồn không xác định" trong Settings).
+
+Cài nhanh qua USB:
+```bash
 flutter install
 ```
+
+---
+
+**Cách 2 — Google Play Store (phân phối chính thức)**
+
+```bash
+# Build Android App Bundle
+cd mobile/flutter_xiangqi
+flutter build appbundle --release
+```
+
+File AAB xuất ra tại: `build/app/outputs/bundle/release/app-release.aab`
+
+Upload lên [Google Play Console](https://play.google.com/console) và publish. Cần tài khoản developer ($25 một lần).
+
+---
+
+**Cách 3 — Flutter Web + "Pin vào màn hình" điện thoại (PWA)**
+
+Flutter Web build ra web app, deploy lên bất kỳ host nào có HTTPS, sau đó dùng tính năng "Thêm vào màn hình chính" của trình duyệt → trông và cảm giác gần như app native, có icon riêng, chạy toàn màn hình.
+
+Flutter hỗ trợ PWA sẵn — không cần cấu hình thêm gì.
+
+**Bước 1 — Build Flutter Web:**
+
+```bash
+cd mobile/flutter_xiangqi
+flutter build web --release
+```
+
+File build xuất ra tại: `build/web/`
+
+**Bước 2 — Deploy (chọn 1 trong 2):**
+
+*Option A — Netlify Drop (nhanh nhất, miễn phí):*
+
+Vào [netlify.com/drop](https://app.netlify.com/drop), kéo thả thư mục `build/web/` vào. Netlify tự cấp URL `https://....netlify.app` ngay lập tức.
+
+*Option B — Deploy lên Railway (cùng project với backend):*
+
+Cách này cho phép Flutter Web và Django backend cùng nằm trong một Railway project, tiện quản lý và chia sẻ cùng domain.
+
+**Các file cần tạo** (đã có sẵn trong repo):
+
+- [`mobile/flutter_xiangqi/Dockerfile.web`](mobile/flutter_xiangqi/Dockerfile.web) — Multi-stage build: build Flutter Web → serve bằng nginx
+- [`mobile/flutter_xiangqi/nginx.conf`](mobile/flutter_xiangqi/nginx.conf) — Nginx config tối ưu cho SPA (gzip, cache, SPA routing)
+
+**Quy trình deploy trên Railway:**
+
+1. Vào [railway.app](https://railway.app) → mở project hiện tại của backend
+2. Bấm **"+ New Service"** → chọn **"GitHub Repo"**
+3. Chọn repo này (cùng repo với backend)
+4. Railway sẽ hỏi Dockerfile path — nhập: `mobile/flutter_xiangqi/Dockerfile.web`
+5. Đặt **Root Directory** là `mobile/flutter_xiangqi`
+6. Railway tự build và cấp URL `https://....up.railway.app` riêng cho Flutter Web
+7. Bấm **"Generate Domain"** để lấy URL HTTPS
+
+> ⚠️ **Lưu ý Railway PORT**: Railway inject biến `PORT` động. Nginx trong Dockerfile.web lắng nghe cổng `80` cố định — Railway sẽ tự map đúng. Không cần thêm biến môi trường gì thêm cho service này.
+
+> 💡 **Thời gian build**: Lần đầu build khá lâu (~5–10 phút) vì Railway phải pull Flutter image. Các lần sau build nhanh hơn nhờ layer cache.
+
+**Bước 3 — Pin vào màn hình điện thoại:**
+
+*Android (Chrome):*
+1. Mở URL Flutter Web trên Chrome
+2. Bấm menu **⋮** (3 chấm) góc trên phải
+3. Chọn **"Thêm vào màn hình chính"** (hoặc "Add to Home screen")
+4. Đặt tên → Thêm → icon xuất hiện trên màn hình như app thật
+
+*iOS (Safari):*
+1. Mở URL trên Safari (bắt buộc phải dùng Safari, không phải Chrome)
+2. Bấm nút **Share** (hình vuông có mũi tên lên)
+3. Chọn **"Add to Home Screen"**
+4. Đặt tên → Add
+
+> ✅ Sau khi pin, app chạy **toàn màn hình** (không có thanh địa chỉ browser), có icon riêng — trông như app native.
+>
+> ⚠️ Cần HTTPS để tính năng "Add to Home Screen" hoạt động đầy đủ. Netlify và Railway đều cấp HTTPS miễn phí.
+
+---
+
+**Tóm tắt**
+
+| Mục đích | Hướng làm |
+|---|---|
+| Test nhanh cho bản thân | Build APK → cài qua USB |
+| Chia sẻ cho bạn bè test | Build APK → gửi file |
+| Pin vào màn hình như app | Flutter Web → Netlify / Railway → Add to Home Screen |
+| Phân phối chính thức | Google Play (AAB) |
+| Backend / API | Railway (Django) ← đang chạy rồi ✅ |
 
 Xem thêm chi tiết kiến trúc, các phases phát triển và API contract trong [`mobile/flutter_xiangqi/overview.md`](mobile/flutter_xiangqi/overview.md).
