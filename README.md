@@ -151,3 +151,95 @@ Nếu bạn deploy lên Railway hoặc nền tảng tương tự, hãy kiểm tr
 - `CONTRACT.md`: mô tả contract dữ liệu và API
 - `roadmap.md`: hướng phát triển tiếp theo
 - `docs/state_format.md`: format state của bàn cờ
+- `mobile/flutter_xiangqi/overview.md`: thiết kế và hướng dẫn phát triển app Flutter
+
+## Mobile (Flutter)
+
+Dự án có app mobile Flutter đặt tại `mobile/flutter_xiangqi/`.
+
+App Flutter hoạt động hoàn toàn như một **client thuần** — toàn bộ luật cờ, validation và AI đều chạy trên backend Django. Flutter chỉ render UI và gọi REST API.
+
+### Chơi mobile khi backend host trên Railway
+
+**Có, hoàn toàn được.** Khi backend đã deploy lên Railway, app Flutter trên điện thoại có thể kết nối trực tiếp — không cần server local hay tunnel.
+
+Chỉ cần cập nhật một chỗ duy nhất trong Flutter:
+
+```dart
+// lib/core/constants/api_constants.dart
+class ApiConstants {
+  static const String baseUrl = 'https://<tên-app-của-bạn>.up.railway.app';
+  static const String apiPrefix = '/api';
+}
+```
+
+Thay `<tên-app-của-bạn>` bằng domain Railway thực tế của bạn (ví dụ: `xiangqi-production.up.railway.app`).
+
+### Checklist trước khi chạy mobile với Railway
+
+Đảm bảo backend Railway đã cấu hình đúng các biến môi trường:
+
+| Biến | Ghi chú |
+|---|---|
+| `ALLOWED_HOSTS` | Thêm domain Railway của bạn |
+| `CSRF_TRUSTED_ORIGINS` | Thêm `https://<domain>.up.railway.app` |
+| `SECRET_KEY` | Đặt giá trị ngẫu nhiên, bảo mật |
+| `DEBUG` | Đặt `False` khi production |
+| `DATABASE_URL` | Railway tự inject nếu dùng Railway Postgres |
+
+### CORS với app mobile native
+
+App Flutter native (Android/iOS) **không bị chặn bởi CORS** như trình duyệt web, vì request không xuất phát từ browser. Tuy nhiên backend vẫn cần `ALLOWED_HOSTS` đúng để Django không reject request.
+
+### Chạy app trên laptop (development)
+
+```bash
+cd mobile/flutter_xiangqi
+```
+
+**Kiểm tra thiết bị / emulator khả dụng:**
+
+```bash
+flutter devices
+```
+
+**Chạy trên Android Emulator** (cần mở AVD trước từ Android Studio):
+
+```bash
+flutter run
+```
+
+**Chạy trên Chrome** (web, để test nhanh UI):
+
+```bash
+flutter run -d chrome
+```
+
+**Chạy trên Windows desktop:**
+
+```bash
+flutter run -d windows
+```
+
+> **Lưu ý khi chạy local:** Nếu backend đang chạy local (`localhost:8000` hoặc `localhost:8001`), cần cập nhật `baseUrl` trong `lib/core/constants/api_constants.dart`:
+>
+> ```dart
+> // Khi test với backend local:
+> static const String baseUrl = 'http://10.0.2.2:8000'; // Android Emulator
+> // static const String baseUrl = 'http://localhost:8000'; // Chrome / Windows desktop
+> ```
+>
+> Android Emulator dùng `10.0.2.2` thay cho `localhost` vì emulator chạy trong máy ảo riêng. Nếu backend đang tunnel qua Cloudflare hoặc đã host trên Railway, dùng URL đó luôn và không cần đổi.
+
+### Build và cài app
+
+```bash
+# Build APK (Android)
+cd mobile/flutter_xiangqi
+flutter build apk --release
+
+# Cài lên thiết bị đang kết nối
+flutter install
+```
+
+Xem thêm chi tiết kiến trúc, các phases phát triển và API contract trong [`mobile/flutter_xiangqi/overview.md`](mobile/flutter_xiangqi/overview.md).
