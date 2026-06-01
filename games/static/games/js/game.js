@@ -972,8 +972,18 @@ function handleSocketMessage(data) {
         return;
     }
 
-    if (data.type === 'connection_success' || data.type === 'sync_state') {
-        updateGameState(data, true); // allowSideUpdate = true
+    if (data.type === 'connection_success') {
+        // Trusted initial side handshake: only this event may update playerSide.
+        if (typeof data.side === 'string' && data.side) {
+            playerSide = data.side;
+        }
+        updateGameState(data);
+        return;
+    }
+
+    if (data.type === 'sync_state') {
+        // Never update playerSide from sync payloads.
+        updateGameState(data);
         return;
     }
 
@@ -992,7 +1002,7 @@ function handleSocketMessage(data) {
 
     if (data.type === 'move') {
         console.log("DEBUG: Client nhận move broadcast. Có legal_moves?", Array.isArray(data.legal_moves));
-        updateGameState(data, false); // allowSideUpdate = false — keep own perspective
+        updateGameState(data);
         return;
     }
 
@@ -1003,7 +1013,7 @@ function handleSocketMessage(data) {
             board_state: data.board_state || boardState,
             current_turn: data.current_turn || currentTurn,
             last_move: data.last_move || lastMove
-        }, false); // do not overwrite playerSide from broadcast
+        }); // do not overwrite playerSide from broadcast
         return;
     }
 }
@@ -1052,11 +1062,11 @@ function syncMultiplayerState(forceSync) {
                 .then(function (res) { return res.json(); })
                 .then(function (gameData) {
                     if (!gameData.ok) return;
-                    // allowSideUpdate = false: HTTP poll must not change playerSide
+                    // HTTP poll only syncs shared room/game state.
                     updateGameState({
                         ...gameData,
                         status: roomData.status
-                    }, false);
+                    });
                 });
         })
         .catch(function (err) {
@@ -1131,7 +1141,7 @@ function sendMove(move) {
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    updateGameState(data, true); // own HTTP move response
+                    updateGameState(data); // own HTTP move response
                 } else {
                     showGameToast(data.message, 'warning');
                 }
@@ -1152,7 +1162,7 @@ function sendMove(move) {
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    updateGameState(data, true); // PvE: own move response
+                    updateGameState(data); // PvE: own move response
                     logMove(move, "Player");
 
                     if (data.status === 'ongoing' && data.current_turn !== playerSide) {
@@ -1169,7 +1179,7 @@ function sendMove(move) {
     }
 }
 
-function updateGameState(data, allowSideUpdate) {
+function updateGameState(data) {
     var prevLastMove = lastMove;
     var prevInCheck = inCheck;
     var hasFullMoveHistory = Array.isArray(data.move_history);
@@ -1183,14 +1193,6 @@ function updateGameState(data, allowSideUpdate) {
     if (typeof data.status === 'string' && data.status) {
         status = data.status;
     }
-    // Only update playerSide on initial sync — never from a move broadcast.
-    // Also never downgrade a confirmed side ('r'/'b') to 'spectator' due to
-    // a transient session mismatch — the template-injected side is authoritative.
-    if (allowSideUpdate && typeof data.side === 'string' && data.side) {
-        if (data.side !== 'spectator' || playerSide === 'spectator') {
-            playerSide = data.side;
-        }
-    }
     if (Object.prototype.hasOwnProperty.call(data, 'last_move')) {
         lastMove = data.last_move;
     }
@@ -1203,8 +1205,9 @@ function updateGameState(data, allowSideUpdate) {
         console.log("DEBUG: Payload không có legal_moves. Giữ nguyên legalMoves hiện tại.");
     }
     inCheck = data.in_check || null;
-    // Always derive flip from the locally-held playerSide (never from broadcast)
-    boardFlipped = (playerSide === 'b');
+    // Chỉ tính orientation từ playerSide local
+    const isBoardFlipped = playerSide === 'b';
+    boardFlipped = isBoardFlipped;
 
     if (hasFullMoveHistory) {
         moveHistory = data.move_history.map(function (move) {
@@ -1553,7 +1556,7 @@ function startPolling() {
                     if (data.current_turn === playerSide || data.status === 'finished') {
                         clearInterval(pollInterval);
                         pollInterval = null;
-                        updateGameState(data, true); // PvE poll: own game state
+                        updateGameState(data); // PvE poll: own game state
                     }
                 }
             })

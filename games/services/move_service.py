@@ -77,7 +77,7 @@ def handle_socket_move(room_code, identifier, move_data):
         return {
             "type": "move",
             "player": identifier,
-            "side": side,
+            "moved_by": side,
             "from": move_data['from'],
             "to": move_data['to'],
             "current_turn": game.current_turn,
