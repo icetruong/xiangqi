@@ -26,8 +26,8 @@ COPY . /app/
 # Mở port 8000
 EXPOSE 8000
 
-# Tuỳ chọn: Chạy migrate hoặc collectstatic trước khi khởi động
-# RUN python manage.py collectstatic --noinput
+# Chạy collectstatic để tạo file tĩnh cho PWA và UI
+RUN python manage.py collectstatic --noinput
 
 # Khởi chạy server Daphne phục vụ cả HTTP lẫn Websocket (Django Channels)
 CMD sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 xiangqi_project.asgi:application"
