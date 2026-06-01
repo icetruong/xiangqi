@@ -1,9 +1,61 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
+from django.views.decorators.cache import cache_control
+from django.templatetags.static import static
 from games.models import Game, Room
 from games.services import game_service
 from games.api_views import _get_in_check
 import json
+
+# ── PWA Views ──────────────────────────────────────────────────────────────
+
+@cache_control(max_age=86400)
+def pwa_manifest(request):
+    """Serve the Web App Manifest at /manifest.json"""
+    base = request.build_absolute_uri('/').rstrip('/')
+    data = {
+        "name": "Cờ Tướng Online",
+        "short_name": "Cờ Tướng",
+        "description": "Chơi cờ tướng online với bạn bè hoặc đấu với AI",
+        "start_url": "/",
+        "display": "standalone",
+        "orientation": "portrait-primary",
+        "theme_color": "#2a120b",
+        "background_color": "#0a0503",
+        "lang": "vi",
+        "icons": [
+            {
+                "src": base + static("games/img/icon-192.png"),
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": base + static("games/img/icon-512.png"),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            }
+        ],
+        "screenshots": [],
+        "categories": ["games", "entertainment"]
+    }
+    return JsonResponse(data)
+
+
+def service_worker(request):
+    """Serve the Service Worker at /sw.js (must be at root scope)"""
+    response = render(request, 'games/sw.js', content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
+def offline_page(request):
+    """PWA offline fallback page"""
+    return render(request, 'games/offline.html')
+
 
 @ensure_csrf_cookie
 def index(request):
@@ -69,11 +121,11 @@ def lobby(request):
     return render(request, 'games/lobby.html')
 
 def room_board(request, room_code):
-    try:
-        room = Room.objects.get(room_code=room_code)
-    except Room.DoesNotExist:
+    room = Room.objects.filter(room_code=room_code).first()
+    if not room:
         return redirect('games:index')
     
+
     # Use Django session key as the stable player identifier.
     # This is server-generated and unique per browser session.
     if not request.session.session_key:

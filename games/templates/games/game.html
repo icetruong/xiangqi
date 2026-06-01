@@ -4,8 +4,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cờ Tướng — Ván đấu</title>
+    <meta name="description" content="Cờ Tướng Online — Đấu với AI hoặc bạn bè.">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2a120b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cờ Tướng">
+    <link rel="apple-touch-icon" href="{% static 'games/img/icon-192.png' %}">
+    <!-- Icons & styles -->
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/style.css' %}">
     <link
@@ -115,6 +125,13 @@
                 </div>
             </div>
         </div>
+
+        <!-- ── Mobile Tab Navigation Bar (only visible on small screens via CSS) ── -->
+        <nav class="mobile-tab-bar" id="mobileTabBar" aria-label="Điều hướng mobile">
+            <button class="mobile-tab-btn active" id="tabBoard" data-panel="none">⚔ Bàn cờ</button>
+            <button class="mobile-tab-btn" id="tabInfo" data-panel="left">📜 Thông tin</button>
+            <button class="mobile-tab-btn" id="tabSettings" data-panel="right">⚙ Cài đặt</button>
+        </nav>
     </div>
 
     <!-- game.js MUST come before the inline script so initGame() is defined -->
@@ -733,6 +750,39 @@
             }, { once: true });
 
         })();
+
+        /* ── Mobile Tab Navigation ── */
+        (function () {
+            var tabBtns = document.querySelectorAll('.mobile-tab-btn');
+            var leftPanel  = document.querySelector('.layout-left');
+            var rightPanel = document.querySelector('.layout-right');
+
+            if (!tabBtns.length || !leftPanel || !rightPanel) return;
+
+            tabBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    tabBtns.forEach(function (b) { b.classList.remove('active'); });
+                    btn.classList.add('active');
+
+                    var panel = btn.dataset.panel;
+                    leftPanel.classList.remove('mobile-visible');
+                    rightPanel.classList.remove('mobile-visible');
+
+                    if (panel === 'left')  leftPanel.classList.add('mobile-visible');
+                    if (panel === 'right') rightPanel.classList.add('mobile-visible');
+                });
+            });
+        })();
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function (err) {
+                    console.warn('SW registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 

@@ -11,13 +11,37 @@ const PIECE_NAMES = {
 // ── Board Constants ──
 const COLS = 9;
 const ROWS = 10;
-const CELL_SIZE = 64;
-const BOARD_PAD = 32;
-const BOARD_W = (COLS - 1) * CELL_SIZE;
-const BOARD_H = (ROWS - 1) * CELL_SIZE;
-const PIECE_SIZE = Math.round(CELL_SIZE * 0.82);
-const HINT_SIZE = 14;
-const FONT_SIZE = Math.round(PIECE_SIZE * 0.58);
+
+// Dynamic sizing — recalculated on every render / resize
+var CELL_SIZE, BOARD_PAD, BOARD_W, BOARD_H, PIECE_SIZE, HINT_SIZE, FONT_SIZE;
+
+function computeBoardMetrics() {
+    var availH = window.innerHeight;
+    var availW = window.innerWidth;
+
+    // On desktop (>860px) subtract the two side panels + gaps from available width
+    var isMobile = availW <= 860;
+    if (!isMobile) {
+        // 2 side panels × 200px (narrowed at ≤1100) + 2 gaps × 14px + 2 × padding 10px
+        var sideW = availW <= 1100 ? 200 : 260;
+        availW = availW - sideW * 2 - 48; // 48px for gaps + breathing room
+    }
+
+    // Board must fit within available space with padding
+    var maxByHeight = Math.floor((availH * 0.90) / (ROWS - 1));
+    var maxByWidth  = Math.floor((availW * 0.95) / COLS);
+    var ideal = Math.min(maxByHeight, maxByWidth, 64);
+    ideal = Math.max(ideal, 28); // never go below 28px
+
+    CELL_SIZE  = ideal;
+    BOARD_PAD  = Math.round(CELL_SIZE * 0.5);
+    BOARD_W    = (COLS - 1) * CELL_SIZE;
+    BOARD_H    = (ROWS - 1) * CELL_SIZE;
+    PIECE_SIZE = Math.round(CELL_SIZE * 0.82);
+    HINT_SIZE  = Math.max(8, Math.round(CELL_SIZE * 0.22));
+    FONT_SIZE  = Math.round(PIECE_SIZE * 0.58);
+}
+
 
 // ── SVG namespace ──
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -445,6 +469,7 @@ function drawCornerMarks(svg, col, row, color, sw) {
 var boardSvgEl = null;
 
 function initBoardStructure() {
+    computeBoardMetrics();
     var totalW = BOARD_W + BOARD_PAD * 2;
     var totalH = BOARD_H + BOARD_PAD * 2;
     boardEl.style.width = totalW + 'px';
@@ -933,6 +958,31 @@ function initGame(config) {
             startPolling();
         }
     }
+
+    // ── Responsive resize: rebuild board when window changes size ──
+    var _resizeTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(function () {
+            if (!boardEl) return;
+            // Recompute metrics
+            computeBoardMetrics();
+            // Resize the board element
+            var totalW = BOARD_W + BOARD_PAD * 2;
+            var totalH = BOARD_H + BOARD_PAD * 2;
+            boardEl.style.width  = totalW + 'px';
+            boardEl.style.height = totalH + 'px';
+            // Rebuild the SVG grid
+            if (boardSvgEl && boardSvgEl.parentNode) {
+                boardSvgEl.parentNode.removeChild(boardSvgEl);
+            }
+            boardSvgEl = createBoardSVG();
+            boardEl.appendChild(boardSvgEl);
+            // Re-render pieces at new positions
+            selectedCell = null;
+            renderBoard(false);
+        }, 150);
+    });
 }
 
 // ═══════════════════════════════════════════════
