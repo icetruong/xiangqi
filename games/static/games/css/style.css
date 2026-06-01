@@ -2441,8 +2441,11 @@ body::after {
 
 .layout-center {
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
 }
 
 /* ── Common UI Panel Style ── */
@@ -2744,9 +2747,31 @@ body::after {
         gap: 6px;
     }
 
-    .layout-side .ui-panel,
-    .layout-side .player-panel {
+    .layout-side .ui-panel {
         flex: 1 1 100%;
+    }
+
+    .player-panel {
+        flex-direction: row;
+        padding: 8px 12px;
+        gap: 12px;
+        justify-content: flex-start;
+    }
+
+    .pp-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .pp-name {
+        font-size: 0.9rem;
+    }
+
+    .pp-badge {
+        position: static;
+        transform: none;
+        margin-left: auto;
     }
 
     .panel-header {
