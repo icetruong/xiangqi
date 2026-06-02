@@ -141,12 +141,7 @@
         </div>
     </div>
 
-    <!-- ── Mobile Tab Navigation Bar ── -->
-    <nav class="mobile-tab-bar" id="mobileTabBar" aria-label="Điều hướng mobile">
-        <button class="mobile-tab-btn active" id="tabBoard" data-panel="none">⚔ Bàn cờ</button>
-        <button class="mobile-tab-btn" id="tabInfo" data-panel="left">📜 Thông tin</button>
-        <button class="mobile-tab-btn" id="tabSettings" data-panel="right">⚙ Cài đặt</button>
-    </nav>
+
 
     <!-- Floating Chat Panel — must be in DOM before initGame() runs -->
     <div id="chatOverlay" class="chat-overlay" aria-label="Chat">
@@ -835,24 +830,7 @@
 
         })();
 
-        /* ── Mobile Tab Navigation ── */
-        (function () {
-            var tabBtns = document.querySelectorAll('.mobile-tab-btn');
-            var leftPanel  = document.querySelector('.layout-left');
-            var rightPanel = document.querySelector('.layout-right');
-            if (!tabBtns.length || !leftPanel || !rightPanel) return;
-            tabBtns.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    tabBtns.forEach(function (b) { b.classList.remove('active'); });
-                    btn.classList.add('active');
-                    var panel = btn.dataset.panel;
-                    leftPanel.classList.remove('mobile-visible');
-                    rightPanel.classList.remove('mobile-visible');
-                    if (panel === 'left')  leftPanel.classList.add('mobile-visible');
-                    if (panel === 'right') rightPanel.classList.add('mobile-visible');
-                });
-            });
-        })();
+
     </script>
 
     <script>
