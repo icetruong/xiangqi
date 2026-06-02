@@ -2441,8 +2441,11 @@ body::after {
 
 .layout-center {
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
 }
 
 /* ── Common UI Panel Style ── */
@@ -2668,3 +2671,191 @@ body::after {
         display: none;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE GAME LAYOUT — Mobile & Tablet
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Tablet: narrow side panels ── */
+@media (max-width: 1100px) {
+    .game-layout {
+        gap: 14px;
+    }
+
+    .layout-side {
+        width: 200px;
+        gap: 12px;
+    }
+}
+
+/* ── Small tablet: hide side panels, center board ── */
+@media (max-width: 860px) {
+    .main-container {
+        padding: 10px;
+        height: auto;
+        min-height: 100dvh;
+        align-items: flex-start;
+    }
+
+    .game-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Side panels hidden by default on mobile,
+       shown via tab toggle (see tab nav below) */
+    .layout-side {
+        width: 100%;
+        max-width: 500px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        display: none;
+    }
+
+    .layout-side.mobile-visible {
+        display: flex;
+    }
+
+    /* Each panel inside side takes 50% on tablet, 100% on phone */
+    .layout-side .ui-panel,
+    .layout-side .player-panel {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 140px;
+    }
+
+    /* Center the board horizontally */
+    .layout-center {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Scrollable history shorter on mobile */
+    .history-list {
+        max-height: 120px;
+    }
+}
+
+/* ── Phone portrait: single-column, board at top ── */
+@media (max-width: 540px) {
+    .main-container {
+        padding: 6px 4px;
+    }
+
+    .game-layout {
+        gap: 6px;
+    }
+
+    .layout-side .ui-panel {
+        flex: 1 1 100%;
+    }
+
+    .player-panel {
+        flex-direction: row;
+        padding: 8px 12px;
+        gap: 12px;
+        justify-content: flex-start;
+    }
+
+    .pp-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .pp-name {
+        font-size: 0.9rem;
+    }
+
+    .pp-badge {
+        position: static;
+        transform: none;
+        margin-left: auto;
+    }
+
+    .panel-header {
+        font-size: 0.8rem;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
+    }
+
+    .captured-pieces {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .history-list {
+        max-height: 100px;
+        font-size: 0.8rem;
+    }
+
+    /* Tighter player panels */
+    .player-panel {
+        padding: 10px 8px;
+        gap: 4px;
+    }
+
+    .pp-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
+    .pp-name {
+        font-size: 0.62rem;
+    }
+
+    .pp-badge {
+        font-size: 0.5rem;
+        padding: 2px 5px;
+        top: -12px;
+    }
+}
+
+/* ── Mobile tab navigation bar (injected by JS below) ── */
+.mobile-tab-bar {
+    display: none;
+}
+
+@media (max-width: 860px) {
+    .mobile-tab-bar {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        background: linear-gradient(0deg, #110703 0%, rgba(17,7,3,0.9) 100%);
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.8);
+        z-index: 9999;
+    }
+
+    .mobile-tab-btn {
+        flex: 1;
+        padding: 8px 6px;
+        font-family: 'Noto Serif', serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #d4b87a;
+        background: linear-gradient(160deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+        border: 1px solid #7a5a28;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: filter 0.15s, transform 0.1s;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .mobile-tab-btn:hover {
+        filter: brightness(1.2);
+    }
+
+    .mobile-tab-btn.active {
+        background: linear-gradient(160deg, #6b4e0a 0%, #4a3407 100%);
+        border-color: #c9944a;
+        color: #ffe9a0;
+    }
+}

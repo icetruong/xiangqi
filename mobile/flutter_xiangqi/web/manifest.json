@@ -1,11 +1,11 @@
 {
-    "name": "flutter_xiangqi",
-    "short_name": "flutter_xiangqi",
+    "name": "Cờ Tướng (Xiangqi)",
+    "short_name": "Cờ Tướng",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1a0a00",
+    "theme_color": "#c0392b",
+    "description": "Game cờ tướng online — chơi với AI hoặc đấu trực tuyến.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

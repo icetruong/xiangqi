@@ -11,13 +11,40 @@ const PIECE_NAMES = {
 // ── Board Constants ──
 const COLS = 9;
 const ROWS = 10;
-const CELL_SIZE = 64;
-const BOARD_PAD = 32;
-const BOARD_W = (COLS - 1) * CELL_SIZE;
-const BOARD_H = (ROWS - 1) * CELL_SIZE;
-const PIECE_SIZE = Math.round(CELL_SIZE * 0.82);
-const HINT_SIZE = 14;
-const FONT_SIZE = Math.round(PIECE_SIZE * 0.58);
+
+// Dynamic sizing — recalculated on every render / resize
+var CELL_SIZE, BOARD_PAD, BOARD_W, BOARD_H, PIECE_SIZE, HINT_SIZE, FONT_SIZE;
+
+function computeBoardMetrics() {
+    var availH = window.innerHeight;
+    var availW = window.innerWidth;
+
+    // On desktop (>860px) subtract the two side panels + gaps from available width
+    var isMobile = availW <= 860;
+    if (!isMobile) {
+        // 2 side panels × 200px (narrowed at ≤1100) + 2 gaps × 14px + 2 × padding 10px
+        var sideW = availW <= 1100 ? 200 : 260;
+        availW = availW - sideW * 2 - 48; // 48px for gaps + breathing room
+    } else {
+        // On mobile, subtract the height of the bottom tab bar so the board doesn't get covered
+        availH = availH - 70; 
+    }
+
+    // Board must fit within available space with padding
+    var maxByHeight = Math.floor((availH * 0.90) / (ROWS - 1));
+    var maxByWidth  = Math.floor((availW * 0.95) / COLS);
+    var ideal = Math.min(maxByHeight, maxByWidth, 64);
+    ideal = Math.max(ideal, 28); // never go below 28px
+
+    CELL_SIZE  = ideal;
+    BOARD_PAD  = Math.round(CELL_SIZE * 0.5);
+    BOARD_W    = (COLS - 1) * CELL_SIZE;
+    BOARD_H    = (ROWS - 1) * CELL_SIZE;
+    PIECE_SIZE = Math.round(CELL_SIZE * 0.82);
+    HINT_SIZE  = Math.max(8, Math.round(CELL_SIZE * 0.22));
+    FONT_SIZE  = Math.round(PIECE_SIZE * 0.58);
+}
+
 
 // ── SVG namespace ──
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -445,6 +472,7 @@ function drawCornerMarks(svg, col, row, color, sw) {
 var boardSvgEl = null;
 
 function initBoardStructure() {
+    computeBoardMetrics();
     var totalW = BOARD_W + BOARD_PAD * 2;
     var totalH = BOARD_H + BOARD_PAD * 2;
     boardEl.style.width = totalW + 'px';
@@ -933,6 +961,31 @@ function initGame(config) {
             startPolling();
         }
     }
+
+    // ── Responsive resize: rebuild board when window changes size ──
+    var _resizeTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(function () {
+            if (!boardEl) return;
+            // Recompute metrics
+            computeBoardMetrics();
+            // Resize the board element
+            var totalW = BOARD_W + BOARD_PAD * 2;
+            var totalH = BOARD_H + BOARD_PAD * 2;
+            boardEl.style.width  = totalW + 'px';
+            boardEl.style.height = totalH + 'px';
+            // Rebuild the SVG grid
+            if (boardSvgEl && boardSvgEl.parentNode) {
+                boardSvgEl.parentNode.removeChild(boardSvgEl);
+            }
+            boardSvgEl = createBoardSVG();
+            boardEl.appendChild(boardSvgEl);
+            // Re-render pieces at new positions
+            selectedCell = null;
+            renderBoard(false);
+        }, 150);
+    });
 }
 
 // ═══════════════════════════════════════════════
@@ -972,7 +1025,17 @@ function handleSocketMessage(data) {
         return;
     }
 
-    if (data.type === 'connection_success' || data.type === 'sync_state') {
+    if (data.type === 'connection_success') {
+        // Trusted initial side handshake: only this event may update playerSide.
+        if (typeof data.side === 'string' && data.side) {
+            playerSide = data.side;
+        }
+        updateGameState(data);
+        return;
+    }
+
+    if (data.type === 'sync_state') {
+        // Never update playerSide from sync payloads.
         updateGameState(data);
         return;
     }
@@ -991,6 +1054,7 @@ function handleSocketMessage(data) {
     }
 
     if (data.type === 'move') {
+        console.log("DEBUG: Client nhận move broadcast. Có legal_moves?", Array.isArray(data.legal_moves));
         updateGameState(data);
         return;
     }
@@ -1002,7 +1066,7 @@ function handleSocketMessage(data) {
             board_state: data.board_state || boardState,
             current_turn: data.current_turn || currentTurn,
             last_move: data.last_move || lastMove
-        });
+        }); // do not overwrite playerSide from broadcast
         return;
     }
 }
@@ -1035,8 +1099,10 @@ function syncMultiplayerState(forceSync) {
             if (!roomData.ok) return;
 
             gameId = roomData.game_id || gameId;
-            playerSide = derivePlayerSideFromRoom(roomData);
-            updatePlayerSideLabel();
+            // Do NOT overwrite playerSide here — it is already set correctly
+            // from the Django template (server-side session) and WebSocket
+            // connection_success. Polling the room API cannot reliably
+            // determine the current user's side.
 
             if (roomData.status === 'waiting') {
                 status = 'waiting';
@@ -1049,6 +1115,7 @@ function syncMultiplayerState(forceSync) {
                 .then(function (res) { return res.json(); })
                 .then(function (gameData) {
                     if (!gameData.ok) return;
+                    // HTTP poll only syncs shared room/game state.
                     updateGameState({
                         ...gameData,
                         status: roomData.status
@@ -1127,7 +1194,7 @@ function sendMove(move) {
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    updateGameState(data);
+                    updateGameState(data); // own HTTP move response
                 } else {
                     showGameToast(data.message, 'warning');
                 }
@@ -1148,7 +1215,7 @@ function sendMove(move) {
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.ok) {
-                    updateGameState(data);
+                    updateGameState(data); // PvE: own move response
                     logMove(move, "Player");
 
                     if (data.status === 'ongoing' && data.current_turn !== playerSide) {
@@ -1179,16 +1246,21 @@ function updateGameState(data) {
     if (typeof data.status === 'string' && data.status) {
         status = data.status;
     }
-    if (typeof data.side === 'string' && data.side) {
-        playerSide = data.side;
-    }
     if (Object.prototype.hasOwnProperty.call(data, 'last_move')) {
         lastMove = data.last_move;
     }
 
-    legalMoves = data.legal_moves || [];
+    // Only update legalMoves when the response explicitly includes the field.
+    if (Array.isArray(data.legal_moves)) {
+        console.log("DEBUG: Update legalMoves thành công, số lượng = " + data.legal_moves.length);
+        legalMoves = data.legal_moves;
+    } else {
+        console.log("DEBUG: Payload không có legal_moves. Giữ nguyên legalMoves hiện tại.");
+    }
     inCheck = data.in_check || null;
-    boardFlipped = (playerSide === 'b');
+    // Chỉ tính orientation từ playerSide local
+    const isBoardFlipped = playerSide === 'b';
+    boardFlipped = isBoardFlipped;
 
     if (hasFullMoveHistory) {
         moveHistory = data.move_history.map(function (move) {
@@ -1537,7 +1609,7 @@ function startPolling() {
                     if (data.current_turn === playerSide || data.status === 'finished') {
                         clearInterval(pollInterval);
                         pollInterval = null;
-                        updateGameState(data);
+                        updateGameState(data); // PvE poll: own game state
                     }
                 }
             })

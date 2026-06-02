@@ -38,7 +38,7 @@ def _split_csv(value: str | None) -> list[str]:
 
 ALLOWED_HOSTS = _split_csv(os.environ.get('ALLOWED_HOSTS'))
 if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    ALLOWED_HOSTS = ['*']
 
 _railway_public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
 if _railway_public_domain and _railway_public_domain not in ALLOWED_HOSTS:
@@ -56,6 +56,11 @@ if DEBUG:
     CSRF_TRUSTED_ORIGINS.extend([
         'http://localhost',
         'http://127.0.0.1',
+        'https://*.trycloudflare.com',
+        'https://*.loca.lt',
+        'https://*.ngrok-free.app',
+        'https://usitech.io.vn',
+        'https://*.usitech.io.vn',
     ])
 
 ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))

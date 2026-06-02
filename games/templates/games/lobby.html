@@ -4,8 +4,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi - Chơi Online</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cờ Tướng — Chơi Online</title>
+    <meta name="description" content="Tạo phòng hay tham gia đấu cờ tướng online.">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2a120b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cờ Tướng">
+    <link rel="apple-touch-icon" href="{% static 'games/img/icon-192.png' %}">
+    <!-- Icons & styles -->
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/start-screen.css' %}">
     <link
@@ -142,8 +152,8 @@
                     </div>
 
                     <!-- Title -->
-                    <h1 class="game-title" style="font-size:36px; padding-top:20px;">Trực Tuyến</h1>
-                    <p class="subtitle">Chơi online (PvP)</p>
+                    <h1 class="game-title" style="font-family: 'Noto Serif', serif; font-size:36px; padding-top:20px; text-transform: uppercase;">Trực Tuyến</h1>
+                    <p class="subtitle" style="font-family: 'Noto Serif', serif;">Chơi online (PvP)</p>
 
                     <div class="ornamental-divider"><span>✦</span></div>
 
@@ -151,16 +161,16 @@
                     <div id="lobbyForm">
                         <div class="settings-group">
                             <div class="form-group">
-                                <label for="playerName" style="font-family:'Cinzel', serif; font-size:1.1rem; color:#d4b87a; display:block; margin-bottom:8px;">Tên của bạn:</label>
+                                <label for="playerName" style="font-family:'Noto Serif', serif; font-size:1.1rem; color:#d4b87a; display:block; margin-bottom:8px; text-transform: uppercase;">Tên của bạn:</label>
                                 <input type="text" id="playerName" placeholder="Nhập tên người chơi..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #7a6042; font-family: 'Noto Serif', serif; font-size: 1.1rem; color: #fff; text-align: center; border-radius: 4px; box-sizing: border-box; margin-bottom: 24px;">
                             </div>
                             <div class="button-area" style="margin-bottom:20px;">
-                                <button type="button" class="start-button pvp-btn" id="btnCreateRoom" style="width:100%;"><span class="btn-text">Tạo Phòng Mới</span></button>
+                                <button type="button" class="start-button pvp-btn" id="btnCreateRoom" style="width:100%; font-family: 'Noto Serif', serif;"><span class="btn-text">Tạo Phòng Mới</span></button>
                             </div>
                             <div class="ornamental-divider" style="margin: 20px 0; font-size: 0.8em; opacity:0.5;"><span>hoặc</span></div>
                             <div class="form-group">
-                                <input type="text" id="joinRoomCode" placeholder="Nhập mã phòng có sẵn..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #7a6042; font-family: 'Cinzel', serif; font-size: 1.1rem; color: #fff; text-align: center; border-radius: 4px; box-sizing: border-box; margin-bottom:8px;">
-                                <button type="button" class="start-button pvp-btn" id="btnJoinRoom" style="width:100%;"><span class="btn-text">Vào Phòng</span></button>
+                                <input type="text" id="joinRoomCode" placeholder="Nhập mã phòng có sẵn..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #7a6042; font-family: 'Noto Serif', serif; font-size: 1.1rem; color: #fff; text-align: center; border-radius: 4px; box-sizing: border-box; margin-bottom:8px;">
+                                <button type="button" class="start-button pvp-btn" id="btnJoinRoom" style="width:100%; font-family: 'Noto Serif', serif;"><span class="btn-text">Vào Phòng</span></button>
                             </div>
                         </div>
                     </div>
@@ -651,6 +661,16 @@
     <audio id="bgmAudio" loop preload="auto">
         <source src="{% static 'games/audio/bgm.mp3' %}" type="audio/mpeg">
     </audio>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function (err) {
+                    console.warn('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>

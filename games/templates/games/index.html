@@ -4,8 +4,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xiangqi vs AI - Start Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Cờ Tướng — Xiangqi vs AI</title>
+    <meta name="description" content="Chơi cờ tướng online với bạn bè hoặc thách đấu AI. Chế độ PvE và PvP.">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2a120b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cờ Tướng">
+    <link rel="apple-touch-icon" href="{% static 'games/img/icon-192.png' %}">
+    <!-- Icons & styles -->
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
     <link rel="stylesheet" href="{% static 'games/css/start-screen.css' %}">
     <link
@@ -824,6 +834,15 @@
     <audio id="bgmAudio" loop preload="auto">
         <source src="{% static 'games/audio/bgm.mp3' %}" type="audio/mpeg">
     </audio>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function (err) {
+                    console.warn('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>

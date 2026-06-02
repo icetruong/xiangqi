@@ -4,6 +4,11 @@ from . import views, api_views
 app_name = 'games'
 
 urlpatterns = [
+    # PWA endpoints (must be at root scope)
+    path('manifest.json', views.pwa_manifest, name='pwa_manifest'),
+    path('sw.js',         views.service_worker, name='service_worker'),
+    path('offline/',      views.offline_page,   name='offline'),
+
     # Template Views
     path('', views.index, name='index'),
     path('lobby/', views.lobby, name='lobby'),

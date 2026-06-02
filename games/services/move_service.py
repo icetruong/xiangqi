@@ -66,10 +66,18 @@ def handle_socket_move(room_code, identifier, move_data):
             room.status = 'finished'
             room.save(update_fields=['status'])
 
+        legal_moves = []
+        if game.status == 'ongoing' and room.status == 'playing':
+            legal_moves = engine_adapter.list_legal_moves(game.board_state, game.current_turn)
+        
+        print(f"DEBUG (server): Broadcast move. legal_moves length = {len(legal_moves)}")
+
+
+
         return {
             "type": "move",
             "player": identifier,
-            "side": side,
+            "moved_by": side,
             "from": move_data['from'],
             "to": move_data['to'],
             "current_turn": game.current_turn,
@@ -85,4 +93,5 @@ def handle_socket_move(room_code, identifier, move_data):
             "status": room.status,
             "winner": game.winner,
             "reason": game.end_reason,
+            "legal_moves": legal_moves,
         }

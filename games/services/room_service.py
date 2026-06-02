@@ -18,7 +18,13 @@ def create_room(identifier):
         game.ai_side = 'n' # Placeholder for none to prevent AI trigger
         game.save()
         
-        room = Room.objects.create(room_code=room_code, game=game, status='waiting', player_red=identifier)
+        # Randomly assign creator to red or black
+        creator_side = random.choice(['r', 'b'])
+        if creator_side == 'r':
+            room = Room.objects.create(room_code=room_code, game=game, status='waiting', player_red=identifier)
+        else:
+            room = Room.objects.create(room_code=room_code, game=game, status='waiting', player_black=identifier)
+            
         return room
 
 def join_room(room_code, identifier):
@@ -31,17 +37,19 @@ def join_room(room_code, identifier):
         if room.player_black == identifier:
             return room, 'b'
             
-        # Fallback for an unexpected half-empty room with no red player.
+        # Assign to empty slot
         if not room.player_red:
             room.player_red = identifier
-            room.save(update_fields=['player_red'])
+            if room.status == 'waiting':
+                room.status = 'playing'
+            room.save(update_fields=['player_red', 'status'])
             return room, 'r'
 
-        # The room creator is always red; the joiner is always black.
         if not room.player_black:
             room.player_black = identifier
-            room.status = 'playing'
-            room.save(update_fields=['player_red', 'player_black', 'status'])
+            if room.status == 'waiting':
+                room.status = 'playing'
+            room.save(update_fields=['player_black', 'status'])
             return room, 'b'
 
         # Room is full, client becomes spectator
