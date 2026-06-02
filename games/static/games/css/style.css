@@ -2428,12 +2428,12 @@ body::after {
     align-items: flex-start;
     gap: 24px;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1320px;
     margin: 0 auto;
 }
 
 .layout-side {
-    width: 260px;
+    width: 320px;
     display: flex;
     flex-direction: column;
     gap: 16px;
