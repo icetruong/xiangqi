@@ -532,6 +532,7 @@ function renderBoard(shouldAnimate) {
     for (var i = 0; i < children.length; i++) {
         var ch = children[i];
         if (ch === boardSvgEl) continue;
+        if (ch === hintSvgEl) continue;  // keep hint overlay
         if (ch.classList.contains('piece')) continue; // handle pieces separately
         boardEl.removeChild(ch);
     }
@@ -734,6 +735,11 @@ function renderBoard(shouldAnimate) {
     // ── Hint Dots ──
     if (selectedCell) {
         renderHints(px, py);
+    }
+
+    // Keep hintSvgEl as last child so it renders above all pieces
+    if (hintSvgEl && hintSvgEl.parentNode === boardEl) {
+        boardEl.appendChild(hintSvgEl);
     }
 }
 
@@ -946,6 +952,7 @@ function initGame(config) {
     }, { once: true });
 
     initBoardStructure();
+    initHintArrowLayer();
     renderBoard(false);
     updateStatusUI();
     initTurnIndicator();
@@ -956,6 +963,7 @@ function initGame(config) {
         initWebSocket();
         startMultiplayerSyncPolling();
         initChat();
+        initHintButtons();
     } else {
         // Nếu người chơi chọn Đen, AI Đỏ đang đi trước — tự poll để cập nhật bàn cờ
         if (status === 'ongoing' && currentTurn !== playerSide) {
@@ -982,9 +990,14 @@ function initGame(config) {
             }
             boardSvgEl = createBoardSVG();
             boardEl.appendChild(boardSvgEl);
+            initHintArrowLayer();
             // Re-render pieces at new positions
             selectedCell = null;
             renderBoard(false);
+            // Redraw hint arrow at new pixel coordinates
+            if (currentHint) {
+                showHintArrow(currentHint.from, currentHint.to, currentHint.type);
+            }
         }, 150);
     });
 }
@@ -1247,6 +1260,7 @@ function sendMove(move) {
 }
 
 function updateGameState(data) {
+    cancelPendingHint();
     var prevLastMove = lastMove;
     var prevInCheck = inCheck;
     var hasFullMoveHistory = Array.isArray(data.move_history);
@@ -1419,6 +1433,7 @@ function updateTurnIndicator() {
 
     leftPanel.classList.toggle('player-panel--active', isMyTurn);
     rightPanel.classList.toggle('player-panel--active', isAITurn);
+    updateHintButtonVisibility();
 }
 
 function logMove(move, who) {
@@ -1606,6 +1621,221 @@ function _spawnWinParticles() {
         p.style.animationDelay = delay + "s";
 
         container.appendChild(p);
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  AI Hint — PvP Board Assistance
+// ═══════════════════════════════════════════════
+
+var aiHintController = null;
+var currentHint = null;  // { from, to, type: 'predict'|'suggest' }
+var hintSvgEl = null;    // separate SVG overlay above pieces (z-index > piece z-index)
+
+function initHintArrowLayer() {
+    if (hintSvgEl && hintSvgEl.parentNode) {
+        hintSvgEl.parentNode.removeChild(hintSvgEl);
+    }
+    var totalW = BOARD_W + BOARD_PAD * 2;
+    var totalH = BOARD_H + BOARD_PAD * 2;
+    hintSvgEl = document.createElementNS(SVG_NS, 'svg');
+    hintSvgEl.setAttribute('class', 'hint-svg');
+    hintSvgEl.setAttribute('viewBox', '0 0 ' + totalW + ' ' + totalH);
+    hintSvgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    hintSvgEl.style.width = totalW + 'px';
+    hintSvgEl.style.height = totalH + 'px';
+    boardEl.appendChild(hintSvgEl);
+}
+
+function _hintPx(c) {
+    return boardFlipped ? BOARD_PAD + (COLS - 1 - c) * CELL_SIZE : BOARD_PAD + c * CELL_SIZE;
+}
+
+function _hintPy(r) {
+    return boardFlipped ? BOARD_PAD + (ROWS - 1 - r) * CELL_SIZE : BOARD_PAD + r * CELL_SIZE;
+}
+
+function showHintArrow(from, to, type) {
+    if (!hintSvgEl) return;
+    _clearHintArrowSvg();
+    currentHint = { from: from, to: to, type: type };
+
+    var color = (type === 'predict') ? '#e67e22' : '#4a90e2';
+    var x1 = _hintPx(from[1]);
+    var y1 = _hintPy(from[0]);
+    var x2 = _hintPx(to[1]);
+    var y2 = _hintPy(to[0]);
+
+    var dx = x2 - x1, dy = y2 - y1;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var r = PIECE_SIZE * 0.5 + 2;
+    var ux = dx / len, uy = dy / len;
+
+    // Dashed line (shortened to not overlap circles)
+    var line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', x1 + ux * r);
+    line.setAttribute('y1', y1 + uy * r);
+    line.setAttribute('x2', x2 - ux * r);
+    line.setAttribute('y2', y2 - uy * r);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('stroke-dasharray', '6 4');
+    line.setAttribute('opacity', '0.85');
+    hintSvgEl.appendChild(line);
+
+    // Arrowhead at destination
+    var headLen = 12, aAngle = Math.PI / 5;
+    var angle = Math.atan2(dy, dx);
+    var p1x = x2 - headLen * Math.cos(angle - aAngle);
+    var p1y = y2 - headLen * Math.sin(angle - aAngle);
+    var p2x = x2 - headLen * Math.cos(angle + aAngle);
+    var p2y = y2 - headLen * Math.sin(angle + aAngle);
+    var head = document.createElementNS(SVG_NS, 'polygon');
+    head.setAttribute('points', x2 + ',' + y2 + ' ' + p1x + ',' + p1y + ' ' + p2x + ',' + p2y);
+    head.setAttribute('fill', color);
+    head.setAttribute('opacity', '0.9');
+    hintSvgEl.appendChild(head);
+
+    // Circle at source (ring)
+    var cFrom = document.createElementNS(SVG_NS, 'circle');
+    cFrom.setAttribute('cx', x1);
+    cFrom.setAttribute('cy', y1);
+    cFrom.setAttribute('r', r - 1);
+    cFrom.setAttribute('fill', 'none');
+    cFrom.setAttribute('stroke', color);
+    cFrom.setAttribute('stroke-width', '2.5');
+    cFrom.setAttribute('opacity', '0.8');
+    hintSvgEl.appendChild(cFrom);
+
+    // Circle at destination (filled)
+    var cTo = document.createElementNS(SVG_NS, 'circle');
+    cTo.setAttribute('cx', x2);
+    cTo.setAttribute('cy', y2);
+    cTo.setAttribute('r', r - 1);
+    cTo.setAttribute('fill', color);
+    cTo.setAttribute('fill-opacity', '0.25');
+    cTo.setAttribute('stroke', color);
+    cTo.setAttribute('stroke-width', '2.5');
+    cTo.setAttribute('opacity', '0.85');
+    hintSvgEl.appendChild(cTo);
+}
+
+function _clearHintArrowSvg() {
+    if (!hintSvgEl) return;
+    while (hintSvgEl.firstChild) {
+        hintSvgEl.removeChild(hintSvgEl.firstChild);
+    }
+}
+
+function _resetHintButtonLabels() {
+    var btnPredict = document.getElementById('btnPredictOpponent');
+    var btnSuggest = document.getElementById('btnSuggestMove');
+    if (btnPredict) {
+        btnPredict.disabled = false;
+        btnPredict.textContent = '🔮 Đoán đối thủ';
+    }
+    if (btnSuggest) {
+        btnSuggest.disabled = false;
+        btnSuggest.textContent = '💡 Gợi ý nước';
+    }
+}
+
+function clearHintArrow() {
+    _clearHintArrowSvg();
+    currentHint = null;
+    _resetHintButtonLabels();
+}
+
+function cancelPendingHint() {
+    if (aiHintController) {
+        aiHintController.abort();
+        aiHintController = null;
+    }
+    clearHintArrow();
+}
+
+function requestAiHint(forSide, type) {
+    if (!roomCode) return;
+    if (aiHintController) {
+        aiHintController.abort();
+        aiHintController = null;
+    }
+    _clearHintArrowSvg();
+    currentHint = null;
+
+    var btnId = (type === 'predict') ? 'btnPredictOpponent' : 'btnSuggestMove';
+    var btn = document.getElementById(btnId);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Đang tính…';
+    }
+
+    aiHintController = new AbortController();
+    var signal = aiHintController.signal;
+
+    fetch('/api/rooms/' + roomCode + '/ai_hint/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ for_side: forSide }),
+        signal: signal
+    })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.ok) {
+                showHintArrow(data.from, data.to, type);
+            } else {
+                showGameToast(data.message || 'Không thể tính nước.', 'warning');
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = type === 'predict' ? '🔮 Đoán đối thủ' : '💡 Gợi ý nước';
+            }
+        })
+        .catch(function (err) {
+            if (err.name === 'AbortError') return;
+            showGameToast('Không thể kết nối máy chủ.', 'warning');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = type === 'predict' ? '🔮 Đoán đối thủ' : '💡 Gợi ý nước';
+            }
+        });
+}
+
+function updateHintButtonVisibility() {
+    var btnPredict = document.getElementById('btnPredictOpponent');
+    var btnSuggest = document.getElementById('btnSuggestMove');
+    if (!btnPredict || !btnSuggest) return;
+
+    if (!isMultiplayer || playerSide === 'spectator' || isFinishedStatus(status) || isWaitingStatus(status)) {
+        btnPredict.hidden = true;
+        btnSuggest.hidden = true;
+        return;
+    }
+
+    var isMyTurn = isPlayableStatus(status) && currentTurn === playerSide;
+    var isOpponentTurn = isPlayableStatus(status) && currentTurn !== playerSide;
+
+    btnPredict.hidden = !isOpponentTurn;
+    btnSuggest.hidden = !isMyTurn;
+
+    // Clear stale hint when turn switches away from the hint's type
+    if (!isOpponentTurn && currentHint && currentHint.type === 'predict') clearHintArrow();
+    if (!isMyTurn && currentHint && currentHint.type === 'suggest') clearHintArrow();
+}
+
+function initHintButtons() {
+    var btnPredict = document.getElementById('btnPredictOpponent');
+    var btnSuggest = document.getElementById('btnSuggestMove');
+    if (btnPredict) {
+        btnPredict.addEventListener('click', function () {
+            var opponentSide = (playerSide === 'r') ? 'b' : 'r';
+            requestAiHint(opponentSide, 'predict');
+        });
+    }
+    if (btnSuggest) {
+        btnSuggest.addEventListener('click', function () {
+            requestAiHint(playerSide, 'suggest');
+        });
     }
 }
 
@@ -1866,6 +2096,7 @@ function initChat() {
     function openChat() {
         _chatOpen = true;
         overlay.classList.add('open');
+        toggleBtn.hidden = true;
         _chatUnread = 0;
         var badge = document.getElementById('chatUnreadBadge');
         if (badge) badge.hidden = true;
@@ -1877,6 +2108,7 @@ function initChat() {
     function closeChat() {
         _chatOpen = false;
         overlay.classList.remove('open');
+        toggleBtn.hidden = false;
     }
 
     toggleBtn.addEventListener('click', function () {

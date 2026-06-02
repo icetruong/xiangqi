@@ -266,6 +266,37 @@ def room_detail(request, room_code):
 
 
 @api_view(['POST'])
+def pvp_ai_hint(request, room_code):
+    """
+    Return an AI-suggested move for the given side in a PvP room.
+    Does NOT apply the move — purely advisory.
+    """
+    try:
+        room = Room.objects.select_related('game').get(room_code=room_code)
+    except Room.DoesNotExist:
+        return Response({"ok": False, "error_code": "ROOM_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
+
+    game = room.game
+    if not game or game.status != 'ongoing':
+        return Response({"ok": False, "error_code": "GAME_NOT_ONGOING", "message": "Game is not ongoing."}, status=status.HTTP_400_BAD_REQUEST)
+
+    for_side = request.data.get('for_side')
+    if for_side not in ('r', 'b'):
+        return Response({"ok": False, "error_code": "BAD_REQUEST", "message": "for_side must be 'r' or 'b'."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if game.current_turn != for_side:
+        return Response({"ok": False, "error_code": "WRONG_TURN", "message": "Not this side's turn."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        move = engine_adapter.pick_ai_move(game.board_state, for_side, difficulty='normal')
+        return Response({"ok": True, "from": move["from"], "to": move["to"]})
+    except RuntimeError as e:
+        return Response({"ok": False, "error_code": "NO_MOVE", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"ok": False, "error_code": "SERVER_ERROR", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
 def room_move(request, room_code):
     # Use Django session as stable identifier
     if not request.session.session_key:

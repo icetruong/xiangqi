@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/rooms/<str:room_code>/join/', api_views.join_room, name='api_join_room'),
     path('api/rooms/<str:room_code>/', api_views.room_detail, name='api_room_detail'),
     path('api/rooms/<str:room_code>/move/', api_views.room_move, name='api_room_move'),
+    path('api/rooms/<str:room_code>/ai_hint/', api_views.pvp_ai_hint, name='api_pvp_ai_hint'),
 ]
