@@ -7,6 +7,12 @@ EMPTY = 0
 rK, rA, rE, rN, rR, rC, rP = 1, 2, 3, 4, 5, 6, 7
 bK, bA, bE, bN, bR, bC, bP = -1, -2, -3, -4, -5, -6, -7
 
+_STR_TO_INT = {
+    "rK": rK, "rA": rA, "rE": rE, "rN": rN, "rR": rR, "rC": rC, "rP": rP,
+    "bK": bK, "bA": bA, "bE": bE, "bN": bN, "bR": bR, "bC": bC, "bP": bP,
+    "": EMPTY, ".": EMPTY,
+}
+
 
 class Board:
     __slots__ = ("board", "red_king", "black_king", "zobrist_hash")
@@ -35,7 +41,9 @@ class Board:
     def get(self, row: int, col: int) -> int:
         return self.board[row * self.COLS + col]
 
-    def set(self, row: int, col: int, value: int) -> None:
+    def set(self, row: int, col: int, value) -> None:  # type: ignore[override]
+        if isinstance(value, str):
+            value = _STR_TO_INT[value]
         idx = row * self.COLS + col
         previous = self.board[idx]
         self.board[idx] = value
