@@ -955,6 +955,7 @@ function initGame(config) {
     if (isMultiplayer) {
         initWebSocket();
         startMultiplayerSyncPolling();
+        initChat();
     } else {
         // Nếu người chơi chọn Đen, AI Đỏ đang đi trước — tự poll để cập nhật bàn cờ
         if (status === 'ongoing' && currentTurn !== playerSide) {
@@ -1044,6 +1045,9 @@ function handleSocketMessage(data) {
         showGameToast(`Người chơi đã tham gia`, 'info');
         if (wsClient && wsClient.readyState === WebSocket.OPEN) {
             wsClient.send(JSON.stringify({ type: 'sync' }));
+            if (_myNickname) {
+                wsClient.send(JSON.stringify({ type: 'player_info', nickname: _myNickname }));
+            }
         }
         return;
     }
@@ -1067,6 +1071,16 @@ function handleSocketMessage(data) {
             current_turn: data.current_turn || currentTurn,
             last_move: data.last_move || lastMove
         }); // do not overwrite playerSide from broadcast
+        return;
+    }
+
+    if (data.type === 'chat') {
+        appendChatMessage(data.text, data.is_mine, data.nickname);
+        return;
+    }
+
+    if (data.type === 'player_info') {
+        updateOpponentName(data.nickname);
         return;
     }
 }
@@ -1767,4 +1781,139 @@ function renderMoveHistory() {
 
     // Auto scroll bottom
     container.scrollTop = container.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════
+//  Chat
+// ═══════════════════════════════════════════════
+var _chatUnread = 0;
+var _chatOpen = false;
+var _myNickname = '';
+
+function updateOpponentName(nickname) {
+    var el = document.getElementById('ppNameRight');
+    if (el && nickname) el.textContent = nickname;
+}
+
+function appendChatMessage(text, isMine, nickname) {
+    var container = document.getElementById('chatMessages');
+    if (!container) return;
+
+    var empty = container.querySelector('.chat-empty');
+    if (empty) empty.remove();
+
+    var wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.alignItems = isMine ? 'flex-end' : 'flex-start';
+
+    if (!isMine && nickname) {
+        var nameEl = document.createElement('div');
+        nameEl.className = 'chat-sender-name';
+        nameEl.textContent = nickname;
+        wrap.appendChild(nameEl);
+    }
+
+    var bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + (isMine ? 'chat-bubble--mine' : 'chat-bubble--theirs');
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+
+    if (!_chatOpen) {
+        _chatUnread++;
+        var badge = document.getElementById('chatUnreadBadge');
+        var btn = document.getElementById('chatToggle');
+        if (badge) {
+            badge.textContent = _chatUnread;
+            badge.hidden = false;
+        }
+        if (btn) btn.classList.add('has-unread');
+    }
+}
+
+function initChat() {
+    var input = document.getElementById('chatInput');
+    var sendBtn = document.getElementById('chatSend');
+    var container = document.getElementById('chatMessages');
+    var toggleBtn = document.getElementById('chatToggle');
+    var closeBtn = document.getElementById('chatClose');
+    var overlay = document.getElementById('chatOverlay');
+
+    if (!input || !sendBtn || !container || !toggleBtn || !overlay) return;
+
+    _myNickname = (localStorage.getItem('player_name') || '').trim() || 'Người chơi';
+
+    // Update my own panel name
+    var myNameEl = document.getElementById('ppNameLeft');
+    if (myNameEl) myNameEl.textContent = _myNickname;
+
+    // Initial placeholder
+    var empty = document.createElement('div');
+    empty.className = 'chat-empty';
+    empty.textContent = 'Chưa có tin nhắn nào.';
+    container.appendChild(empty);
+
+    // Announce nickname to opponent after WS connects
+    function announceNickname() {
+        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+            wsClient.send(JSON.stringify({ type: 'player_info', nickname: _myNickname }));
+        }
+    }
+
+    // Toggle open/close
+    function openChat() {
+        _chatOpen = true;
+        overlay.classList.add('open');
+        _chatUnread = 0;
+        var badge = document.getElementById('chatUnreadBadge');
+        if (badge) badge.hidden = true;
+        toggleBtn.classList.remove('has-unread');
+        setTimeout(function () { input.focus(); }, 50);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function closeChat() {
+        _chatOpen = false;
+        overlay.classList.remove('open');
+    }
+
+    toggleBtn.addEventListener('click', function () {
+        if (_chatOpen) closeChat(); else openChat();
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeChat);
+
+    // Close on outside click
+    document.addEventListener('click', function (e) {
+        if (!_chatOpen) return;
+        if (!overlay.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+            closeChat();
+        }
+    });
+
+    function sendChat() {
+        var text = input.value.trim();
+        if (!text) return;
+        if (!wsClient || wsClient.readyState !== WebSocket.OPEN) {
+            showGameToast('Chưa kết nối, không thể gửi tin nhắn.', 'warning');
+            return;
+        }
+        wsClient.send(JSON.stringify({ type: 'chat', text: text, nickname: _myNickname }));
+        input.value = '';
+    }
+
+    sendBtn.addEventListener('click', sendChat);
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+    });
+
+    // Announce nickname once WS is ready (retry until open)
+    var _announceTimer = setInterval(function () {
+        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+            announceNickname();
+            clearInterval(_announceTimer);
+        }
+    }, 500);
 }

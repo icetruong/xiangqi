@@ -130,6 +130,32 @@ class GameConsumer(AsyncWebsocketConsumer):
                         "data": broadcast_data
                     }
                 )
+                return
+
+            if message_type == 'chat':
+                text = str(text_data_json.get('text', '')).strip()[:200]
+                nickname = str(text_data_json.get('nickname', '')).strip()[:30] or 'Người chơi'
+                if text:
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "type": "chat_broadcast",
+                            "text": text,
+                            "nickname": nickname,
+                            "sender_id": identifier,
+                        }
+                    )
+
+            if message_type == 'player_info':
+                nickname = str(text_data_json.get('nickname', '')).strip()[:30] or 'Người chơi'
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "player_info_broadcast",
+                        "nickname": nickname,
+                        "sender_id": identifier,
+                    }
+                )
 
         except Exception as e:
             await self.send(text_data=json.dumps({
@@ -140,3 +166,22 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def game_update(self, event):
         """Forward group broadcast to this WebSocket connection."""
         await self.send(text_data=json.dumps(event['data']))
+
+    async def chat_broadcast(self, event):
+        """Forward chat message to this WebSocket connection."""
+        is_mine = (event['sender_id'] == self.player_id)
+        await self.send(text_data=json.dumps({
+            "type": "chat",
+            "text": event['text'],
+            "nickname": event.get('nickname', 'Người chơi'),
+            "is_mine": is_mine,
+        }))
+
+    async def player_info_broadcast(self, event):
+        """Forward player info (nickname) to other connections."""
+        is_mine = (event['sender_id'] == self.player_id)
+        if not is_mine:
+            await self.send(text_data=json.dumps({
+                "type": "player_info",
+                "nickname": event['nickname'],
+            }))
