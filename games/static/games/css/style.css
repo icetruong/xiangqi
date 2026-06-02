@@ -829,40 +829,87 @@ body::after {
 
 .hint-row-btn {
     flex: 1;
-    padding: 7px 6px;
+    position: relative;
+    padding: 12px 6px;
     border-radius: 6px;
-    background: linear-gradient(135deg, rgba(60,30,10,0.8) 0%, rgba(30,15,5,0.9) 100%);
-    border: 1px solid rgba(200,160,80,0.3);
-    color: #d4b87a;
-    font-size: 0.75rem;
-    font-family: 'Noto Sans SC', sans-serif;
+    
+    /* Wooden background from ui-panel */
+    background: repeating-linear-gradient(178deg,
+            rgba(255, 220, 160, .025) 0px,
+            rgba(255, 220, 160, .025) 1px,
+            transparent 1px,
+            transparent 6px),
+        linear-gradient(165deg, #3a1c0e 0%, #2b1308 50%, #1e0d06 100%);
+        
+    /* Frame border from ui-panel */
+    border: 2px solid #7a5a28;
+    outline: 1px solid #c9944a;
+    outline-offset: -4px;
+    
+    /* Box shadow from ui-panel */
+    box-shadow: 0 0 0 1px #3a1c0e,
+        0 4px 12px rgba(0, 0, 0, .7),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .18),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
+
+    /* Text from ui-panel / panel-header */
+    font-family: 'Noto Serif', serif;
+    font-size: 0.85rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: border-color 0.2s, filter 0.2s, transform 0.1s, box-shadow 0.15s, opacity 0.15s;
-    opacity: 0.95;
+    color: #f5e6c8;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     text-align: center;
     white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
+    user-select: none;
+}
+
+/* Ornaments from ui-panel */
+.hint-row-btn::before,
+.hint-row-btn::after {
+    content: '◈';
+    position: absolute;
+    font-size: 0.55rem;
+    color: #c9944a;
+    opacity: 0.75;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.hint-row-btn::before {
+    top: 5px;
+    left: 6px;
+}
+
+.hint-row-btn::after {
+    bottom: 5px;
+    right: 6px;
 }
 
 .hint-row-btn:disabled {
-    opacity: 0.4;
+    opacity: 0.6;
     cursor: wait;
-    filter: grayscale(0.5);
+    filter: grayscale(0.6);
 }
 
 .hint-row-btn:not(:disabled):hover {
-    opacity: 1;
     transform: translateY(-1px);
-    border-color: rgba(200,160,80,0.7);
-    filter: brightness(1.2);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+    filter: brightness(1.15);
+    box-shadow: 0 0 0 1px #3a1c0e,
+        0 6px 16px rgba(0, 0, 0, .8),
+        0 2px 6px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 200, 100, .25),
+        inset 0 -1px 0 rgba(0, 0, 0, .5);
 }
 
 .hint-row-btn:not(:disabled):active {
-    transform: translateY(0);
-    opacity: 0.8;
+    transform: translateY(1px);
+    filter: brightness(0.9);
 }
 
 /* ── Floating Chat FAB — fixed to bottom-right screen edge ── */
