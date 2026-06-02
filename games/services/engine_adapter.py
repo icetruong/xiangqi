@@ -146,8 +146,8 @@ def pick_ai_move(
         # Fixed depth=4 — fast (~2s opening, <0.2s endgame), predictable
         success = game.ai_move_minimax(depth=4)
     else:
-        # easy: depth=2, very fast
-        success = game.ai_move_minimax(depth=2)
+        # easy: depth=3, fast
+        success = game.ai_move_minimax(depth=3)
     
     if not success:
         raise RuntimeError("AI could not find a valid move (Checkmate/Stalemate?)")
