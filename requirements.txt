@@ -21,6 +21,10 @@ psycopg2-binary==2.9.9
 # Production server
 gunicorn==21.2.0
 
+# Cython (build AI move generator extension for ~100x speedup)
+# After pip install, run: python setup_cython.py build_ext --inplace
+cython>=3.0.0
+
 # Development tools
 pytest==8.0.0
 pytest-django==4.8.0

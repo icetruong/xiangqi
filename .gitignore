@@ -2,6 +2,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
+
+# Cython generated C sources (rebuild with setup_cython.py)
+engine/ai/*.c
 .Python
 env/
 venv/

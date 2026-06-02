@@ -64,20 +64,29 @@ def pseudo_moves_of_piece(board: Board, src: Tuple[int, int]) -> List[Tuple[int,
         return pawn_moves(board, src)
     return []
 
-#   bên color được phép đi những nước nào 
-def generate_legal_moves(board: Board, color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
-    legal: List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
+#   bên color được phép đi những nước nào
+try:
+    from engine.ai.cy_movegen import cy_generate_legal_moves as _cy_gen  # type: ignore[import]
+    _USE_CYTHON = True
+except ImportError:
+    _USE_CYTHON = False
 
+
+def generate_legal_moves(board: Board, color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
+    if _USE_CYTHON:
+        rk = board.red_king if board.red_king is not None else 85
+        bk = board.black_king if board.black_king is not None else 4
+        return _cy_gen(board.board, color, rk, bk)  # type: ignore[return-value]
+
+    legal: List[Tuple[Tuple[int, int], Tuple[int, int]]] = []
     for i in range(Board.ROWS):
         for j in range(Board.COLS):
             piece = board.board[i * 9 + j]
             if is_empty(piece) or color_of(piece) != color:
                 continue
-
             src = (i, j)
             for dst in pseudo_moves_of_piece(board, src):
                 if is_legal_move(board, src, dst, color):
                     legal.append((src, dst))
-
     return legal
     

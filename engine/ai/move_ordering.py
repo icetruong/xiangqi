@@ -1,27 +1,52 @@
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 from engine.utils.position import is_empty, type_of
 from engine.board import Board
-
 from engine.ai.evaluator import PIECE_VALUE
 
-def opponent(color: str) -> str:
-    return "r" if color == "b" else "b"
-
-def move_score(board: Board, move: Tuple[Tuple[int, int], Tuple[int, int]], turn_color: str) -> int:
-    (sr, sc), (dr, dc) = move
-
-    capture = board.board[dr * 9 + dc]
-    score = 0
-    if not is_empty(capture):
-        # score += 10000 + PIECE_VALUE.get(type_of(capture), 0)
-        moved_piece = board.board[sr * 9 + sc]
-        victim_val = PIECE_VALUE.get(type_of(capture), 0)
-        attacker_val = PIECE_VALUE.get(type_of(moved_piece), 0)
-        score += 1000000 + 100 * victim_val - attacker_val
-
-    return score
+_Move = Tuple[Tuple[int, int], Tuple[int, int]]
 
 
+def order_moves(
+    board: Board,
+    moves: List[_Move],
+    turn_color: str,
+    killers: Optional[list] = None,
+    history: Optional[list] = None,
+    tt_move: Optional[_Move] = None,
+) -> List[_Move]:
+    b = board.board
+    cols = board.COLS
 
-def order_moves(board: Board, moves: List[Tuple[Tuple[int, int], Tuple[int, int]]], turn_color: str) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
-    return sorted(moves, key = lambda mv : move_score(board, mv, turn_color), reverse=True)
+    def score(mv: _Move) -> int:
+        (sr, sc), (dr, dc) = mv
+        s_idx = sr * cols + sc
+        d_idx = dr * cols + dc
+
+        # TT best move from previous iteration — highest priority
+        if tt_move is not None and mv == tt_move:
+            return 10_000_000
+
+        capture = b[d_idx]
+        if not is_empty(capture):
+            # MVV-LVA: most-valuable victim, least-valuable attacker
+            moved = b[s_idx]
+            vt = type_of(capture)
+            at = type_of(moved)
+            victim_val = PIECE_VALUE.get(vt, 0) if vt else 0
+            attacker_val = PIECE_VALUE.get(at, 0) if at else 0
+            return 1_000_000 + 100 * victim_val - attacker_val
+
+        # Killer moves (non-capture moves that caused beta cutoffs at this depth)
+        if killers is not None:
+            if mv == killers[0]:
+                return 900_000
+            if mv == killers[1]:
+                return 800_000
+
+        # History heuristic (cumulative score of beta cutoffs)
+        if history is not None:
+            return history[s_idx][d_idx]
+
+        return 0
+
+    return sorted(moves, key=score, reverse=True)

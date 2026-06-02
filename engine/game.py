@@ -72,29 +72,48 @@ class Game:
         return self.status.value
     
     def ai_move_minimax(self, depth: int = 3) -> bool:
-        from engine.ai.search import find_best_move
+        from engine.ai.search import find_best_move, SearchContext
 
         turn_color = self.turn.value
-        src, dst = find_best_move(self.board, turn_color, depth)        
+        # Iterative deepening so TT/killers warm up before the target depth
+        ctx = SearchContext()
+        best_move = None
+        for d in range(1, depth + 1):
+            mv = find_best_move(self.board, turn_color, d, ctx=ctx)
+            if mv is not None:
+                best_move = mv
 
+        if best_move is None:
+            return False
+
+        src, dst = best_move
         return self.make_move(src, dst)
     
-    def get_dynamic_time_limit(self) -> float:
-        piece_count = 0
-        for r in range(self.board.ROWS):
-            for c in range(self.board.COLS):
-                if self.board.board[r * 9 + c] != 0:
-                    piece_count += 1
+    def _piece_count(self) -> int:
+        return sum(1 for p in self.board.board if p != 0)
 
-        # Keep "normal" difficulty responsive for interactive play.
-        # The old 5s/3s/1.5s search windows made the UI feel laggy,
-        # especially on Flutter web while polling the backend.
-        if piece_count >= 24:
+    def get_dynamic_time_limit(self) -> float:
+        """Time limit for 'normal' difficulty (depth=4 fixed, so this is unused)."""
+        count = self._piece_count()
+        if count >= 24:
             return 1.5
-        elif piece_count >= 12:
+        elif count >= 12:
             return 1.0
-        else:
-            return 0.6
+        return 0.6
+
+    def get_hard_time_limit(self) -> float:
+        """
+        Time limit for 'hard' difficulty, scaled by game phase:
+          Opening  (>=24 pieces): 5.0s  → reaches depth 4-5
+          Midgame  (>=12 pieces): 4.5s  → reaches depth 6-7
+          Endgame  (< 12 pieces): 4.0s  → reaches depth 8+
+        """
+        count = self._piece_count()
+        if count >= 24:
+            return 5.0
+        elif count >= 12:
+            return 4.5
+        return 4.0
 
     def ai_move_time(self, time_limit_sec: Optional[float] = None, max_depth: int = 6) -> bool:
         from engine.ai.time_search import best_move_with_time_limit
@@ -113,7 +132,3 @@ class Game:
         src, dst = move
         return self.make_move(src, dst)
 
-        
-
-
-        

@@ -135,13 +135,19 @@ def pick_ai_move(
     game.turn = Color(ai_side)
     game._update_status()
 
-    if difficulty == 'normal':
-        # Time search với thời gian động (tự động cấp phát)
-        success = game.ai_move_time()
+    if difficulty == 'hard':
+        # Time-limited iterative deepening, time scaled by game phase:
+        #   opening >=24 pieces → 5s, midgame >=12 → 4.5s, endgame → 4s
+        success = game.ai_move_time(
+            time_limit_sec=game.get_hard_time_limit(),
+            max_depth=10,
+        )
+    elif difficulty == 'normal':
+        # Fixed depth=4 — fast (~2s opening, <0.2s endgame), predictable
+        success = game.ai_move_minimax(depth=4)
     else:
-        # easy=2, hard=4
-        depth = 4 if difficulty == 'hard' else 2
-        success = game.ai_move_minimax(depth=depth)
+        # easy: depth=2, very fast
+        success = game.ai_move_minimax(depth=2)
     
     if not success:
         raise RuntimeError("AI could not find a valid move (Checkmate/Stalemate?)")
