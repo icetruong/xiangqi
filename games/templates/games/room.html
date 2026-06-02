@@ -17,7 +17,7 @@
     <link rel="apple-touch-icon" href="{% static 'games/img/icon-192.png' %}">
     <!-- Icons & styles -->
     <link rel="icon" type="image/svg+xml" href="{% static 'games/img/favicon.svg' %}">
-    <link rel="stylesheet" href="{% static 'games/css/style.css' %}?v=8">
+    <link rel="stylesheet" href="{% static 'games/css/style.css' %}?v=11">
     <link
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
@@ -64,12 +64,11 @@
                     </div>
                 </div>
 
-                <!-- Chat Toggle Button -->
-                <button id="chatToggle" class="chat-toggle-btn" type="button" aria-label="Mở chat">
-                    <span class="chat-toggle-icon">💬</span>
-                    <span class="chat-toggle-label">Chat</span>
-                    <span class="chat-unread-badge" id="chatUnreadBadge" hidden>0</span>
-                </button>
+                <!-- AI Hint buttons row — between turn indicators and chat -->
+                <div class="hint-btn-row">
+                    <button id="btnSuggestMove" class="hint-row-btn hint-row-btn--suggest" type="button" hidden aria-label="Gợi ý nước đi">💡 Gợi ý nước</button>
+                    <button id="btnPredictOpponent" class="hint-row-btn hint-row-btn--predict" type="button" hidden aria-label="Đoán nước đối thủ">🔮 Đoán đối thủ</button>
+                </div>
             </div>
 
             <!-- CENTER PANEL -->
@@ -143,6 +142,12 @@
 
 
 
+    <!-- Floating Chat FAB — fixed to screen edge -->
+    <button id="chatToggle" class="chat-fab" type="button" aria-label="Mở chat">
+        <span class="chat-fab-icon">💬</span>
+        <span class="chat-unread-badge" id="chatUnreadBadge" hidden>0</span>
+    </button>
+
     <!-- Floating Chat Panel — must be in DOM before initGame() runs -->
     <div id="chatOverlay" class="chat-overlay" aria-label="Chat">
         <div class="chat-overlay-header">
@@ -158,7 +163,7 @@
     </div>
 
     <!-- game.js MUST come before the inline script so initGame() is defined -->
-    <script src="{% static 'games/js/game.js' %}?v=7"></script>
+    <script src="{% static 'games/js/game.js' %}?v=9"></script>
     <script>
         // ── Game Timer Logic ──
         window.gameTimer = {

@@ -811,6 +811,116 @@ body::after {
     background: #1e3e54;
 }
 
+/* ── AI Hint SVG overlay — sits above all pieces ── */
+.hint-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 25;
+}
+
+/* ── AI Hint buttons row — in left panel between turn indicators and chat ── */
+.hint-btn-row {
+    display: flex;
+    gap: 6px;
+    margin: 4px 0 2px;
+}
+
+.hint-row-btn {
+    flex: 1;
+    padding: 7px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 0.72rem;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+    opacity: 0.9;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.hint-row-btn--suggest {
+    background: linear-gradient(145deg, #1e3560 0%, #0d1a38 100%);
+    border-color: #4a80d0;
+    color: #b8d8ff;
+    box-shadow: 0 2px 6px rgba(74, 128, 208, 0.25);
+}
+
+.hint-row-btn--predict {
+    background: linear-gradient(145deg, #6b3010 0%, #3a1808 100%);
+    border-color: #c45808;
+    color: #ffd080;
+    box-shadow: 0 2px 6px rgba(196, 88, 8, 0.25);
+}
+
+.hint-row-btn:disabled {
+    opacity: 0.38;
+    cursor: wait;
+}
+
+.hint-row-btn:not(:disabled):hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.hint-row-btn:not(:disabled):active {
+    transform: translateY(0);
+    opacity: 0.75;
+}
+
+/* ── Floating Chat FAB — fixed to bottom-right screen edge ── */
+.chat-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 200;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid rgba(212, 184, 122, 0.55);
+    background: radial-gradient(circle at 38% 32%, #5a3a1a 0%, #2a1208 100%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(212, 184, 122, 0.2);
+    color: #f0d090;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.chat-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(212, 184, 122, 0.35);
+}
+
+.chat-fab:active {
+    transform: scale(0.96);
+}
+
+.chat-fab .chat-unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: #e05030;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1.5px solid #2a1208;
+}
+
 /* ══════════ Mobile ══════════ */
 @media (max-width: 520px) {
     .game-actions {
@@ -2990,9 +3100,9 @@ body::after {
     display: none;
     position: fixed;
     bottom: 0;
-    left: 16px;
+    right: 20px;
     width: 300px;
-    max-height: 400px;
+    max-height: 420px;
     flex-direction: column;
     background: linear-gradient(160deg, #2a1a08 0%, #1a0e04 100%);
     border: 1px solid rgba(200,160,80,0.4);
