@@ -23,6 +23,9 @@ RUN pip install --upgrade pip && \
 # Copy phần code còn lại
 COPY . /app/
 
+# Build Cython extensions for faster AI (~10x speedup over pure Python)
+RUN python setup_cython.py build_ext --inplace || echo "Cython build failed, falling back to pure Python"
+
 # Mở port 8000
 EXPOSE 8000
 
