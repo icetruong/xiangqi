@@ -1055,10 +1055,14 @@ function handleSocketMessage(data) {
     }
 
     if (data.type === 'player_joined') {
-        showGameToast(`Người chơi đã tham gia`, 'info');
+        if (status === 'playing') {
+            showGameToast(`Khán giả đã tham gia`, 'info');
+        } else {
+            showGameToast(`Người chơi đã tham gia`, 'info');
+        }
         if (wsClient && wsClient.readyState === WebSocket.OPEN) {
             wsClient.send(JSON.stringify({ type: 'sync' }));
-            if (_myNickname) {
+            if (_myNickname && playerSide !== 'spectator') {
                 wsClient.send(JSON.stringify({ type: 'player_info', nickname: _myNickname }));
             }
         }
@@ -2076,8 +2080,10 @@ function initChat() {
     _myNickname = (localStorage.getItem('player_name') || '').trim() || 'Người chơi';
 
     // Update my own panel name
-    var myNameEl = document.getElementById('ppNameLeft');
-    if (myNameEl) myNameEl.textContent = _myNickname;
+    if (typeof playerSide !== 'undefined' && playerSide !== 'spectator') {
+        var myNameEl = document.getElementById('ppNameLeft');
+        if (myNameEl) myNameEl.textContent = _myNickname;
+    }
 
     // Initial placeholder
     var empty = document.createElement('div');
@@ -2087,7 +2093,7 @@ function initChat() {
 
     // Announce nickname to opponent after WS connects
     function announceNickname() {
-        if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+        if (wsClient && wsClient.readyState === WebSocket.OPEN && typeof playerSide !== 'undefined' && playerSide !== 'spectator') {
             wsClient.send(JSON.stringify({ type: 'player_info', nickname: _myNickname }));
         }
     }
